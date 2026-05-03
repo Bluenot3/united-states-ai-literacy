@@ -35,7 +35,7 @@ const LoginPage: React.FC = () => {
     // Redirect once authenticated
     useEffect(() => {
         if (isAuthenticated) {
-            navigate('/hub', { replace: true });
+            navigate('/command-center', { replace: true });
         }
     }, [isAuthenticated, navigate]);
 

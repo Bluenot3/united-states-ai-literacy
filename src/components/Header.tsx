@@ -12,7 +12,9 @@ type PageMeta = {
 };
 
 const getPageMeta = (pathname: string): PageMeta => {
+    if (pathname.includes('/command-center')) return { title: 'ZEN Ecosystem Command Center', eyebrow: 'Ecosystem', icon: 'network' };
     if (pathname.includes('/dashboard')) return { title: 'Vanguard Dashboard', eyebrow: 'Command Deck', icon: 'dashboard' };
+    if (pathname.includes('/programs/hermes')) return { title: 'Hermes Agent Ops', eyebrow: 'Open Source Agent', icon: 'programs' };
     if (pathname.includes('/hub')) return { title: 'Program Hub', eyebrow: 'Workspace', icon: 'programs' };
     if (pathname.includes('/docs')) return { title: 'Docs Library', eyebrow: 'Reference Layer', icon: 'research' };
     if (pathname.includes('/guide')) return { title: 'Starter Guide', eyebrow: 'Orientation', icon: 'guide' };

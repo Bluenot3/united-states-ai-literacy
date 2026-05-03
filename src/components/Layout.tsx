@@ -28,7 +28,7 @@ const Layout: React.FC = () => {
 
     const isModulePage = pathname.startsWith('/module/');
     // Hub and program-selection pages are full-width — no sidebar until user enters a course
-    const isHubPage = pathname === '/hub' || pathname === '/' || pathname.startsWith('/programs/');
+    const isHubPage = pathname === '/command-center' || pathname === '/hub' || pathname === '/' || pathname.startsWith('/programs/');
 
     React.useLayoutEffect(() => {
         if (window.location.hash) {

@@ -4,6 +4,7 @@ import { homeschoolCurriculum } from './homeschool/curriculumData';
 import { t3Curriculum } from './t3/curriculumData';
 import { web3Curriculum } from './web3/curriculumData';
 import { arenaCurriculum } from './arena/curriculumData';
+import { hermesCurriculum } from './hermes/curriculumData';
 import type { ProgramCurriculum } from '../types';
 
 export const curriculumRegistry: Record<string, ProgramCurriculum> = {
@@ -12,6 +13,7 @@ export const curriculumRegistry: Record<string, ProgramCurriculum> = {
     t3: t3Curriculum,
     web3: web3Curriculum,
     arena: arenaCurriculum,
+    hermes: hermesCurriculum,
 };
 
 export const getCurriculumByProgramId = (programId: string): ProgramCurriculum | undefined => {
@@ -24,4 +26,5 @@ export {
     t3Curriculum,
     web3Curriculum,
     arenaCurriculum,
+    hermesCurriculum,
 };

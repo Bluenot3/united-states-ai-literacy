@@ -22,7 +22,7 @@ export interface ProgramInfo {
     name: string;
     description: string;
     route: string;
-    accentColor: 'purple' | 'blue' | 'emerald' | 'amber' | 'cyan' | 'pink';
+    accentColor: 'purple' | 'blue' | 'emerald' | 'amber' | 'cyan' | 'pink' | 'orange';
     badge: string | null;
     icon: string;
     audience: string;

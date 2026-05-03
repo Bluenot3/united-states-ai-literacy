@@ -6,6 +6,7 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 
 const LoginPage = React.lazy(() => import('./modules/module1/components/auth/LoginPage'));
+const CommandCenterPage = React.lazy(() => import('./pages/CommandCenterPage'));
 const ResetPasswordPage = React.lazy(() => import('./pages/ResetPasswordPage'));
 const Module1Page = React.lazy(() => import('./pages/Module1Page'));
 const Module2Page = React.lazy(() => import('./pages/Module2Page'));
@@ -93,6 +94,22 @@ const documentMetaMatchers: Array<{
         meta: {
             title: 'Program Hub | ZEN Vanguard',
             description: 'Browse ZEN Vanguard programs, launch the curriculum, and navigate your command deck.',
+            themeColor: '#081021',
+        },
+    },
+    {
+        match: (pathname) => pathname === '/command-center',
+        meta: {
+            title: 'ZEN Ecosystem Command Center',
+            description: 'Enter the central ZEN operating layer connecting Arsenal, AI literacy programs, automation systems, AI social tools, business solutions, and verified credentials.',
+            themeColor: '#03050d',
+        },
+    },
+    {
+        match: (pathname) => pathname === '/programs/hermes',
+        meta: {
+            title: 'Hermes Agent Ops | ZEN Vanguard',
+            description: 'Deploy and master the free, open-source Hermes AI Agent — self-evolving, multi-platform, self-hosted. Full hands-on curriculum.',
             themeColor: '#081021',
         },
     },
@@ -342,7 +359,8 @@ const App: React.FC = () => {
                         </ProtectedRoute>
                     }
                 >
-                    <Route index element={<Navigate to="/hub" replace />} />
+                    <Route index element={<Navigate to="/command-center" replace />} />
+                    <Route path="command-center" element={<Suspense fallback={<PageLoader />}><CommandCenterPage /></Suspense>} />
                     <Route path="hub" element={<Suspense fallback={<PageLoader />}><ProgramHubPage /></Suspense>} />
                     <Route path="programs/:programId" element={<Suspense fallback={<PageLoader />}><ProgramDashboardPage /></Suspense>} />
                     <Route path="dashboard" element={<Dashboard />} />

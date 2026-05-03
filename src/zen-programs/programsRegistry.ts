@@ -145,6 +145,30 @@ export const programs: ProgramInfo[] = [
             'Use the Starter Guide deployment checklist when you publish results.',
         ],
     },
+    {
+        id: 'hermes',
+        name: 'Hermes Agent Ops',
+        description: 'Deploy and master the free, open-source Hermes AI Agent — self-evolving, multi-platform, self-hosted.',
+        route: '/programs/hermes',
+        accentColor: 'orange',
+        badge: '🔥 Free & Open Source',
+        icon: 'HA',
+        audience: 'Builders, operators, and anyone who wants a personal AI agent for free',
+        level: 'Beginner to advanced',
+        duration: '6 modules, hands-on deployment',
+        spotlight: 'Your own AI agent that learns, remembers, and works across every platform — for $0.',
+        skills: ['Self-hosted AI agents', 'Multi-platform gateway', 'Persistent memory', 'Tool orchestration', 'Local LLM integration'],
+        outcomes: [
+            'Deploy a fully operational Hermes Agent on your own hardware or a $5 VPS.',
+            'Connect your agent to Telegram, Discord, Slack, and WhatsApp with unified memory.',
+            'Build custom tools, wire up MCP servers, and run autonomous scheduled workflows.',
+        ],
+        starterSteps: [
+            'Install Hermes Agent with a single command and run your first conversation.',
+            'Connect at least one messaging platform via the gateway before moving to advanced tools.',
+            'Set up Ollama for free local inference before paying for any API keys.',
+        ],
+    },
 ];
 
 export const getProgramById = (id: string): ProgramInfo | undefined => {
@@ -200,6 +224,14 @@ export const getAccentClasses = (color: ProgramInfo['accentColor']) => {
             border: 'border-pink-500/30',
             shadow: 'shadow-glowing',
             ring: 'ring-pink-500/20',
+        },
+        orange: {
+            gradient: 'from-orange-500 via-orange-600 to-red-600',
+            bg: 'bg-orange-500',
+            text: 'text-orange-400',
+            border: 'border-orange-500/30',
+            shadow: 'shadow-glowing-amber',
+            ring: 'ring-orange-500/20',
         },
     };
 
