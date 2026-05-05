@@ -1,0 +1,9 @@
+{
+  "_comment": "User email entitlements. Managed by webhook handler.",
+  "_example_user@example.com": {
+    "entitled": true,
+    "stripeCustomerId": "cus_xxx",
+    "subscriptionId": "sub_xxx",
+    "grantedAt": "2026-01-20T12:00:00.000Z"
+  }
+}
