@@ -1,7 +1,7 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "united-states-ai-literacy",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -61,7 +61,12 @@
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.9",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "@mermaid-js/parser": "^1.1.0",
+    "@supabase/supabase-js": "^2.93.1",
+    "cytoscape": "^3.33.1",
+    "mermaid": "^11.14.0",
+    "pdfjs-dist": "^5.5.207"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",

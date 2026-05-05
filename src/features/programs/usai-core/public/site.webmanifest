@@ -1,0 +1,17 @@
+{
+  "name": "ZEN Vanguard",
+  "short_name": "Vanguard",
+  "description": "Professional AI literacy platform with guided curriculum, certifications, and operational dashboards.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#060B18",
+  "theme_color": "#060B18",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

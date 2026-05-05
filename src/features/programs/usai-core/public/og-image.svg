@@ -1,0 +1,37 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#060B18"/>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="210" cy="140" r="170" fill="#C9A84C" fill-opacity="0.14"/>
+  <circle cx="1010" cy="520" r="220" fill="#22D3EE" fill-opacity="0.12"/>
+  <rect x="74" y="70" width="1052" height="490" rx="36" fill="#0B1324" fill-opacity="0.78" stroke="url(#panel)" stroke-width="2"/>
+  <rect x="112" y="110" width="206" height="206" rx="28" fill="#081021" stroke="#C9A84C" stroke-opacity="0.35"/>
+  <path d="M150 152H280V172L203 247H280V268H144V248L220 172H150V152Z" fill="url(#mark)"/>
+  <text x="362" y="216" fill="#F7E4B0" font-family="Inter, Arial, sans-serif" font-size="74" font-weight="800" letter-spacing="6">ZEN VANGUARD</text>
+  <text x="364" y="278" fill="#E2E8F0" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="600" letter-spacing="2">ADVANCED AI LITERACY PLATFORM</text>
+  <text x="112" y="398" fill="#CBD5E1" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="500">Professional AI literacy, guided systems thinking, live progress telemetry,</text>
+  <text x="112" y="444" fill="#CBD5E1" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="500">and verifiable certification across the ZEN Vanguard learning stack.</text>
+  <g opacity="0.92">
+    <rect x="112" y="492" width="204" height="44" rx="22" fill="#C9A84C" fill-opacity="0.12" stroke="#C9A84C" stroke-opacity="0.32"/>
+    <text x="146" y="520" fill="#F7E4B0" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="2">PROGRAM HUB</text>
+    <rect x="336" y="492" width="214" height="44" rx="22" fill="#22D3EE" fill-opacity="0.1" stroke="#22D3EE" stroke-opacity="0.26"/>
+    <text x="370" y="520" fill="#CFFAFE" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="2">LIVE TELEMETRY</text>
+    <rect x="570" y="492" width="260" height="44" rx="22" fill="#FFFFFF" fill-opacity="0.05" stroke="#FFFFFF" stroke-opacity="0.12"/>
+    <text x="604" y="520" fill="#E2E8F0" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="2">VERIFIED ARTIFACTS</text>
+  </g>
+  <defs>
+    <linearGradient id="bg" x1="93" y1="18" x2="1040" y2="630" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#060B18"/>
+      <stop offset="0.55" stop-color="#0A1628"/>
+      <stop offset="1" stop-color="#08111F"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="108" y1="86" x2="1092" y2="548" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C9A84C"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="144" y1="152" x2="288" y2="268" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6E1AC"/>
+      <stop offset="0.5" stop-color="#C9A84C"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+  </defs>
+</svg>
