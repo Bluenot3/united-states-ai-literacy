@@ -8,7 +8,7 @@ dist-ssr/
 *.local
 
 # Environment — never commit secrets
-.env
+# .env is committed with safe feature flags only (no secrets)
 .env.local
 .env.*.local
 .env.production
