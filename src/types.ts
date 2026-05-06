@@ -190,6 +190,17 @@ export interface ModuleProgress {
     certificateHash: string | null;
 }
 
+export type BadgeKind = 'section' | 'module' | 'credential' | 'streak' | 'deployment';
+
+export interface UserBadge {
+    id: string;
+    title: string;
+    description: string;
+    kind: BadgeKind;
+    moduleId?: 1 | 2 | 3 | 4;
+    earnedAt: string;
+}
+
 // Session record for analytics
 export interface SessionRecord {
     startedAt: string;
@@ -213,6 +224,7 @@ export interface User {
     };
     finalCertificationId: string | null;
     finalCertificationHash: string | null;
+    badges: UserBadge[];
     sessionHistory: SessionRecord[];
     progress?: ModuleProgress;
     assignments?: Assignment[];
@@ -237,6 +249,8 @@ export interface Certificate {
     sha256Hash: string;
     blockNumber: number;
     previousHash: string;
+    artifactUrl?: string;
+    badgeId?: string;
 }
 
 export interface InteractiveComponentProps {
@@ -290,7 +304,7 @@ export interface ActivityEvent {
     id: string;
     studentId: string;
     studentName: string;
-    type: 'section_complete' | 'interactive_complete' | 'login' | 'certificate_earned' | 'assignment_started' | 'quiz_passed' | 'points_earned';
+    type: 'section_complete' | 'interactive_complete' | 'login' | 'certificate_earned' | 'assignment_started' | 'quiz_passed' | 'points_earned' | 'badge_earned' | 'page_view' | 'session_ended';
     description: string;
     timestamp: string;
     moduleId?: number;
@@ -311,6 +325,10 @@ export interface Student {
     assignments: Assignment[];
     status: 'active' | 'inactive' | 'at-risk';
     sessionHistory: SessionRecord[];
+    badges: UserBadge[];
+    certificates: Certificate[];
+    finalCertificationId: string | null;
+    finalCertificationHash: string | null;
 }
 
 export interface AdminStats {
@@ -325,4 +343,6 @@ export interface AdminStats {
     totalSectionsCompleted: number;
     totalInteractivesCompleted: number;
     totalPoints: number;
+    badgesIssued: number;
+    finalCredentialsIssued: number;
 }

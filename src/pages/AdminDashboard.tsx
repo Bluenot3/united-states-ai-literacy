@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAdmin } from '../contexts/AdminContext';
 import { Link } from 'react-router-dom';
+import { VANGUARD_MODULE_NAMES, VANGUARD_MODULE_TOTALS } from '../services/progressEngine';
 
 // Animated Counter Component
 const AnimatedCounter: React.FC<{ value: number; prefix?: string; suffix?: string; duration?: number }> = ({
@@ -148,15 +149,17 @@ const AdminDashboard: React.FC = () => {
     }, []);
 
     // Get at-risk students
-    const atRiskStudents = students.filter(s => s.status === 'at-risk').slice(0, 5);
+    const atRiskStudents = React.useMemo(() => (
+        students.filter(s => s.status === 'at-risk').slice(0, 5)
+    ), [students]);
 
     // Calculate real module progress from student data
     const moduleProgress = React.useMemo(() => {
         const modules = [
-            { id: 1, name: 'AI Foundations', color: 'from-purple-500 to-violet-600' },
-            { id: 2, name: 'Building AI', color: 'from-blue-500 to-cyan-600' },
-            { id: 3, name: 'AI Applications', color: 'from-emerald-500 to-teal-600' },
-            { id: 4, name: 'Advanced Topics', color: 'from-amber-500 to-orange-600' },
+            { id: 1 as const, name: VANGUARD_MODULE_NAMES[1], color: 'from-purple-500 to-violet-600' },
+            { id: 2 as const, name: VANGUARD_MODULE_NAMES[2], color: 'from-blue-500 to-cyan-600' },
+            { id: 3 as const, name: VANGUARD_MODULE_NAMES[3], color: 'from-emerald-500 to-teal-600' },
+            { id: 4 as const, name: VANGUARD_MODULE_NAMES[4], color: 'from-amber-500 to-orange-600' },
         ];
 
         return modules.map(module => {
@@ -167,7 +170,7 @@ const AdminDashboard: React.FC = () => {
             // Count students who have completed sections in this module
             let totalSections = 0;
             let certificates = 0;
-            const estimatedSectionsPerModule = 50;
+            const sectionsPerModule = VANGUARD_MODULE_TOTALS[module.id];
 
             students.forEach(s => {
                 const progress = s.moduleProgress[module.id];
@@ -177,7 +180,7 @@ const AdminDashboard: React.FC = () => {
                 }
             });
 
-            const maxPossible = students.length * estimatedSectionsPerModule;
+            const maxPossible = students.length * sectionsPerModule;
             const completion = maxPossible > 0 ? Math.round((totalSections / maxPossible) * 100) : 0;
             const studentsWithProgress = students.filter(s =>
                 (s.moduleProgress[module.id]?.completedSections?.length || 0) > 0
@@ -219,7 +222,7 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             {/* Metrics Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
                 <MetricCard
                     label="Total Students"
                     value={stats.totalStudents}
@@ -239,10 +242,22 @@ const AdminDashboard: React.FC = () => {
                     color="from-amber-500/20 to-orange-500/20"
                 />
                 <MetricCard
+                    label="Badges Issued"
+                    value={stats.badgesIssued}
+                    icon={<svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 4.5h6m-8.25 3h10.5m-12 3h13.5M8.25 21l3.75-2.25L15.75 21v-7.5h-7.5V21z" /></svg>}
+                    color="from-cyan-500/20 to-teal-500/20"
+                />
+                <MetricCard
                     label="Total Points"
                     value={stats.totalPoints}
                     icon={<svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>}
                     color="from-purple-500/20 to-pink-500/20"
+                />
+                <MetricCard
+                    label="Final Credentials"
+                    value={stats.finalCredentialsIssued}
+                    icon={<svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.5 18.75h-9a2.25 2.25 0 01-2.25-2.25v-9A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25zM9 12l2 2 4-4" /></svg>}
+                    color="from-zen-gold/20 to-emerald-500/20"
                 />
             </div>
 
@@ -379,4 +394,3 @@ const AdminDashboard: React.FC = () => {
 };
 
 export default AdminDashboard;
-

@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { Student, Message, ActivityEvent, AdminStats } from '../types';
 import { dal } from '../services/dal';
+import { ADMIN_EMAILS, isAdminEmail, normalizeAdminEmail } from '../services/adminAccess';
+import { useAuth } from '../hooks/useAuth';
+import { VANGUARD_MODULE_TOTALS } from '../services/progressEngine';
 
 interface AdminContextType {
     isAdminAuthenticated: boolean;
@@ -34,6 +37,8 @@ const calculateStats = (students: Student[]): AdminStats => {
             totalSectionsCompleted: 0,
             totalInteractivesCompleted: 0,
             totalPoints: 0,
+            badgesIssued: 0,
+            finalCredentialsIssued: 0,
         };
     }
 
@@ -45,9 +50,13 @@ const calculateStats = (students: Student[]): AdminStats => {
         return lastActiveTime > oneDayAgo;
     }).length;
 
-    const certificatesIssued = students.reduce((sum, s) => {
-        return sum + Object.values(s.moduleProgress).filter(m => m.certificateId).length;
-    }, 0);
+    const certificatesIssued = students.reduce((sum, s) => (
+        sum + (s.certificates?.length ?? Object.values(s.moduleProgress).filter(m => m.certificateId).length)
+    ), 0);
+    const badgesIssued = students.reduce((sum, s) => sum + (s.badges?.length ?? 0), 0);
+    const finalCredentialsIssued = students.filter((s) => (
+        Boolean(s.finalCertificationId) || (s.certificates ?? []).some((certificate) => certificate.type === 'final')
+    )).length;
 
     const totalSectionsCompleted = students.reduce((sum, s) => {
         return sum + Object.values(s.moduleProgress).reduce((mSum, m) => mSum + m.completedSections.length, 0);
@@ -58,14 +67,13 @@ const calculateStats = (students: Student[]): AdminStats => {
     }, 0);
 
     const totalPoints = students.reduce((sum, s) => sum + s.totalPoints, 0);
-    const totalPossibleSections = students.length * 4 * 50;
+    const totalPossibleSections = students.length * Object.values(VANGUARD_MODULE_TOTALS).reduce((sum, sections) => sum + sections, 0);
     const averageProgress = totalPossibleSections > 0
         ? Math.round((totalSectionsCompleted / totalPossibleSections) * 100)
         : 0;
 
     const atRiskStudents = students.filter(s => s.status === 'at-risk').length;
-    const possibleCerts = students.length * 4;
-    const completionRate = possibleCerts > 0 ? Math.round((certificatesIssued / possibleCerts) * 100) : 0;
+    const completionRate = students.length > 0 ? Math.round((finalCredentialsIssued / students.length) * 100) : 0;
 
     // Engagement time approx
     let totalSessionTime = 0;
@@ -96,16 +104,20 @@ const calculateStats = (students: Student[]): AdminStats => {
         totalSectionsCompleted,
         totalInteractivesCompleted,
         totalPoints,
+        badgesIssued,
+        finalCredentialsIssued,
     };
 };
 
 export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { user } = useAuth();
     // Dev bypass: sessionStorage.__admin_bypass__ lets local preview skip Supabase auth
     const devBypass = import.meta.env.DEV && sessionStorage.getItem('__admin_bypass__') === '1';
-    const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(devBypass);
+    const [isAdminSessionAuthenticated, setIsAdminSessionAuthenticated] = useState(devBypass);
     const [students, setStudents] = useState<Student[]>([]);
     const [messages, _setMessages] = useState<Message[]>([]);
     const [activityFeed, setActivityFeed] = useState<ActivityEvent[]>([]);
+    const isAdminAuthenticated = isAdminSessionAuthenticated || isAdminEmail(user?.email);
 
     // Build activity feed from student data
     const buildActivityFeed = useCallback((loadedStudents: Student[]): ActivityEvent[] => {
@@ -161,6 +173,31 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     });
                 }
             });
+            (student.badges ?? []).forEach((badge) => {
+                events.push({
+                    id: `${student.id}-badge-${badge.id}`,
+                    studentId: student.id,
+                    studentName: student.name,
+                    type: 'badge_earned',
+                    description: `Earned badge: ${badge.title}`,
+                    timestamp: badge.earnedAt,
+                    moduleId: badge.moduleId,
+                });
+            });
+            (student.certificates ?? []).forEach((certificate) => {
+                events.push({
+                    id: `${student.id}-credential-${certificate.id}`,
+                    studentId: student.id,
+                    studentName: student.name,
+                    type: 'certificate_earned',
+                    description: certificate.type === 'final'
+                        ? 'Issued final Vanguard credential'
+                        : `Issued Module ${certificate.moduleNumber} credential`,
+                    timestamp: certificate.issuedAt,
+                    moduleId: certificate.moduleNumber,
+                    points: certificate.type === 'final' ? 1000 : 500,
+                });
+            });
         });
         return events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     }, []);
@@ -170,9 +207,13 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (!isAdminAuthenticated) return;
 
         try {
-            const loadedStudents = await dal.user.getAllStudents();
+            const [loadedStudents, remoteActivity] = await Promise.all([
+                dal.user.getAllStudents(),
+                dal.admin.getActivityEvents(),
+            ]);
             setStudents(loadedStudents);
-            setActivityFeed(buildActivityFeed(loadedStudents));
+            setActivityFeed([...remoteActivity, ...buildActivityFeed(loadedStudents)]
+                .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
         } catch (error) {
             console.error("Failed to load admin data:", error);
         }
@@ -186,25 +227,20 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const adminLogin = useCallback(async (username: string, password: string): Promise<boolean> => {
         // Map username to email if needed
-        let email = username;
-        if (!email.includes('@')) {
-            email = 'admin@zenvanguard.com'; // Default admin email mapping
+        const email = normalizeAdminEmail(username);
+        if (!isAdminEmail(email)) {
+            console.warn(`Admin login rejected. Allowed admins: ${ADMIN_EMAILS.join(', ')}`);
+            return false;
         }
 
         try {
             await dal.auth.login(email, password);
 
             // All admin-authorized emails — include real Supabase accounts
-            const adminEmails = [
-                'admin@zenvanguard.com',
-                'alexleschik@bgcgw.org',
-                'testadmin@zenai.co',
-                'alex1leschik@gmail.com',
-                'huxley@zenai.biz',
-            ];
+            const adminEmails: readonly string[] = ADMIN_EMAILS;
 
-            if (adminEmails.includes(email) || email === 'admin') {
-                setIsAdminAuthenticated(true);
+            if (adminEmails.includes(email)) {
+                setIsAdminSessionAuthenticated(true);
                 return true;
             }
 
@@ -219,7 +255,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const adminLogout = useCallback(() => {
         dal.auth.logout();
-        setIsAdminAuthenticated(false);
+        setIsAdminSessionAuthenticated(false);
         setStudents([]);
     }, []);
 

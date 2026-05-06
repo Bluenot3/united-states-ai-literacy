@@ -105,7 +105,7 @@ export const useModuleExperience = <TSection extends TrackableSection>({
     }, [isModuleComplete, moduleProgress.completedSections.length, totalSections, user]);
 
     useEffect(() => {
-        if (user && !moduleProgress.certificateId && moduleProgress.completedSections.length >= totalSections * 0.9) {
+        if (user && !moduleProgress.certificateId && moduleProgress.completedSections.length >= totalSections) {
             setShowCompletionModal(true);
         }
     }, [moduleProgress, totalSections, user]);

@@ -1,4 +1,7 @@
 import type { Certificate } from '../types';
+import { dal } from './dal';
+
+export const FINAL_VANGUARD_CERTIFICATE_URL = new URL('../assets/certificates/zen-ai-co-cred.pdf', import.meta.url).href;
 
 // Simple SHA-256 hash implementation using Web Crypto API
 async function sha256(message: string): Promise<string> {
@@ -36,6 +39,12 @@ function getCertificatesFromStorage(): Certificate[] {
 
 function saveCertificatesToStorage(certificates: Certificate[]) {
     localStorage.setItem(CERTIFICATES_STORAGE_KEY, JSON.stringify(certificates));
+}
+
+function persistCertificate(certificate: Certificate) {
+    void dal.certificates.upsert(certificate).catch((error) => {
+        console.warn('Certificate saved locally but Supabase persistence failed.', error);
+    });
 }
 
 export async function generateModuleCertificate(
@@ -91,11 +100,13 @@ export async function generateModuleCertificate(
         sha256Hash,
         blockNumber: currentBlockNumber,
         previousHash,
+        badgeId: `module-${moduleNumber}-architect`,
     };
 
     // Store certificate
     certificates.push(certificate);
     saveCertificatesToStorage(certificates);
+    persistCertificate(certificate);
 
     // Update previous hash for next certificate
     previousHash = sha256Hash;
@@ -164,10 +175,13 @@ export async function generateFinalCertification(
         sha256Hash,
         blockNumber: currentBlockNumber,
         previousHash,
+        artifactUrl: FINAL_VANGUARD_CERTIFICATE_URL,
+        badgeId: 'vanguard-intelligence-architect',
     };
 
     certificates.push(certificate);
     saveCertificatesToStorage(certificates);
+    persistCertificate(certificate);
     previousHash = sha256Hash;
 
     return certificate;
@@ -182,9 +196,18 @@ export async function verifyCertificate(certId: string): Promise<{
     const certificate = certificates.find(c => c.id === certId);
 
     if (!certificate) {
+        const remoteCertificate = await dal.certificates.getById(certId);
+
+        if (!remoteCertificate) {
+            return {
+                valid: false,
+                errorMessage: 'Certificate not found.',
+            };
+        }
+
         return {
-            valid: false,
-            errorMessage: 'Certificate not found.',
+            valid: true,
+            certificate: remoteCertificate,
         };
     }
 
@@ -220,6 +243,16 @@ export function getAllCertificates(): Certificate[] {
 
 export function getCertificatesByUser(userEmail: string): Certificate[] {
     return getCertificatesFromStorage().filter(c => c.userEmail === userEmail);
+}
+
+export async function getCertificatesByUserEmail(userEmail: string): Promise<Certificate[]> {
+    const localCertificates = getCertificatesByUser(userEmail);
+    const remoteCertificates = await dal.certificates.getByUserEmail(userEmail);
+    const certificatesById = new Map([...remoteCertificates, ...localCertificates].map((certificate) => [certificate.id, certificate]));
+
+    return Array.from(certificatesById.values()).sort((first, second) => (
+        new Date(second.issuedAt).getTime() - new Date(first.issuedAt).getTime()
+    ));
 }
 
 export function formatCertificateDate(isoString: string): string {

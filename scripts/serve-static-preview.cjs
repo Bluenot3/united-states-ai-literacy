@@ -53,6 +53,7 @@ const mimeTypeByExtension = {
     '.gif': 'image/gif',
     '.html': 'text/html; charset=utf-8',
     '.ico': 'image/x-icon',
+    '.avif': 'image/avif',
     '.jpeg': 'image/jpeg',
     '.jpg': 'image/jpeg',
     '.js': 'application/javascript; charset=utf-8',
@@ -63,6 +64,7 @@ const mimeTypeByExtension = {
     '.svg': 'image/svg+xml',
     '.txt': 'text/plain; charset=utf-8',
     '.wasm': 'application/wasm',
+    '.webp': 'image/webp',
     '.woff': 'font/woff',
     '.woff2': 'font/woff2',
 };

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import type { InteractiveComponentProps } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
-import { getAiClient } from '../../services/aiService';
 import { SparklesIcon } from '../icons/SparklesIcon';
+import LocalAIStatusCard from '../../../../components/ai/LocalAIStatusCard';
+import { useWebLLMProvider } from '../../../../hooks/useWebLLMProvider';
+import { runProgramAI, type RunProgramAIResponse } from '../../../../lib/ai/runProgramAI';
 
 const ROLES = ['Researcher', 'Summarizer', 'Critic', 'Planner'];
 const TASK = "Task: Create a report on the impact of AI on climate change.";
@@ -20,9 +22,11 @@ const AgentSystemDesigner: React.FC<InteractiveComponentProps> = ({ interactiveI
   ]);
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
+  const [aiProvider, setAiProvider] = useState<RunProgramAIResponse['provider'] | null>(null);
   const [loading, setLoading] = useState(false);
   const isAllAssigned = targets.every(t => t.role);
   const hasCompleted = user?.progress.completedInteractives.includes(interactiveId);
+  const localAI = useWebLLMProvider();
 
   const handleSelectRole = (role: string) => {
     setSelectedRole(role);
@@ -46,6 +50,7 @@ const AgentSystemDesigner: React.FC<InteractiveComponentProps> = ({ interactiveI
     if (!isAllAssigned) return;
     setLoading(true);
     setFeedback('');
+    setAiProvider(null);
     const userWorkflow = targets.map(t => t.role).join(' -> ');
     const prompt = `You are an expert in AI agentic workflows. A user has designed a workflow for the following task: "${TASK}".
     
@@ -54,9 +59,17 @@ User's workflow: ${userWorkflow}
 Critique this workflow. Is it logical? What are its strengths and weaknesses? Suggest one possible improvement. Keep your feedback constructive and easy for a beginner to understand.`;
     
     try {
-        const ai = await getAiClient();
-        const response = await ai.models.generateContent({ model: 'gemini-2.5-pro', contents: prompt });
+        const response = await runProgramAI({
+            taskType: 'agent_builder_helper',
+            moduleId: 'module-3',
+            userInput: userWorkflow,
+            messages: [{ role: 'user', content: prompt }],
+            preferredProvider: localAI.initialized ? 'webllm' : 'auto',
+            maxTokens: 380,
+            temperature: 0.35,
+        });
         setFeedback(response.text);
+        setAiProvider(response.provider);
         if (!hasCompleted) {
             addPoints(25);
             updateProgress(interactiveId, 'interactive');
@@ -76,6 +89,7 @@ Critique this workflow. Is it logical? What are its strengths and weaknesses? Su
     ]);
     setSelectedRole(null);
     setFeedback('');
+    setAiProvider(null);
     setLoading(false);
   };
 
@@ -83,6 +97,17 @@ Critique this workflow. Is it logical? What are its strengths and weaknesses? Su
     <div className="my-8 p-6 bg-brand-bg rounded-2xl shadow-neumorphic-out">
       <h4 className="font-bold text-lg text-brand-text mb-4 text-center">{TASK}</h4>
       <p className="text-center text-brand-text-light mb-4">Assign roles to the agents below. Click a role, then click a slot.</p>
+      <LocalAIStatusCard
+        supported={localAI.supported}
+        initialized={localAI.initialized}
+        initializing={localAI.initializing}
+        progress={localAI.progress}
+        error={localAI.error}
+        currentModel={localAI.currentModel}
+        provider={aiProvider}
+        onEnable={localAI.initialize}
+        onUseFallback={() => setAiProvider('template')}
+      />
       
       <div className="flex justify-center gap-4 mb-6 flex-wrap">
         {availableRoles.map(role => (
@@ -121,6 +146,11 @@ Critique this workflow. Is it logical? What are its strengths and weaknesses? Su
         <div className="mt-6 p-4 bg-brand-bg rounded-lg shadow-neumorphic-in">
           <h5 className="font-semibold text-brand-text mb-2">AI Feedback</h5>
           {loading ? <p className="animate-pulse">Analyzing workflow...</p> : <pre className="text-brand-text-light whitespace-pre-wrap font-sans">{feedback}</pre>}
+          {aiProvider && (
+            <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-text-light/70">
+              {aiProvider === 'webllm' ? 'Generated with Local WebLLM' : 'Template fallback used'}
+            </p>
+          )}
         </div>
       )}
 

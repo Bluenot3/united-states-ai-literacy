@@ -5,6 +5,9 @@ import { getAiClient } from '../../services/aiService';
 import { SparklesIcon } from '../icons/SparklesIcon';
 import { WandIcon } from '../icons/WandIcon';
 import { Modality } from '@google/genai';
+import LocalAIStatusCard from '../../../../components/ai/LocalAIStatusCard';
+import { useWebLLMProvider } from '../../../../hooks/useWebLLMProvider';
+import { runProgramAI, type RunProgramAIResponse } from '../../../../lib/ai/runProgramAI';
 
 const PromptArchitectWorkbench: React.FC<InteractiveComponentProps> = ({ interactiveId }) => {
     const { user, addPoints, updateProgress } = useAuth();
@@ -12,6 +15,7 @@ const PromptArchitectWorkbench: React.FC<InteractiveComponentProps> = ({ interac
     const [tone, setTone] = useState('As if by an ancient philosopher');
     const [structure, setStructure] = useState('A series of 5 core principles');
     const [result, setResult] = useState({ prompt: '', critique: '' });
+    const [aiProvider, setAiProvider] = useState<RunProgramAIResponse['provider'] | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     
@@ -20,6 +24,7 @@ const PromptArchitectWorkbench: React.FC<InteractiveComponentProps> = ({ interac
     const [imageError, setImageError] = useState('');
 
     const hasCompleted = user?.modules?.[4]?.completedInteractives.includes(interactiveId);
+    const localAI = useWebLLMProvider();
 
     const handleGenerate = async () => {
         if (!idea.trim() || !tone.trim() || !structure.trim()) {
@@ -29,6 +34,7 @@ const PromptArchitectWorkbench: React.FC<InteractiveComponentProps> = ({ interac
         setLoading(true);
         setError('');
         setResult({ prompt: '', critique: '' });
+        setAiProvider(null);
         setImageUrl('');
         setImageError('');
 
@@ -39,13 +45,21 @@ const PromptArchitectWorkbench: React.FC<InteractiveComponentProps> = ({ interac
 Prompt: "${combinedPrompt}"`;
 
         try {
-            const ai = await getAiClient();
-            const critiqueResponse = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: critiqueRequest });
+            const critiqueResponse = await runProgramAI({
+                taskType: 'prompt_coach',
+                moduleId: 'module-4',
+                userInput: combinedPrompt,
+                messages: [{ role: 'user', content: critiqueRequest }],
+                preferredProvider: localAI.initialized ? 'webllm' : 'auto',
+                maxTokens: 360,
+                temperature: 0.35,
+            });
             
             setResult({
                 prompt: combinedPrompt,
                 critique: critiqueResponse.text,
             });
+            setAiProvider(critiqueResponse.provider);
 
             if (!hasCompleted) {
                 addPoints(15); // Points for prompt analysis
@@ -107,6 +121,17 @@ Prompt: "${combinedPrompt}"`;
         <div className="my-8 p-6 bg-brand-bg rounded-2xl shadow-neumorphic-out">
             <h4 className="font-bold text-lg text-brand-text mb-2 text-center">Prompt Architect Workbench</h4>
             <p className="text-center text-brand-text-light mb-4 text-sm">Deconstruct a prompt, analyze it, then generate an image with Nano-Banana.</p>
+            <LocalAIStatusCard
+                supported={localAI.supported}
+                initialized={localAI.initialized}
+                initializing={localAI.initializing}
+                progress={localAI.progress}
+                error={localAI.error}
+                currentModel={localAI.currentModel}
+                provider={aiProvider}
+                onEnable={localAI.initialize}
+                onUseFallback={() => setAiProvider('template')}
+            />
             
             <div className="space-y-4">
                 <div>
@@ -143,6 +168,11 @@ Prompt: "${combinedPrompt}"`;
                         <h5 className="font-semibold text-brand-text mb-2">AI Critique</h5>
                         {loading && <p className="animate-pulse">...</p>}
                         <pre className="text-sm text-brand-text-light whitespace-pre-wrap font-sans">{result.critique}</pre>
+                        {aiProvider && (
+                            <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-text-light/70">
+                                {aiProvider === 'webllm' ? 'Generated with Local WebLLM' : 'Template fallback used'}
+                            </p>
+                        )}
                     </div>
                 </div>
             )}

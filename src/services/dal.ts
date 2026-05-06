@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import type { User, ModuleProgress, SessionRecord } from '../types';
+import type { ActivityEvent, Certificate, ModuleProgress, SessionRecord, Student, User, UserBadge } from '../types';
 
 // ============================================================
 // HELPERS
@@ -30,12 +30,59 @@ function rowToModuleProgress(row: Record<string, unknown> | null): ModuleProgres
     };
 }
 
+function rowToBadge(row: Record<string, unknown>): UserBadge {
+    return {
+        id: row.badge_id as string,
+        title: row.title as string,
+        description: row.description as string,
+        kind: row.kind as UserBadge['kind'],
+        moduleId: row.module_id ? (row.module_id as UserBadge['moduleId']) : undefined,
+        earnedAt: row.earned_at as string,
+    };
+}
+
+function rowToCertificate(row: Record<string, unknown>): Certificate {
+    return {
+        id: row.id as string,
+        type: row.type as Certificate['type'],
+        moduleNumber: row.module_number as Certificate['moduleNumber'],
+        userName: row.user_name as string,
+        userEmail: row.user_email as string,
+        issuedAt: row.issued_at as string,
+        performance: (row.performance as Certificate['performance']) ?? {
+            sectionsCompleted: 0,
+            totalSections: 0,
+            interactivesCompleted: 0,
+            pointsEarned: 0,
+            completionPercentage: 0,
+        },
+        sha256Hash: row.sha256_hash as string,
+        blockNumber: row.block_number as number,
+        previousHash: row.previous_hash as string,
+        artifactUrl: row.artifact_url as string | undefined,
+        badgeId: row.badge_id as string | undefined,
+    };
+}
+
+function isMissingTableError(error: unknown) {
+    return typeof error === 'object' && error !== null && 'code' in error && (error as { code?: string }).code === '42P01';
+}
+
+function warnMissingSchema(tableName: string, error: unknown) {
+    if (isMissingTableError(error)) {
+        console.warn(`Supabase table "${tableName}" is missing. Apply supabase/migrations/001_vanguard_progress.sql before production launch.`);
+        return true;
+    }
+
+    return false;
+}
+
 // ============================================================
 // LOAD FULL USER FROM DATABASE
 // ============================================================
 
 async function loadFullUser(supabaseUser: { id: string; email?: string }): Promise<User | null> {
-    const [profileResult, progressResult, sessionsResult] = await Promise.all([
+    const [profileResult, progressResult, sessionsResult, badgesResult] = await Promise.all([
         supabase.from('user_profiles').select('*').eq('id', supabaseUser.id).single(),
         supabase.from('module_progress').select('*').eq('user_id', supabaseUser.id),
         supabase
@@ -44,11 +91,17 @@ async function loadFullUser(supabaseUser: { id: string; email?: string }): Promi
             .eq('user_id', supabaseUser.id)
             .order('created_at', { ascending: false })
             .limit(50),
+        supabase
+            .from('user_badges')
+            .select('*')
+            .eq('user_id', supabaseUser.id)
+            .order('earned_at', { ascending: false }),
     ]);
 
     const profile = profileResult.data;
     const progressRows = progressResult.data ?? [];
     const sessionRows = sessionsResult.data ?? [];
+    const badgeRows = badgesResult.data ?? [];
 
     // If no profile yet, create one (first login/signup)
     if (!profile) {
@@ -82,6 +135,7 @@ async function loadFullUser(supabaseUser: { id: string; email?: string }): Promi
                 4: createDefaultModuleProgress(),
             },
             sessionHistory: [],
+            badges: [],
             finalCertificationId: null,
             finalCertificationHash: null,
         };
@@ -116,6 +170,7 @@ async function loadFullUser(supabaseUser: { id: string; email?: string }): Promi
         totalPoints: profile.total_points as number,
         modules,
         sessionHistory,
+        badges: badgeRows.map(rowToBadge),
         finalCertificationId: profile.final_certification_id as string | null,
         finalCertificationHash: profile.final_certification_hash as string | null,
     };
@@ -300,22 +355,47 @@ export const dal = {
                     throw progressError;
                 }
             }
+
+            if (user.badges?.length) {
+                const badgeRows = user.badges.map((badge) => ({
+                    user_id: userId,
+                    badge_id: badge.id,
+                    title: badge.title,
+                    description: badge.description,
+                    kind: badge.kind,
+                    module_id: badge.moduleId ?? null,
+                    earned_at: badge.earnedAt,
+                }));
+
+                const { error: badgeError } = await supabase.from('user_badges').upsert(badgeRows, {
+                    onConflict: 'user_id,badge_id',
+                });
+
+                if (badgeError && !warnMissingSchema('user_badges', badgeError)) {
+                    console.error('Error updating user badges:', badgeError);
+                    throw badgeError;
+                }
+            }
         },
 
         /**
          * Admin: Load all students' profiles, module progress, and session history.
          * Requires the current user to be authenticated as an admin email (see RLS policies).
          */
-        async getAllStudents(): Promise<import('../types').Student[]> {
-            const [profilesResult, progressResult, sessionsResult] = await Promise.all([
+        async getAllStudents(): Promise<Student[]> {
+            const [profilesResult, progressResult, sessionsResult, badgesResult, certificatesResult] = await Promise.all([
                 supabase.from('user_profiles').select('*').order('created_at', { ascending: false }),
                 supabase.from('module_progress').select('*'),
                 supabase.from('session_history').select('*').order('created_at', { ascending: false }),
+                supabase.from('user_badges').select('*').order('earned_at', { ascending: false }),
+                supabase.from('certificates').select('*').order('issued_at', { ascending: false }),
             ]);
 
             const profiles = profilesResult.data ?? [];
             const allProgress = progressResult.data ?? [];
             const allSessions = sessionsResult.data ?? [];
+            const allBadges = badgesResult.data ?? [];
+            const allCertificates = certificatesResult.data ?? [];
 
             const now = Date.now();
             const twoDaysAgo = now - 48 * 60 * 60 * 1000;
@@ -325,8 +405,12 @@ export const dal = {
                 const userId = profile.id as string;
                 const userProgress = allProgress.filter((p) => p.user_id === userId);
                 const userSessions = allSessions.filter((s) => s.user_id === userId);
+                const userBadges = allBadges.filter((b) => b.user_id === userId).map(rowToBadge);
+                const userCertificates = allCertificates
+                    .filter((c) => String(c.user_email).toLowerCase() === String(profile.email).toLowerCase())
+                    .map(rowToCertificate);
 
-                const moduleProgress: import('../types').Student['moduleProgress'] = {};
+                const moduleProgress: Student['moduleProgress'] = {};
                 for (const row of userProgress) {
                     const moduleId = row.module_id as number;
                     moduleProgress[moduleId] = rowToModuleProgress(row);
@@ -336,7 +420,7 @@ export const dal = {
                     if (!moduleProgress[mId]) moduleProgress[mId] = createDefaultModuleProgress();
                 }
 
-                const sessionHistory: import('../types').SessionRecord[] = userSessions.map((row) => ({
+                const sessionHistory: SessionRecord[] = userSessions.map((row) => ({
                     startedAt: row.started_at as string,
                     endedAt: row.ended_at as string,
                     moduleId: row.module_id as number,
@@ -367,8 +451,166 @@ export const dal = {
                     assignments: [],
                     status,
                     sessionHistory,
+                    badges: userBadges,
+                    certificates: userCertificates,
+                    finalCertificationId: (profile.final_certification_id as string | null) ?? null,
+                    finalCertificationHash: (profile.final_certification_hash as string | null) ?? null,
                 };
             });
+        },
+    },
+
+    admin: {
+        async getActivityEvents(): Promise<ActivityEvent[]> {
+            const [eventsResult, profilesResult] = await Promise.all([
+                supabase
+                    .from('user_activity_events')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(500),
+                supabase.from('user_profiles').select('id,email,name'),
+            ]);
+
+            if (eventsResult.error && !warnMissingSchema('user_activity_events', eventsResult.error)) {
+                console.error('Error loading admin activity events:', eventsResult.error);
+                throw eventsResult.error;
+            }
+
+            if (profilesResult.error && !warnMissingSchema('user_profiles', profilesResult.error)) {
+                console.error('Error loading admin activity profiles:', profilesResult.error);
+                throw profilesResult.error;
+            }
+
+            const profilesById = new Map(
+                (profilesResult.data ?? []).map((profile) => [
+                    profile.id as string,
+                    {
+                        name: profile.name as string,
+                        email: profile.email as string,
+                    },
+                ]),
+            );
+
+            return (eventsResult.data ?? []).map((row) => {
+                const studentId = row.user_id as string;
+                const profile = profilesById.get(studentId);
+                return {
+                    id: String(row.id),
+                    studentId,
+                    studentName: profile?.name || profile?.email || 'Unknown learner',
+                    type: row.type as ActivityEvent['type'],
+                    description: row.description as string,
+                    timestamp: row.created_at as string,
+                    moduleId: (row.module_id as number | null) ?? undefined,
+                    points: (row.points as number | null) ?? undefined,
+                };
+            });
+        },
+    },
+
+    sessions: {
+        async insert(userId: string, session: SessionRecord): Promise<void> {
+            const { error } = await supabase.from('session_history').insert({
+                user_id: userId,
+                started_at: session.startedAt,
+                ended_at: session.endedAt,
+                module_id: session.moduleId,
+                sections_viewed: session.sectionsViewed,
+            });
+
+            if (error && !warnMissingSchema('session_history', error)) {
+                console.error('Error inserting session history:', error);
+                throw error;
+            }
+        },
+    },
+
+    activity: {
+        async trackEvent(
+            userId: string,
+            event: {
+                type: ActivityEvent['type'];
+                description: string;
+                moduleId?: number;
+                points?: number;
+                metadata?: Record<string, unknown>;
+            },
+        ): Promise<void> {
+            const { error } = await supabase.from('user_activity_events').insert({
+                user_id: userId,
+                type: event.type,
+                description: event.description,
+                module_id: event.moduleId ?? null,
+                points: event.points ?? null,
+                metadata: event.metadata ?? {},
+            });
+
+            if (error && !warnMissingSchema('user_activity_events', error)) {
+                console.error('Error inserting activity event:', error);
+                throw error;
+            }
+        },
+    },
+
+    certificates: {
+        async upsert(certificate: Certificate): Promise<void> {
+            const { error } = await supabase.from('certificates').upsert({
+                id: certificate.id,
+                type: certificate.type,
+                module_number: certificate.moduleNumber ?? null,
+                user_name: certificate.userName,
+                user_email: certificate.userEmail.toLowerCase(),
+                issued_at: certificate.issuedAt,
+                performance: certificate.performance,
+                sha256_hash: certificate.sha256Hash,
+                block_number: certificate.blockNumber,
+                previous_hash: certificate.previousHash,
+                artifact_url: certificate.artifactUrl ?? null,
+                badge_id: certificate.badgeId ?? null,
+            });
+
+            if (error && !warnMissingSchema('certificates', error)) {
+                console.error('Error upserting certificate:', error);
+                throw error;
+            }
+        },
+
+        async getById(certificateId: string): Promise<Certificate | null> {
+            const { data, error } = await supabase
+                .from('certificates')
+                .select('*')
+                .eq('id', certificateId)
+                .maybeSingle();
+
+            if (error) {
+                if (warnMissingSchema('certificates', error)) {
+                    return null;
+                }
+
+                console.error('Error loading certificate:', error);
+                throw error;
+            }
+
+            return data ? rowToCertificate(data) : null;
+        },
+
+        async getByUserEmail(userEmail: string): Promise<Certificate[]> {
+            const { data, error } = await supabase
+                .from('certificates')
+                .select('*')
+                .eq('user_email', userEmail.toLowerCase())
+                .order('issued_at', { ascending: false });
+
+            if (error) {
+                if (warnMissingSchema('certificates', error)) {
+                    return [];
+                }
+
+                console.error('Error loading certificates by user:', error);
+                throw error;
+            }
+
+            return (data ?? []).map(rowToCertificate);
         },
     },
 };

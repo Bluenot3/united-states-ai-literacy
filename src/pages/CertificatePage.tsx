@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { verifyCertificate, formatCertificateDate, truncateHash } from '../services/CertificateService';
+import { FINAL_VANGUARD_CERTIFICATE_URL, verifyCertificate, formatCertificateDate, truncateHash } from '../services/CertificateService';
 import type { Certificate } from '../types';
 
 declare const html2canvas: any;
@@ -172,6 +172,16 @@ const CertificatePage: React.FC = () => {
 
             {/* Download Buttons */}
             <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
+                {certificate.type === 'final' && (
+                    <a
+                        href={certificate.artifactUrl ?? FINAL_VANGUARD_CERTIFICATE_URL}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-primary"
+                    >
+                        Open Official Credential PDF
+                    </a>
+                )}
                 <button
                     onClick={() => handleDownload('jpg')}
                     className="btn-secondary flex items-center gap-2"

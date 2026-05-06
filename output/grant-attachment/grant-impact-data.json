@@ -1,0 +1,136 @@
+{
+  "sourceFile": "C:\\Users\\AlexT\\Downloads\\AI_Pioneer_Program.pdf",
+  "sourceNote": "Source PDF was image-based in local extraction. This brief uses the user-provided program content and metrics from the conversation plus the local ZEN campaign metrics.",
+  "metrics": {
+    "title": "AI Pioneer Program",
+    "subtitle": "Grant Impact Brief",
+    "span": "2023 to Year 3",
+    "distinction": "First youth AI literacy program in United States history",
+    "studentsPrevious": 15000,
+    "studentsCurrent": 30000,
+    "appsPrevious": 12000,
+    "appsCurrent": 25000,
+    "countries": 35,
+    "attestations": 8500,
+    "confidence": 94,
+    "professionalUse": 78,
+    "tracks": [
+      {
+        "name": "Homeschool Kit",
+        "rate": 87,
+        "audience": "Ages 11-18",
+        "body": "Parent-friendly, self-paced AI starter labs with printable guides, offline mini-labs, family projects, and age-appropriate build sequences."
+      },
+      {
+        "name": "Verifiable Builder Track",
+        "rate": 72,
+        "audience": "Students and builders",
+        "body": "Project builds, proof submissions, attestable skill records, portfolio evidence, and public verification pathways."
+      },
+      {
+        "name": "AgentOps Pro",
+        "rate": 68,
+        "audience": "Career professionals",
+        "body": "Enterprise-oriented AI operations, SLA thinking, cost-per-task analysis, governance, incident response, and post-mortem literacy."
+      }
+    ],
+    "launches": [
+      [
+        "Jarvis Voice App",
+        "Voice-enabled AI assistant demo built on Hugging Face Spaces."
+      ],
+      [
+        "Alex Chatbot",
+        "Conversational AI chatbot created for dynamic learner interaction."
+      ],
+      [
+        "Qwen3-Coder WebDev",
+        "Natural language workflow for generating complete web applications."
+      ]
+    ],
+    "funnel": [
+      [
+        "Wallet Creation",
+        1000
+      ],
+      [
+        "Build -> Hash",
+        800
+      ],
+      [
+        "Submit -> Attest",
+        620
+      ],
+      [
+        "Token-Gated",
+        380
+      ],
+      [
+        "SBT / NFT",
+        150
+      ]
+    ],
+    "regions": [
+      [
+        "North America",
+        1200,
+        45
+      ],
+      [
+        "Europe",
+        800,
+        38
+      ],
+      [
+        "Asia Pacific",
+        600,
+        52
+      ],
+      [
+        "Latin America",
+        180,
+        67
+      ],
+      [
+        "Africa",
+        67,
+        89
+      ]
+    ],
+    "journey": [
+      [
+        "2023",
+        "Foundation",
+        "Program inception, first AI literacy pilots, early learner labs, and first cloud-hosted AI demonstrations."
+      ],
+      [
+        "2024",
+        "Pilot to Proof",
+        "Curriculum refinement, project-based learning model, AI app showcase, and early verification architecture."
+      ],
+      [
+        "2025",
+        "Scaled Output",
+        "15,000 students and 12,000 apps built across the program ecosystem."
+      ],
+      [
+        "Year 3",
+        "Expanded Reach",
+        "30,000 students and 25,000 apps built, with Vanguard extending the pathway for adults and career professionals."
+      ]
+    ]
+  },
+  "growth": {
+    "studentDelta": 15000,
+    "appDelta": 13000,
+    "studentPct": 100,
+    "appPct": 108
+  },
+  "publicationSafety": [
+    "No commercial CTA language.",
+    "No financial return language.",
+    "No unsupported credentialing claim.",
+    "No federal endorsement claim.",
+    "Uses privacy-by-design language instead of unverified GDPR compliance language."
+  ]
+}

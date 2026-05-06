@@ -7,6 +7,8 @@ import zenMonogramLogoWebp from '../assets/branding/zen-monogram-signature.webp'
 import zenMonogramLogoAvif from '../assets/branding/zen-monogram-signature.avif';
 import { ZenModuleGlyph } from './zen';
 import type { ZenGlyphName } from './zen';
+import { isAdminEmail } from '../services/adminAccess';
+import { VANGUARD_MODULE_TOTALS } from '../services/progressEngine';
 
 const moduleInfo = [
     {
@@ -40,12 +42,15 @@ const moduleInfo = [
 ];
 
 const primaryLinks = [
+    { to: '/command-center', label: 'Command Center', hint: 'ZEN operating layer', icon: 'network' as ZenGlyphName },
     { to: '/dashboard', label: 'Dashboard', hint: 'Overview and momentum', icon: 'dashboard' as ZenGlyphName },
     { to: '/docs', label: 'Docs Library', hint: 'Reference layer and playbooks', icon: 'research' as ZenGlyphName },
     { to: '/guide', label: 'Starter Guide', hint: 'Orientation and setup path', icon: 'guide' as ZenGlyphName },
     { to: '/hub', label: 'Program Hub', hint: 'Navigate the broader ecosystem', icon: 'programs' as ZenGlyphName },
     { to: '/profile', label: 'Profile', hint: 'Identity and progress record', icon: 'identity' as ZenGlyphName },
 ];
+
+const adminLink = { to: '/admin', label: 'Admin', hint: 'Learner operations', icon: 'telemetry' as ZenGlyphName };
 
 /** Tooltip wrapper that appears on the right side when sidebar is collapsed */
 const Tooltip: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
@@ -67,12 +72,14 @@ const GlobalSidebar: React.FC = () => {
     const [isMobileOpen, setIsMobileOpen] = useState(false);
 
     const currentPath = location.pathname;
+    const visiblePrimaryLinks = useMemo(() => (
+        isAdminEmail(user?.email) ? [...primaryLinks, adminLink] : primaryLinks
+    ), [user?.email]);
 
     const moduleCompletion = useMemo(() => {
         return moduleInfo.reduce<Record<number, number>>((accumulator, module) => {
             const progress = getModuleProgress(module.id);
-            const estimatedTotalSections = module.id === 1 ? 50 : module.id === 4 ? 60 : 40;
-            accumulator[module.id] = Math.min(100, Math.round((progress.completedSections.length / estimatedTotalSections) * 100));
+            accumulator[module.id] = Math.min(100, Math.round((progress.completedSections.length / VANGUARD_MODULE_TOTALS[module.id]) * 100));
             return accumulator;
         }, {});
     }, [getModuleProgress, user]);
@@ -122,7 +129,7 @@ const GlobalSidebar: React.FC = () => {
             <nav className="flex flex-1 flex-col items-center gap-1.5 overflow-y-auto py-3 w-full px-2">
 
                 {/* Workspace links */}
-                {primaryLinks.map((link) => {
+                {visiblePrimaryLinks.map((link) => {
                     const isActive = currentPath === link.to || currentPath.startsWith(link.to + '/');
                     return (
                         <Tooltip key={link.to} label={link.label}>
@@ -241,7 +248,7 @@ const GlobalSidebar: React.FC = () => {
                 {/* Navigation links */}
                 <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-2 py-3 [scrollbar-width:none]">
                     <p className="mb-1 px-2.5 text-[9px] font-bold uppercase tracking-[0.28em] text-slate-600">Workspace</p>
-                    {primaryLinks.map((link) => {
+                    {visiblePrimaryLinks.map((link) => {
                         const isActive = currentPath === link.to || currentPath.startsWith(link.to + '/');
                         return (
                             <NavLink

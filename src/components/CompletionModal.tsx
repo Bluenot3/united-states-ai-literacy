@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { generateModuleCertificate } from '../services/CertificateService';
+import { generateFinalCertification, generateModuleCertificate, getCertificatesByUser } from '../services/CertificateService';
 
 declare const html2canvas: any;
 declare const jspdf: any;
@@ -56,10 +56,11 @@ const launchConfetti = () => {
 };
 
 const CompletionModal: React.FC<CompletionModalProps> = ({ moduleId, moduleName, onClose }) => {
-    const { user, getModuleProgress, setModuleCertificate } = useAuth();
+    const { user, getModuleProgress, setModuleCertificate, setFinalCertification } = useAuth();
     const navigate = useNavigate();
     const [certificateGenerated, setCertificateGenerated] = useState(false);
     const [certificateId, setCertificateId] = useState<string | null>(null);
+    const [finalCertificateId, setFinalCertificateId] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [certificateName, setCertificateName] = useState(user?.name || 'Student');
     const certificateRef = useRef<HTMLDivElement>(null);
@@ -88,6 +89,26 @@ const CompletionModal: React.FC<CompletionModalProps> = ({ moduleId, moduleName,
 
             setModuleCertificate(moduleId, cert.id, cert.sha256Hash);
             setCertificateId(cert.id);
+
+            const moduleCertificateIds = ([1, 2, 3, 4] as const).map((candidateModuleId) => (
+                candidateModuleId === moduleId ? cert.id : user.modules[candidateModuleId].certificateId
+            ));
+
+            if (!user.finalCertificationId && moduleCertificateIds.every(Boolean)) {
+                const issuedModuleCertificates = getCertificatesByUser(user.email)
+                    .filter((candidate) => candidate.type === 'module' && moduleCertificateIds.includes(candidate.id));
+                const certificatesById = new Map([...issuedModuleCertificates, cert].map((candidate) => [candidate.id, candidate]));
+                const orderedModuleCertificates = moduleCertificateIds
+                    .map((id) => certificatesById.get(id ?? ''))
+                    .filter((candidate): candidate is NonNullable<typeof candidate> => Boolean(candidate));
+
+                if (orderedModuleCertificates.length === 4) {
+                    const finalCertificate = await generateFinalCertification(certificateName, user.email, orderedModuleCertificates);
+                    setFinalCertification(finalCertificate.id, finalCertificate.sha256Hash);
+                    setFinalCertificateId(finalCertificate.id);
+                }
+            }
+
             setCertificateGenerated(true);
         } catch (error) {
             console.error('Failed to generate certificate:', error);
@@ -186,6 +207,11 @@ const CompletionModal: React.FC<CompletionModalProps> = ({ moduleId, moduleName,
                         <div className="text-center mb-4">
                             <h2 className="text-2xl font-bold text-brand-text">Certificate Generated!</h2>
                             <p className="text-brand-text-light text-sm">SHA-256 verified and timestamped</p>
+                            {finalCertificateId && (
+                                <p className="mt-2 text-sm font-semibold text-pale-green">
+                                    Final Vanguard Program certificate unlocked.
+                                </p>
+                            )}
                         </div>
 
                         {/* Mini certificate preview */}
@@ -222,6 +248,11 @@ const CompletionModal: React.FC<CompletionModalProps> = ({ moduleId, moduleName,
                             <button onClick={handleViewCertificate} className="btn-primary text-sm">
                                 🔍 View Full Certificate
                             </button>
+                            {finalCertificateId && (
+                                <button onClick={() => navigate(`/certificate/${finalCertificateId}`)} className="btn-primary text-sm">
+                                    View Final Credential
+                                </button>
+                            )}
                         </div>
                     </>
                 )}

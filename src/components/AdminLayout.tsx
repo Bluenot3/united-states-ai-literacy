@@ -62,7 +62,7 @@ const AdminLayout: React.FC = () => {
     return (
         <div className="min-h-screen bg-zen-navy flex">
             {/* Sidebar */}
-            <aside className={`${sidebarCollapsed ? 'w-20' : 'w-72'} bg-[#080E1E]/90 backdrop-blur-xl border-r border-zen-gold/10 flex flex-col transition-all duration-300 relative flex-shrink-0`}>
+            <aside className={`${sidebarCollapsed ? 'w-20' : 'w-72'} hidden bg-[#080E1E]/90 backdrop-blur-xl border-r border-zen-gold/10 lg:flex flex-col transition-all duration-300 relative flex-shrink-0`}>
                 {/* Gold accent gradient */}
                 <div className="absolute inset-0 bg-gradient-to-b from-zen-gold/5 via-transparent to-transparent pointer-events-none" />
 
@@ -165,6 +165,37 @@ const AdminLayout: React.FC = () => {
 
             {/* Main Content */}
             <main className="flex-1 overflow-auto bg-zen-navy">
+                <div className="sticky top-0 z-40 border-b border-zen-gold/10 bg-[#080E1E]/95 px-3 py-3 backdrop-blur-xl lg:hidden">
+                    <div className="mb-3 flex items-center justify-between">
+                        <div>
+                            <p className="text-sm font-black text-white">ZEN Admin</p>
+                            <p className="text-[10px] uppercase tracking-[0.24em] text-zen-gold/60">Command Center</p>
+                        </div>
+                        <button
+                            onClick={handleLogout}
+                            className="rounded-lg border border-red-400/20 px-3 py-1.5 text-xs font-semibold text-red-300"
+                        >
+                            Sign Out
+                        </button>
+                    </div>
+                    <nav className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+                        {navItems.map(item => (
+                            <NavLink
+                                key={item.path}
+                                to={item.path}
+                                end={item.end}
+                                className={({ isActive }) => `flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold ${
+                                    isActive
+                                        ? 'border-zen-gold/30 bg-zen-gold/15 text-zen-gold'
+                                        : 'border-white/10 bg-white/[0.03] text-slate-400'
+                                }`}
+                            >
+                                {icons[item.icon]}
+                                {item.label}
+                            </NavLink>
+                        ))}
+                    </nav>
+                </div>
                 <Outlet />
             </main>
         </div>

@@ -23,6 +23,7 @@
   "dependencies": {
     "@google/genai": "^1.48.0",
     "@mermaid-js/parser": "^1.1.0",
+    "@mlc-ai/web-llm": "^0.2.83",
     "@supabase/supabase-js": "^2.93.1",
     "cors": "^2.8.5",
     "cytoscape": "^3.33.1",

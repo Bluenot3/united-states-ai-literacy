@@ -32,6 +32,10 @@ export default defineConfig({
                         return undefined;
                     }
 
+                    if (id.includes('@mlc-ai/web-llm') || id.includes('web-tree-sitter')) {
+                        return 'vendor-webllm';
+                    }
+
                     if (id.includes('react') || id.includes('scheduler') || id.includes('react-router')) {
                         return 'vendor-react';
                     }

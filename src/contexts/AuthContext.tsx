@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useEffect, useMemo, useState } from 
 import { useLocation } from 'react-router-dom';
 import type { ModuleProgress, SessionRecord, User } from '../types';
 import { dal } from '../services/dal';
+import { reconcileUserProgress } from '../services/progressEngine';
 
 interface AuthContextType {
     user: User | null;
@@ -26,7 +27,9 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const PREVIEW_USER_STORAGE_KEY = 'zenPreviewUser';
-const PREVIEW_ACCESS_ENABLED = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true';
+const LOCAL_PREVIEW_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
+const IS_LOCAL_PREVIEW_HOST = typeof window !== 'undefined' && LOCAL_PREVIEW_HOSTS.has(window.location.hostname);
+const PREVIEW_ACCESS_ENABLED = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true' || IS_LOCAL_PREVIEW_HOST;
 
 const createDefaultModuleProgress = (): ModuleProgress => ({
     completedSections: [],
@@ -54,14 +57,16 @@ const createPreviewUser = (): User => ({
     totalPoints: 0,
     modules: createDefaultModules(),
     sessionHistory: [],
+    badges: [],
     finalCertificationId: null,
     finalCertificationHash: null,
 });
 
-const normalizeUser = (incomingUser: User): User => ({
+const normalizeUser = (incomingUser: User): User => reconcileUserProgress({
     ...incomingUser,
     totalPoints: incomingUser.totalPoints ?? 0,
     sessionHistory: incomingUser.sessionHistory ?? [],
+    badges: incomingUser.badges ?? [],
     modules: {
         1: incomingUser.modules?.[1] ?? createDefaultModuleProgress(),
         2: incomingUser.modules?.[2] ?? createDefaultModuleProgress(),
@@ -151,6 +156,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
     }, []);
 
+    useEffect(() => {
+        const userId = dal.auth.getUserId();
+
+        if (!user || !userId) {
+            return;
+        }
+
+        void dal.activity.trackEvent(userId, {
+            type: 'page_view',
+            description: `Viewed ${location.pathname}`,
+            metadata: {
+                path: location.pathname,
+                search: location.search,
+                email: user.email,
+            },
+        }).catch(console.error);
+    }, [location.pathname, location.search, user]);
+
     const updateUserState = useCallback((updater: (prevUser: User) => User | null) => {
         setUser((prevUser) => {
             const baseUser = prevUser ?? (PREVIEW_ACCESS_ENABLED ? readPreviewUser() : null);
@@ -161,6 +184,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             const nextUser = updater(baseUser);
             const userId = dal.auth.getUserId();
+
+            if (nextUser) {
+                const reconciledUser = normalizeUser(nextUser);
+                const previousBadgeIds = new Set(baseUser.badges?.map((badge) => badge.id) ?? []);
+                const newBadges = reconciledUser.badges.filter((badge) => !previousBadgeIds.has(badge.id));
+
+                newBadges.forEach((badge) => {
+                    document.dispatchEvent(new CustomEvent('badgeEarned', { detail: { badge } }));
+
+                    if (userId) {
+                        void dal.activity.trackEvent(userId, {
+                            type: 'badge_earned',
+                            description: `Earned badge: ${badge.title}`,
+                            moduleId: badge.moduleId,
+                            metadata: { badgeId: badge.id, badgeKind: badge.kind },
+                        }).catch(console.error);
+                    }
+                });
+
+                persistPreviewUser(reconciledUser);
+
+                if (userId) {
+                    void dal.user.updateUser(userId, reconciledUser).catch(console.error);
+                }
+
+                return reconciledUser;
+            }
 
             if (nextUser && userId) {
                 void dal.user.updateUser(userId, nextUser).catch(console.error);
@@ -200,11 +250,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (type === 'section' && !moduleProgress.completedSections.includes(id)) {
                 moduleProgress.completedSections = [...moduleProgress.completedSections, id];
                 updated = true;
+
+                const userId = dal.auth.getUserId();
+                if (userId) {
+                    void dal.activity.trackEvent(userId, {
+                        type: 'section_complete',
+                        description: `Completed section ${id}`,
+                        moduleId,
+                        metadata: { sectionId: id },
+                    }).catch(console.error);
+                }
             }
 
             if (type === 'interactive' && !moduleProgress.completedInteractives.includes(id)) {
                 moduleProgress.completedInteractives = [...moduleProgress.completedInteractives, id];
                 updated = true;
+
+                const userId = dal.auth.getUserId();
+                if (userId) {
+                    void dal.activity.trackEvent(userId, {
+                        type: 'interactive_complete',
+                        description: `Completed interactive ${id}`,
+                        moduleId,
+                        metadata: { interactiveId: id },
+                    }).catch(console.error);
+                }
             }
 
             if (!updated) {
@@ -234,6 +304,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             moduleProgress.points += amount;
 
             document.dispatchEvent(new CustomEvent('pointsAdded', { detail: { amount } }));
+
+            const userId = dal.auth.getUserId();
+            if (userId) {
+                void dal.activity.trackEvent(userId, {
+                    type: 'points_earned',
+                    description: `Earned ${amount} XP`,
+                    moduleId,
+                    points: amount,
+                    metadata: { amount },
+                }).catch(console.error);
+            }
 
             return {
                 ...prevUser,
@@ -336,6 +417,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             moduleId: currentSession.moduleId,
             sectionsViewed: currentSession.sectionsViewed,
         };
+
+        const userId = dal.auth.getUserId();
+        if (userId) {
+            void dal.sessions.insert(userId, sessionRecord).catch(console.error);
+            void dal.activity.trackEvent(userId, {
+                type: 'session_ended',
+                description: `Ended module ${sessionRecord.moduleId} session`,
+                moduleId: sessionRecord.moduleId,
+                metadata: { sectionsViewed: sessionRecord.sectionsViewed },
+            }).catch(console.error);
+        }
 
         updateUserState((prevUser) => ({
             ...prevUser,

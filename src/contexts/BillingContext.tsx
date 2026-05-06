@@ -16,6 +16,9 @@ interface BillingContextType {
 
 const BillingContext = createContext<BillingContextType | undefined>(undefined);
 const ADMIN_TOKEN_KEY = 'zenBillingAdminToken';
+const LOCAL_PREVIEW_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
+const IS_LOCAL_PREVIEW_HOST = typeof window !== 'undefined' && LOCAL_PREVIEW_HOSTS.has(window.location.hostname);
+const PREVIEW_BILLING_BYPASS_ENABLED = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true' || IS_LOCAL_PREVIEW_HOST;
 
 export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, isAuthenticated } = useAuth();
@@ -26,6 +29,14 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const [adminToken, setAdminToken] = useState<string | null>(() => sessionStorage.getItem(ADMIN_TOKEN_KEY));
 
     const checkEntitlement = useCallback(async () => {
+        if (PREVIEW_BILLING_BYPASS_ENABLED && user?.email) {
+            setEntitled(true);
+            setIsAdminBypass(false);
+            setError(null);
+            setLoading(false);
+            return;
+        }
+
         if (!user?.email) {
             setEntitled(false);
             setIsAdminBypass(false);

@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import Notebook from '../components/notebook/Notebook';
 import ContentGallery from '../components/profile/ContentGallery';
+import { getVanguardProgressSummary } from '../services/progressEngine';
 
 const PioneerProfilePage: React.FC = () => {
     const { user, logout } = useAuth();
     const [activeTab, setActiveTab] = useState<'notebook' | 'gallery'>('notebook');
+    const progressSummary = getVanguardProgressSummary(user);
+    const badges = user?.badges ?? [];
 
     return (
         <div className="min-h-screen text-white relative overflow-hidden">
@@ -74,8 +78,8 @@ const PioneerProfilePage: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="p-4 rounded-2xl bg-black/20 border border-white/5 backdrop-blur-sm">
-                                    <p className="text-gray-500 text-[10px] uppercase tracking-[0.2em] font-bold mb-1">Rank</p>
-                                    <p className="font-mono text-lg text-emerald-400 font-bold truncate">Nova I</p>
+                                    <p className="text-gray-500 text-[10px] uppercase tracking-[0.2em] font-bold mb-1">Badges</p>
+                                    <p className="font-mono text-2xl text-emerald-400 font-bold">{progressSummary.badgesEarned}</p>
                                 </div>
                             </div>
                         </div>
@@ -92,6 +96,53 @@ const PioneerProfilePage: React.FC = () => {
                             </button>
                         </div>
                     </div>
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-[1fr_0.85fr] gap-6">
+                    <section className="rounded-3xl border border-white/10 bg-white/[0.045] p-6 backdrop-blur-xl">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                            <div>
+                                <p className="text-[10px] uppercase tracking-[0.28em] text-amber-300/70 font-bold">Vanguard badges</p>
+                                <h2 className="mt-2 text-2xl font-black text-white">Earned from real section and module progress</h2>
+                            </div>
+                            <p className="text-sm text-gray-400">{progressSummary.completedSections}/{progressSummary.totalSections} sections tracked by email</p>
+                        </div>
+                        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            {(badges.length ? badges : [
+                                { id: 'pending', title: 'No badges yet', description: 'Complete your first tracked section to mint the first Vanguard badge.', kind: 'section' as const, earnedAt: '' },
+                            ]).map((badge) => (
+                                <article key={badge.id} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-300/70">{badge.kind}</p>
+                                    <h3 className="mt-2 text-base font-black text-white">{badge.title}</h3>
+                                    <p className="mt-2 text-xs leading-5 text-gray-400">{badge.description}</p>
+                                    {badge.earnedAt && (
+                                        <p className="mt-3 text-[10px] font-mono text-amber-300/70">{new Date(badge.earnedAt).toLocaleDateString()}</p>
+                                    )}
+                                </article>
+                            ))}
+                        </div>
+                    </section>
+
+                    <section className="rounded-3xl border border-amber-300/15 bg-amber-300/[0.055] p-6 backdrop-blur-xl">
+                        <p className="text-[10px] uppercase tracking-[0.28em] text-amber-300/70 font-bold">Final credential</p>
+                        <h2 className="mt-2 text-2xl font-black text-white">ZEN Vanguard Program Certificate</h2>
+                        <p className="mt-3 text-sm leading-6 text-gray-300">
+                            The final uploaded ZEN credential unlocks after all four module certificates are issued.
+                        </p>
+                        <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
+                            <p className="text-3xl font-black text-amber-300">{progressSummary.completedModules}/4</p>
+                            <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold">Modules completed</p>
+                        </div>
+                        {user?.finalCertificationId ? (
+                            <Link to={`/certificate/${user.finalCertificationId}`} className="mt-5 inline-flex rounded-full bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-gray-200">
+                                Open Final Certificate
+                            </Link>
+                        ) : (
+                            <p className="mt-5 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-semibold text-gray-400">
+                                Complete all modules and generate each module certificate to unlock the final credential.
+                            </p>
+                        )}
+                    </section>
                 </div>
 
                 {/* Content Tabs (Mobile) */}

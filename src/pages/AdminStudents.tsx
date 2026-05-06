@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useAdmin } from '../contexts/AdminContext';
+import { VANGUARD_MODULE_NAMES, VANGUARD_MODULE_TOTALS } from '../services/progressEngine';
 
 const AdminStudents: React.FC = () => {
     const { students, sendMessage, createAssignment } = useAdmin();
@@ -64,7 +65,7 @@ const AdminStudents: React.FC = () => {
     };
 
     const getProgressPercent = (student: typeof students[0]) => {
-        const total = 50 + 40 + 40 + 60; // Module section totals
+        const total = Object.values(VANGUARD_MODULE_TOTALS).reduce((sum, moduleSections) => sum + moduleSections, 0);
         const completed = Object.values(student.moduleProgress).reduce((sum, m) => sum + m.completedSections.length, 0);
         return Math.min(100, Math.round((completed / total) * 100));
     };
@@ -157,9 +158,9 @@ const AdminStudents: React.FC = () => {
             </div>
 
             {/* Students Table */}
-            <div className="bg-slate-800/30 backdrop-blur-sm rounded-2xl border border-slate-700/50 overflow-hidden">
+            <div className="bg-slate-800/30 backdrop-blur-sm rounded-2xl border border-slate-700/50 overflow-x-auto overflow-y-hidden">
                 {/* Table Header */}
-                <div className="grid grid-cols-12 gap-4 items-center p-4 border-b border-slate-700/50 bg-slate-800/50">
+                <div className="grid min-w-[900px] grid-cols-12 gap-4 items-center p-4 border-b border-slate-700/50 bg-slate-800/50">
                     <div className="col-span-1">
                         <input
                             type="checkbox"
@@ -183,7 +184,7 @@ const AdminStudents: React.FC = () => {
                         return (
                             <div
                                 key={student.id}
-                                className={`grid grid-cols-12 gap-4 items-center p-4 hover:bg-slate-800/50 transition-colors cursor-pointer ${selectedStudents.includes(student.id) ? 'bg-brand-primary/10' : ''
+                                className={`grid min-w-[900px] grid-cols-12 gap-4 items-center p-4 hover:bg-slate-800/50 transition-colors cursor-pointer ${selectedStudents.includes(student.id) ? 'bg-brand-primary/10' : ''
                                     }`}
                                 onClick={() => setSelectedStudent(student.id)}
                             >
@@ -287,10 +288,10 @@ const StudentDetailModal: React.FC<{ studentId: string; onClose: () => void }> =
     if (!student) return null;
 
     const modules = [
-        { id: 1, name: 'AI Foundations', total: 50 },
-        { id: 2, name: 'Building AI', total: 40 },
-        { id: 3, name: 'AI Applications', total: 40 },
-        { id: 4, name: 'Advanced Topics', total: 60 },
+        { id: 1 as const, name: VANGUARD_MODULE_NAMES[1], total: VANGUARD_MODULE_TOTALS[1] },
+        { id: 2 as const, name: VANGUARD_MODULE_NAMES[2], total: VANGUARD_MODULE_TOTALS[2] },
+        { id: 3 as const, name: VANGUARD_MODULE_NAMES[3], total: VANGUARD_MODULE_TOTALS[3] },
+        { id: 4 as const, name: VANGUARD_MODULE_NAMES[4], total: VANGUARD_MODULE_TOTALS[4] },
     ];
 
     return (
@@ -325,18 +326,22 @@ const StudentDetailModal: React.FC<{ studentId: string; onClose: () => void }> =
                 </div>
 
                 {/* Stats */}
-                <div className="p-6 grid grid-cols-3 gap-4">
+                <div className="p-6 grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="bg-slate-900/50 rounded-xl p-4 text-center">
                         <p className="text-3xl font-black text-amber-400">{student.totalPoints.toLocaleString()}</p>
                         <p className="text-xs text-slate-500 uppercase tracking-wider mt-1">Total Points</p>
                     </div>
                     <div className="bg-slate-900/50 rounded-xl p-4 text-center">
-                        <p className="text-3xl font-black text-white">{Object.values(student.moduleProgress).filter(m => m.certificateId).length}</p>
+                        <p className="text-3xl font-black text-white">{student.certificates?.length ?? Object.values(student.moduleProgress).filter(m => m.certificateId).length}</p>
                         <p className="text-xs text-slate-500 uppercase tracking-wider mt-1">Certificates</p>
                     </div>
                     <div className="bg-slate-900/50 rounded-xl p-4 text-center">
-                        <p className="text-3xl font-black text-brand-primary">{student.assignments.length}</p>
-                        <p className="text-xs text-slate-500 uppercase tracking-wider mt-1">Assignments</p>
+                        <p className="text-3xl font-black text-brand-primary">{student.badges?.length ?? 0}</p>
+                        <p className="text-xs text-slate-500 uppercase tracking-wider mt-1">Badges</p>
+                    </div>
+                    <div className="bg-slate-900/50 rounded-xl p-4 text-center">
+                        <p className="text-3xl font-black text-emerald-400">{student.finalCertificationId ? 'Yes' : 'No'}</p>
+                        <p className="text-xs text-slate-500 uppercase tracking-wider mt-1">Final Credential</p>
                     </div>
                 </div>
 

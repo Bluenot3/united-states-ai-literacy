@@ -1,7 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ZenModuleGlyph } from '../components/zen';
-import type { ZenGlyphName } from '../components/zen';
+import ZenModuleGlyph from '../components/zen/ZenModuleGlyph';
+import type { ZenGlyphName } from '../components/zen/ZenModuleGlyph';
+import { useAuth } from '../hooks/useAuth';
+import { getModuleCompletionPercent, getVanguardProgressSummary, VANGUARD_MODULE_NAMES } from '../services/progressEngine';
 
 type CommandTile =
     | {
@@ -68,7 +70,7 @@ const commandTiles: CommandTile[] = [
     {
         title: 'Programs',
         label: 'AI Literacy & Workforce Pathways',
-        description: 'Access ZEN\'s program ecosystem, including the AI Pioneer Program, Vanguard, Web3 Literacy, and future training pathways.',
+        description: 'Run the four-module ZEN Intelligence Architect pathway from foundations through production-grade multi-agent workflows.',
         cta: 'View Programs',
         icon: 'programs',
         tone: 'from-purple-300/80 via-zen-gold/70 to-brand-cyan/70',
@@ -86,13 +88,13 @@ const commandTiles: CommandTile[] = [
     },
     {
         title: 'Web3 Credentials',
-        label: 'Verified Proof of Skill',
-        description: 'Turn learning, building, and achievement into portable blockchain-verified credentials for students, professionals, and partners.',
-        cta: 'View Credential Layer',
+        label: 'Proof-Linked Credential Layer',
+        description: 'Issue portable, blockchain-ready certificates tied to learner identity, deployment artifacts, review trails, and portfolio evidence.',
+        cta: 'Open Credential Forge',
         icon: 'verify',
         tone: 'from-zen-emerald/80 via-brand-cyan/70 to-zen-gold/70',
         destination: 'internal',
-        to: '/programs/web3',
+        to: '/credential-forge',
     },
     {
         title: 'ZEN Overview',
@@ -107,37 +109,117 @@ const commandTiles: CommandTile[] = [
 ];
 
 const proofHighlights = [
+    'ZEN is infrastructure, not curriculum',
+    'ZEN AI Co. founded in 2024',
+    'Mission: democratize AI literacy through deployable, credentialed education',
     'First youth AI literacy program in United States history',
-    'Students ages 11-18 launched cloud-hosted AI-powered agents',
-    'AI Pioneer Program',
-    'Vanguard adult AI literacy and workforce acceleration',
-    'Smart Business Solutions automation systems',
-    'Arsenal as the app, website, agent, and automation builder',
-    'Web3 / blockchain-verified credentials',
-    'AI Social layer',
-    'Partner and client ecosystem',
-    'Business process automation',
-    'AI education infrastructure',
-    'Dashboard and workflow systems',
-    'Future-ready AI x Web3 literacy movement',
+    'Boys & Girls Clubs of America partner context entering Year 3',
+    'Current reach: 42 U.S. states and 12 countries',
+    'Learners deploy agents, apps, automations, credentials, and portfolios',
+    'Every learner ships real agents, apps, or automation systems',
+    'AI-assisted and human-reviewed assessment at each milestone',
+    'Blockchain-ready certificates tied to portfolio artifacts',
+    'Git-based learner projects, semantic curriculum versions, and rollback paths',
 ];
 
-const ecosystemCategories = [
-    'Programs',
-    'Platforms',
-    'Automation Systems',
-    'Credentials',
-    'Partners & Clients',
-    'Student-Built AI Agents',
-    'Workforce Pathways',
-    'Business Infrastructure',
+const ecosystemLayers = [
+    {
+        title: 'Learners',
+        detail: 'Youth, young adults, and professionals entering guided or self-directed AI literacy tracks.',
+        status: 'Input',
+    },
+    {
+        title: 'Curriculum',
+        detail: 'Four progressive modules moving from first AI interactions to production-grade multi-agent workflows.',
+        status: 'Input',
+    },
+    {
+        title: 'Tools',
+        detail: 'Gemini, OpenAI, Hugging Face, Supabase, Solana, Vercel, and Arsenal as deployment surfaces.',
+        status: 'Input',
+    },
+    {
+        title: 'Partners',
+        detail: 'Boys & Girls Clubs, educational institutions, enterprises, mentors, and ZEN graduates.',
+        status: 'Input',
+    },
+    {
+        title: 'Deployment Pipeline',
+        detail: 'Interactive learning, artifact shipping, AI plus human review, credentialing, and community showcase loops.',
+        status: 'Process',
+    },
+    {
+        title: 'Proof Artifacts',
+        detail: 'Agents, apps, automations, verifiable certificates, and public-facing competency portfolios.',
+        status: 'Output',
+    },
+    {
+        title: 'Audit Trail',
+        detail: 'Timestamp, learner ID, artifact hash, tool calls, human review state, and security scan posture.',
+        status: 'Governance',
+    },
+    {
+        title: 'Credential Standards',
+        detail: 'ZEN Certified, ZEN Pro, and ZEN Mentor credentials mapped to specific deployment requirements.',
+        status: 'Governance',
+    },
 ];
 
 const operationalMetrics = [
-    { value: '11-18', label: 'Student builder age range' },
-    { value: '4+', label: 'Program pathways active' },
-    { value: 'AI x Web3', label: 'Literacy and proof layer' },
-    { value: 'Arsenal', label: 'Builder and automation platform' },
+    { value: 'ZEN AI Co.', label: 'Legal operating identity' },
+    { value: '42 / 12', label: 'States and countries reached' },
+    { value: 'Year 3', label: 'Boys & Girls Clubs partner context' },
+    { value: '4 modules', label: 'Deployment-backed mastery path' },
+];
+
+const identityRows = [
+    { label: 'Legal Name', value: 'ZEN AI Co.' },
+    { label: 'Founded', value: '2024' },
+    { label: 'Mission', value: 'Democratize AI literacy through deployable, credentialed education' },
+    { label: 'Distinction', value: 'First youth AI literacy program in United States history' },
+    { label: 'Primary Partner', value: 'Boys & Girls Clubs of America, entering Year 3' },
+    { label: 'Current Reach', value: '42 U.S. states, 12 countries' },
+];
+
+const deploymentPipeline = [
+    { module: 'Module 1', artifact: 'First AI interaction app', examples: 'Email writer, summarizer, or guided assistant' },
+    { module: 'Module 2', artifact: 'Generative media project', examples: 'Image, audio, video, and creative AI production' },
+    { module: 'Module 3', artifact: 'Single-purpose autonomous agent', examples: 'Memory, tools, goals, and narrow operating scope' },
+    { module: 'Module 4', artifact: 'Production-grade multi-agent workflow', examples: 'Coordinated agents, automation paths, and reviewable outputs' },
+];
+
+const credentialStandards = [
+    { level: 'ZEN Certified', requirement: 'Complete all four modules', badge: 'Intelligence Architect' },
+    { level: 'ZEN Pro', requirement: 'Pass advanced capstone and deploy a production agent', badge: 'Pro Architect' },
+    { level: 'ZEN Mentor', requirement: 'Train 10+ learners plus contribute to the community', badge: 'Mentor Badge' },
+];
+
+const launchReadiness = [
+    {
+        title: 'Canonical identity locked',
+        state: 'Live',
+        detail: 'The command center now speaks from the official ZEN AI Co. source of truth instead of generic ecosystem language.',
+    },
+    {
+        title: 'Proof model operationalized',
+        state: 'Live',
+        detail: 'Inputs, processes, outputs, audit trails, versioning, and credential standards are visible as the operating model.',
+    },
+    {
+        title: 'Credential Forge routed',
+        state: 'Live',
+        detail: 'The Web3 credential tile opens the proof-linked credential layer already mounted in the app.',
+    },
+    {
+        title: 'AI Social distribution',
+        state: 'Integration remaining',
+        detail: 'Kept intentionally marked as coming soon until the social layer is wired to real community and publishing data.',
+    },
+    {
+        title: 'Partner CRM sync',
+        state: 'Integration remaining',
+        detail: 'Ready for live partner, cohort, and institution data once the final external integration is connected.',
+    },
 ];
 
 const CommandTileCard: React.FC<{ tile: CommandTile; index: number }> = ({ tile, index }) => {
@@ -212,7 +294,22 @@ const CommandTileCard: React.FC<{ tile: CommandTile; index: number }> = ({ tile,
 };
 
 const CommandCenterPage: React.FC = () => {
+    const { user, getModuleProgress } = useAuth();
     const marqueeItems = [...proofHighlights, ...proofHighlights];
+    const progressSummary = getVanguardProgressSummary(user);
+    const recentBadges = (user?.badges ?? []).slice(0, 3);
+    const moduleProgressCards = ([1, 2, 3, 4] as const).map((moduleId) => {
+        const progress = getModuleProgress(moduleId);
+
+        return {
+            moduleId,
+            name: VANGUARD_MODULE_NAMES[moduleId],
+            percent: getModuleCompletionPercent(progress, moduleId),
+            sections: progress.completedSections.length,
+            certificateId: progress.certificateId,
+            lastViewedSection: progress.lastViewedSection,
+        };
+    });
 
     return (
         <div className="relative -m-4 min-h-screen overflow-hidden bg-[#03050d] text-white lg:-m-8">
@@ -295,12 +392,15 @@ const CommandCenterPage: React.FC = () => {
                             </div>
 
                             <div className="mt-5 grid gap-3">
-                                {ecosystemCategories.map((category, index) => (
-                                    <div key={category} className="flex items-center gap-3 rounded-2xl border border-white/8 bg-[#07101d]/80 px-4 py-3">
+                                {ecosystemLayers.map((layer, index) => (
+                                    <div key={layer.title} className="flex items-center gap-3 rounded-2xl border border-white/8 bg-[#07101d]/80 px-4 py-3">
                                         <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-zen-gold/20 bg-zen-gold/[0.08] text-[11px] font-black text-zen-gold">
                                             {String(index + 1).padStart(2, '0')}
                                         </span>
-                                        <span className="flex-1 text-sm font-semibold text-slate-200">{category}</span>
+                                        <span className="flex-1 text-sm font-semibold text-slate-200">{layer.title}</span>
+                                        <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                                            {layer.status}
+                                        </span>
                                         <span className="h-1.5 w-10 rounded-full bg-gradient-to-r from-zen-gold/80 to-brand-cyan/70" />
                                     </div>
                                 ))}
@@ -318,6 +418,82 @@ const CommandCenterPage: React.FC = () => {
                     ))}
                 </section>
 
+                <section className="mt-8 grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+                    <article className="rounded-[1.35rem] border border-zen-gold/15 bg-zen-gold/[0.055] p-5 backdrop-blur-xl">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-zen-gold/70">Learner proof record</p>
+                        <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                            <div>
+                                <h2 className="text-2xl font-black text-white">{user?.name ?? 'ZEN Preview User'}</h2>
+                                <p className="mt-2 text-sm font-semibold text-slate-300">{user?.email ?? 'preview@zenai.world'}</p>
+                            </div>
+                            <div className="rounded-2xl border border-white/10 bg-[#07101d]/80 px-4 py-3 text-right">
+                                <p className="text-3xl font-black text-zen-gold">{progressSummary.completionPercent}%</p>
+                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Vanguard complete</p>
+                            </div>
+                        </div>
+
+                        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                            <div className="rounded-2xl border border-white/8 bg-[#07101d]/75 p-4">
+                                <p className="text-2xl font-black text-white">{progressSummary.completedSections}/{progressSummary.totalSections}</p>
+                                <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Sections tracked</p>
+                            </div>
+                            <div className="rounded-2xl border border-white/8 bg-[#07101d]/75 p-4">
+                                <p className="text-2xl font-black text-white">{progressSummary.badgesEarned}</p>
+                                <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Badges earned</p>
+                            </div>
+                            <div className="rounded-2xl border border-white/8 bg-[#07101d]/75 p-4">
+                                <p className="text-2xl font-black text-white">{progressSummary.certificatesEarned}</p>
+                                <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Credentials issued</p>
+                            </div>
+                        </div>
+
+                        <div className="mt-5 flex flex-wrap gap-2">
+                            {(recentBadges.length ? recentBadges : [
+                                { id: 'locked', title: 'First Vanguard Action', description: 'Complete any tracked section to unlock.', kind: 'section' as const, earnedAt: '' },
+                            ]).map((badge) => (
+                                <span key={badge.id} className="rounded-full border border-zen-gold/20 bg-zen-gold/[0.08] px-3 py-1.5 text-xs font-bold text-zen-gold">
+                                    {badge.title}
+                                </span>
+                            ))}
+                        </div>
+                    </article>
+
+                    <article className="rounded-[1.35rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-xl">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                            <div>
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-brand-cyan/65">Email-keyed progress</p>
+                                <h2 className="mt-2 text-2xl font-black text-white">Every module writes back to the learner record.</h2>
+                            </div>
+                            {user?.finalCertificationId && (
+                                <Link to={`/certificate/${user.finalCertificationId}`} className="rounded-full border border-zen-emerald/25 bg-zen-emerald/[0.10] px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-zen-emerald">
+                                    Final certificate
+                                </Link>
+                            )}
+                        </div>
+
+                        <div className="mt-5 grid gap-3 md:grid-cols-2">
+                            {moduleProgressCards.map((module) => (
+                                <div key={module.moduleId} className="rounded-2xl border border-white/8 bg-[#07101d]/75 p-4">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-cyan/65">Module {module.moduleId}</p>
+                                            <h3 className="mt-2 text-sm font-black text-white">{module.name}</h3>
+                                        </div>
+                                        <span className="text-xl font-black text-zen-gold">{module.percent}%</span>
+                                    </div>
+                                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/[0.08]">
+                                        <div className="h-full rounded-full bg-gradient-to-r from-zen-gold to-brand-cyan" style={{ width: `${module.percent}%` }} />
+                                    </div>
+                                    <div className="mt-3 flex items-center justify-between gap-3 text-xs text-slate-500">
+                                        <span>{module.sections} sections</span>
+                                        <span>{module.certificateId ? 'Certificate issued' : `Last: ${module.lastViewedSection}`}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </article>
+                </section>
+
                 <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                     {commandTiles.map((tile, index) => (
                         <CommandTileCard key={tile.title} tile={tile} index={index} />
@@ -328,10 +504,10 @@ const CommandCenterPage: React.FC = () => {
                     <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
                         <div>
                             <h2 className="text-3xl font-black leading-tight tracking-tight text-white sm:text-4xl">
-                                Built Across Education, Automation, AI Agents, and Verified Digital Credentials
+                                ZEN Is Infrastructure, Not Curriculum
                             </h2>
                             <p className="mt-5 text-base leading-8 text-slate-300">
-                                ZEN connects literacy, deployment, automation, and proof into one ecosystem - helping people learn AI, build with AI, automate real work, and verify what they have created.
+                                ZEN deploys AI as an operating system for human potential. The command center now exposes the real scaffolding: platforms, pipelines, credentials, partners, audit trails, and portfolio proof.
                             </p>
                         </div>
 
@@ -346,15 +522,87 @@ const CommandCenterPage: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                        {ecosystemCategories.map((category, index) => (
-                            <article key={category} className="rounded-[1.2rem] border border-white/10 bg-[#07101d]/75 p-5 backdrop-blur-xl transition duration-300 hover:border-zen-gold/20 hover:bg-white/[0.055]">
-                                <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-zen-gold/60">
-                                    Layer {String(index + 1).padStart(2, '0')}
+                    <div className="mt-8 grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+                        <article className="rounded-[1.35rem] border border-white/10 bg-[#07101d]/75 p-5 backdrop-blur-xl">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-zen-gold/60">Official identity</p>
+                            <div className="mt-5 divide-y divide-white/10">
+                                {identityRows.map((row) => (
+                                    <div key={row.label} className="grid gap-2 py-3 sm:grid-cols-[10rem_1fr]">
+                                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{row.label}</p>
+                                        <p className="text-sm font-semibold leading-6 text-slate-200">{row.value}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </article>
+
+                        <article className="rounded-[1.35rem] border border-white/10 bg-[#07101d]/75 p-5 backdrop-blur-xl">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-brand-cyan/60">Operating model</p>
+                            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                                {ecosystemLayers.map((layer) => (
+                                    <div key={layer.title} className="rounded-2xl border border-white/8 bg-white/[0.035] p-4">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <h3 className="text-sm font-black text-white">{layer.title}</h3>
+                                            <span className="rounded-full border border-zen-gold/15 bg-zen-gold/[0.06] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-zen-gold/70">
+                                                {layer.status}
+                                            </span>
+                                        </div>
+                                        <p className="mt-3 text-xs leading-6 text-slate-400">{layer.detail}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </article>
+                    </div>
+
+                    <div className="mt-8 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+                        <article className="rounded-[1.35rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-xl">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                                <div>
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-zen-gold/60">Deployment pipeline</p>
+                                    <h3 className="mt-2 text-2xl font-black text-white">Every module ships a real artifact.</h3>
+                                </div>
+                                <p className="max-w-sm text-sm leading-6 text-slate-400">
+                                    The platform measures deployment rate, completion, credential issuance, partner expansion, and learner satisfaction.
                                 </p>
-                                <h3 className="mt-3 text-lg font-black text-white">{category}</h3>
+                            </div>
+
+                            <div className="mt-6 grid gap-3 md:grid-cols-2">
+                                {deploymentPipeline.map((item) => (
+                                    <div key={item.module} className="rounded-2xl border border-white/8 bg-[#07101d]/80 p-4">
+                                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-cyan/65">{item.module}</p>
+                                        <h4 className="mt-3 text-base font-black text-white">{item.artifact}</h4>
+                                        <p className="mt-2 text-sm leading-6 text-slate-400">{item.examples}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </article>
+
+                        <article className="rounded-[1.35rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-xl">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-zen-emerald/70">Credential standards</p>
+                            <div className="mt-5 grid gap-3">
+                                {credentialStandards.map((credential) => (
+                                    <div key={credential.level} className="rounded-2xl border border-white/8 bg-[#07101d]/80 p-4">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <h4 className="text-base font-black text-white">{credential.level}</h4>
+                                            <span className="rounded-full border border-zen-emerald/20 bg-zen-emerald/[0.08] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-zen-emerald">
+                                                {credential.badge}
+                                            </span>
+                                        </div>
+                                        <p className="mt-3 text-sm leading-6 text-slate-400">{credential.requirement}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </article>
+                    </div>
+
+                    <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                        {launchReadiness.map((item) => (
+                            <article key={item.title} className="rounded-[1.2rem] border border-white/10 bg-[#07101d]/75 p-5 backdrop-blur-xl transition duration-300 hover:border-zen-gold/20 hover:bg-white/[0.055]">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-zen-gold/60">
+                                    {item.state}
+                                </p>
+                                <h3 className="mt-3 text-lg font-black text-white">{item.title}</h3>
                                 <p className="mt-3 text-sm leading-7 text-slate-400">
-                                    Connected into the ZEN operating model for learning, deployment, automation, and verified proof.
+                                    {item.detail}
                                 </p>
                             </article>
                         ))}

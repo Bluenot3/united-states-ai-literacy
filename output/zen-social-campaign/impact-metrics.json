@@ -1,0 +1,107 @@
+{
+  "campaign": "ZEN Vanguard + 3rd Annual AI Pioneer Program",
+  "audience": "Partners and funders",
+  "sourcePosture": "User-provided campaign metrics plus existing local ZEN marketing canon.",
+  "headlineMetrics": {
+    "baseline": {
+      "label": "Year 2 / 2024-2025",
+      "students": 15000,
+      "appsBuilt": 12000
+    },
+    "current": {
+      "label": "Year 3 / 2025-2026",
+      "students": 30000,
+      "appsBuilt": 25000
+    },
+    "growth": {
+      "studentsAdded": 15000,
+      "studentGrowthPercent": 100,
+      "appsAdded": 13000,
+      "appGrowthPercent": 108,
+      "appOutputMultiple": 2.08
+    }
+  },
+  "investorThesis": [
+    "ZEN is not a single course; it is a repeatable infrastructure model for AI literacy, deployment, attestable proof, and workforce capacity.",
+    "The movement doubled learner reach and more than doubled app output from Year 2 to Year 3.",
+    "Vanguard expands youth AI literacy into adult and career-professional upskilling.",
+    "The credentialing path creates public skill records without requiring learner PII to be stored on-chain."
+  ],
+  "operatingMetrics": {
+    "countriesReached": 35,
+    "attestations": 8500,
+    "improvedAiConfidencePercent": 94,
+    "appliedSkillsProfessionallyPercent": 78,
+    "corporatePartnerships": 156,
+    "trackCompletionPercent": {
+      "homeschoolKit": 87,
+      "verifiableBuilderTrack": 72,
+      "agentOpsPro": 68
+    },
+    "geographicDistribution": [
+      {
+        "region": "North America",
+        "learners": 1200,
+        "growthPercent": 45
+      },
+      {
+        "region": "Europe",
+        "learners": 800,
+        "growthPercent": 38
+      },
+      {
+        "region": "Asia Pacific",
+        "learners": 600,
+        "growthPercent": 52
+      },
+      {
+        "region": "Latin America",
+        "learners": 180,
+        "growthPercent": 67
+      },
+      {
+        "region": "Africa",
+        "learners": 67,
+        "growthPercent": 89
+      }
+    ]
+  },
+  "launchExamples": [
+    "Jarvis Voice App - voice-enabled AI assistant demo built on Hugging Face Spaces",
+    "Alex Chatbot - conversational AI chatbot for dynamic interaction",
+    "Qwen3-Coder WebDev - natural language to full web applications"
+  ],
+  "learningTracks": [
+    "Homeschool Kit - ages 11-18, parent-friendly, self-paced, printable guides",
+    "Verifiable Builder Track - attestations, token-gated submissions, SBT/NFT completer path",
+    "AgentOps Pro - SLA tables, cost per task, governance, incident post-mortems"
+  ],
+  "credentialingFlow": [
+    {
+      "stage": "Wallet Creation",
+      "count": 1000
+    },
+    {
+      "stage": "Build -> Hash",
+      "count": 800
+    },
+    {
+      "stage": "Submit -> Attest",
+      "count": 620
+    },
+    {
+      "stage": "Token-Gated",
+      "count": 380
+    },
+    {
+      "stage": "SBT / NFT",
+      "count": 150
+    }
+  ],
+  "publicationNotes": [
+    "Do not use accredited language in this campaign pack.",
+    "Do not imply federal or government endorsement.",
+    "Treat GDPR-compliance wording as legal-review required before public posting.",
+    "PII-on-chain claim can be phrased as privacy-by-design if internally validated."
+  ]
+}

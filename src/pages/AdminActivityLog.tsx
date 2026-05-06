@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { useAdmin } from '../contexts/AdminContext';
 import type { Student } from '../types';
+import { VANGUARD_MODULE_NAMES, VANGUARD_MODULE_TOTALS } from '../services/progressEngine';
 
 const MODULE_NAMES: Record<number, string> = {
-    1: 'AI Foundations',
-    2: 'Building AI',
-    3: 'AI Applications',
-    4: 'Advanced Topics',
+    1: VANGUARD_MODULE_NAMES[1],
+    2: VANGUARD_MODULE_NAMES[2],
+    3: VANGUARD_MODULE_NAMES[3],
+    4: VANGUARD_MODULE_NAMES[4],
 };
 
 const MODULE_COLORS: Record<number, string> = {
@@ -23,6 +24,9 @@ const EVENT_ICONS: Record<string, string> = {
     certificate_earned: '🏆',
     quiz_passed: '✅',
     points_earned: '⭐',
+    badge_earned: '◆',
+    page_view: '○',
+    session_ended: '■',
 };
 
 const EVENT_COLORS: Record<string, string> = {
@@ -32,6 +36,9 @@ const EVENT_COLORS: Record<string, string> = {
     certificate_earned: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
     quiz_passed: 'text-green-400 bg-green-500/10 border-green-500/20',
     points_earned: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20',
+    badge_earned: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+    page_view: 'text-blue-300 bg-blue-500/10 border-blue-500/20',
+    session_ended: 'text-slate-300 bg-slate-500/10 border-slate-500/20',
 };
 
 function timeAgo(ts: string) {
@@ -52,7 +59,7 @@ const StudentDrawer: React.FC<{ student: Student; onClose: () => void }> = ({ st
     const totalInteractives = Object.values(student.moduleProgress).reduce(
         (s, m) => s + (m.completedInteractives?.length ?? 0), 0
     );
-    const certificates = Object.values(student.moduleProgress).filter(m => m.certificateId).length;
+    const certificates = student.certificates?.length ?? Object.values(student.moduleProgress).filter(m => m.certificateId).length;
 
     return (
         <div className="fixed inset-0 z-50 flex" onClick={onClose}>
@@ -114,7 +121,7 @@ const StudentDrawer: React.FC<{ student: Student; onClose: () => void }> = ({ st
                             const interactives = mp?.completedInteractives ?? [];
                             const pts = mp?.points ?? 0;
                             const hasCert = !!mp?.certificateId;
-                            const pct = Math.min(100, Math.round((sections / 50) * 100));
+                            const pct = Math.min(100, Math.round((sections / VANGUARD_MODULE_TOTALS[mId as 1 | 2 | 3 | 4]) * 100));
 
                             return (
                                 <div key={mId} className="bg-white/3 rounded-xl p-4 border border-white/5">
@@ -303,6 +310,10 @@ const AdminActivityLog: React.FC = () => {
                             <option value="interactive_complete">Interactives</option>
                             <option value="login">Logins</option>
                             <option value="certificate_earned">Certificates</option>
+                            <option value="badge_earned">Badges</option>
+                            <option value="points_earned">Points</option>
+                            <option value="page_view">Page Views</option>
+                            <option value="session_ended">Sessions Ended</option>
                         </select>
                         <select
                             value={moduleFilter}
@@ -393,7 +404,7 @@ const AdminActivityLog: React.FC = () => {
                             leaderboard.map((student, idx) => {
                                 const totalSecs = Object.values(student.moduleProgress).reduce((s, m) => s + (m.completedSections?.length ?? 0), 0);
                                 const totalInter = Object.values(student.moduleProgress).reduce((s, m) => s + (m.completedInteractives?.length ?? 0), 0);
-                                const certs = Object.values(student.moduleProgress).filter(m => m.certificateId).length;
+                                const certs = student.certificates?.length ?? Object.values(student.moduleProgress).filter(m => m.certificateId).length;
 
                                 return (
                                     <div
