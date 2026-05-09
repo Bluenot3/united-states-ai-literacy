@@ -55,7 +55,7 @@ const RobotSimulator: React.FC = () => {
         try {
             const ai = await getAiClient();
             const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
-            moves = response.text.split(',').map(m => m.trim().toLowerCase());
+            moves = (response.text ?? '').split(',').map((m: string) => m.trim().toLowerCase());
             
             // Animate the AI path
             moves.forEach((m, i) => {

@@ -26,7 +26,7 @@ const AnimatedBackground: React.FC = React.memo(() => {
     }, [handleMouseMove]);
 
     return (
-        <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none bg-zen-navy">
+        <div className="fixed inset-0 -z-10 w-full max-w-full overflow-hidden pointer-events-none bg-zen-navy" style={{ contain: 'layout paint style' }}>
             {/* Deep space quantum gradient mesh */}
             <div className="absolute inset-0 opacity-50">
                 {/* Gold nebula — top-left */}

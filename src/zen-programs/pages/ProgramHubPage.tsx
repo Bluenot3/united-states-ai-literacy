@@ -1,7 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { getAccentClasses, programs } from '../programsRegistry';
+import { useBilling } from '../../contexts/BillingContext';
+import { getTierDefinition, type EntitlementDecision } from '../../entitlements';
+import {
+    canAdminPreviewProgram,
+    getAccentClasses,
+    isProgramPubliclyAvailable,
+} from '../programsRegistry';
+import { useProgramPublishSettings } from '../useProgramPublishSettings';
+import type { ProgramDashboardCard } from '../types';
 
 const vanguardCurriculumBlueprint = [
     {
@@ -60,7 +68,6 @@ const operatingStandards = [
 ];
 
 const hubStats = [
-    { label: 'Programs', value: String(programs.length), detail: 'Operator, beginner, educator, and specialty tracks' },
     { label: 'Flagship modules', value: '4', detail: 'Sequential Vanguard depth from foundations to systems' },
     { label: 'Proof model', value: 'Artifact-led', detail: 'Outputs are designed to become portfolio evidence' },
 ];
@@ -71,8 +78,86 @@ const platformPillars = [
     'The flagship blueprint is surfaced directly on the hub instead of hidden behind navigation.',
 ];
 
+type HubAccessLabel = 'Included' | 'Preview' | 'Upgrade' | 'Coming Soon' | 'Unavailable' | 'Private Beta' | 'Explicit Access';
+
+const getAvailabilityLabel = (program: ProgramDashboardCard): HubAccessLabel => {
+    if (program.availability.availabilityStatus === 'private-beta') {
+        return 'Private Beta';
+    }
+
+    if (program.availability.availabilityStatus === 'draft' || program.availability.availabilityStatus === 'unavailable') {
+        return 'Unavailable';
+    }
+
+    return 'Coming Soon';
+};
+
+const getAccessLabel = (
+    program: ProgramDashboardCard,
+    decision: EntitlementDecision,
+    isAdminPreview: boolean,
+): HubAccessLabel => {
+    if (isAdminPreview && !isProgramPubliclyAvailable(program)) {
+        return getAvailabilityLabel(program);
+    }
+
+    if (!isProgramPubliclyAvailable(program)) {
+        return getAvailabilityLabel(program);
+    }
+
+    if (program.availability.availabilityStatus === 'private-beta') {
+        return 'Private Beta';
+    }
+
+    if (program.status === 'coming-soon' || program.isDisabled) {
+        return 'Coming Soon';
+    }
+
+    if (decision.matchedEntitlement && decision.allowed) {
+        return 'Explicit Access';
+    }
+
+    if (decision.allowed) {
+        return 'Included';
+    }
+
+    if (decision.previewAvailable) {
+        return 'Preview';
+    }
+
+    return 'Upgrade';
+};
+
+const accessLabelClasses: Record<HubAccessLabel, string> = {
+    Included: 'border-emerald-300/20 bg-emerald-300/[0.08] text-emerald-100',
+    Preview: 'border-cyan-300/20 bg-cyan-300/[0.08] text-cyan-100',
+    Upgrade: 'border-amber-300/20 bg-amber-300/[0.08] text-amber-100',
+    'Coming Soon': 'border-slate-400/20 bg-slate-400/[0.08] text-slate-200',
+    Unavailable: 'border-slate-400/20 bg-slate-400/[0.08] text-slate-200',
+    'Private Beta': 'border-fuchsia-300/20 bg-fuchsia-300/[0.08] text-fuchsia-100',
+    'Explicit Access': 'border-purple-300/20 bg-purple-300/[0.08] text-purple-100',
+};
+
+const getUpgradePrompt = (decision: EntitlementDecision): string | null => {
+    if (decision.allowed || decision.status === 'active') {
+        return null;
+    }
+
+    if (!decision.upgradeTier) {
+        return decision.previewAvailable ? 'Preview available' : 'Upgrade required';
+    }
+
+    return `Upgrade to ${getTierDefinition(decision.upgradeTier).label}`;
+};
+
 const ProgramHubPage: React.FC = () => {
     const { user } = useAuth();
+    const { evaluateAccess } = useBilling();
+    const { programDashboardCards } = useProgramPublishSettings();
+    const stats = [
+        { label: 'Programs', value: String(programDashboardCards.length), detail: 'Operator, beginner, educator, and specialty tracks' },
+        ...hubStats,
+    ];
 
     return (
         <div className="min-h-screen bg-[radial-gradient(ellipse_80%_60%_at_15%_20%,_rgba(201,168,76,0.08),_transparent_50%),radial-gradient(ellipse_60%_50%_at_85%_80%,_rgba(34,211,238,0.05),_transparent_40%),linear-gradient(180deg,_#020617_0%,_#0A1628_48%,_#060B18_100%)] text-white">
@@ -144,7 +229,7 @@ const ProgramHubPage: React.FC = () => {
 
                 <section className="mt-6 grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
                     <div className="grid gap-4 md:grid-cols-3">
-                        {hubStats.map((stat) => (
+                        {stats.map((stat) => (
                             <article key={stat.label} className="rounded-[1.6rem] border border-zen-gold/10 bg-zen-surface/60 p-5 shadow-zen-card backdrop-blur-xl">
                                 <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-zen-gold/65">{stat.label}</p>
                                 <p className="mt-3 text-3xl font-black tracking-tight text-white">{stat.value}</p>
@@ -168,8 +253,16 @@ const ProgramHubPage: React.FC = () => {
                 </section>
 
                 <section className="mt-10 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
-                    {programs.map((program, index) => {
+                    {programDashboardCards.map((program, index) => {
                         const colors = getAccentClasses(program.accentColor);
+                        const accessDecision = evaluateAccess(program.programId);
+                        const isAdminPreview = canAdminPreviewProgram(user, program);
+                        const accessLabel = getAccessLabel(program, accessDecision, isAdminPreview);
+                        const upgradePrompt = getUpgradePrompt(accessDecision);
+                        const isProgramUnavailable = !isProgramPubliclyAvailable(program);
+                        const ctaLabel = isProgramUnavailable && !isAdminPreview
+                            ? program.availability.publicLabel
+                            : upgradePrompt ?? program.ctaLabel;
 
                         return (
                             <Link
@@ -189,6 +282,29 @@ const ProgramHubPage: React.FC = () => {
                                             {program.badge && (
                                                 <span className="rounded-full border border-zen-gold/20 bg-zen-gold/[0.06] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-zen-gold-light">
                                                     {program.badge}
+                                                </span>
+                                            )}
+                                            <span className={`rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] ${accessLabelClasses[accessLabel]}`}>
+                                                {accessLabel}
+                                            </span>
+                                            {isAdminPreview && (
+                                                <span className="rounded-full border border-blue-300/20 bg-blue-300/[0.08] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-blue-100">
+                                                    Admin Preview
+                                                </span>
+                                            )}
+                                            {isAdminPreview && !program.availability.published && (
+                                                <span className="rounded-full border border-amber-300/20 bg-amber-300/[0.08] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-100">
+                                                    Unpublished
+                                                </span>
+                                            )}
+                                            {isAdminPreview && program.availability.arsenalReadyStatus === 'merge-ready' && (
+                                                <span className="rounded-full border border-emerald-300/20 bg-emerald-300/[0.08] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-100">
+                                                    Merge-ready
+                                                </span>
+                                            )}
+                                            {isAdminPreview && program.availability.arsenalReadyStatus === 'staging' && (
+                                                <span className="rounded-full border border-cyan-300/20 bg-cyan-300/[0.08] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-100">
+                                                    Arsenal staging
                                                 </span>
                                             )}
                                         </div>
@@ -239,7 +355,7 @@ const ProgramHubPage: React.FC = () => {
                                         ))}
                                     </div>
                                     <span className={`flex items-center gap-1.5 text-sm font-semibold ${colors.text} transition-transform duration-300 group-hover:translate-x-1`}>
-                                        Enter
+                                        {ctaLabel}
                                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                         </svg>

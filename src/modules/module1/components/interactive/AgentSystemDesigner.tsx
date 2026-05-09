@@ -8,6 +8,8 @@ interface DropTarget {
   role: string | null;
 }
 
+type AgentSlotId = 1 | 2 | 3 | 4;
+
 const AgentSystemDesigner: React.FC = () => {
   const [availableRoles, setAvailableRoles] = useState<string[]>(ROLES);
   const [targets, setTargets] = useState<DropTarget[]>([
@@ -20,12 +22,14 @@ const AgentSystemDesigner: React.FC = () => {
   const [feedback, setFeedback] = useState('');
   const [correct, setCorrect] = useState(0);
 
-  const correctMapping = {
+  const correctMapping: Record<AgentSlotId, string> = {
     1: 'Planner',
     2: 'Researcher',
     3: 'Summarizer',
     4: 'Critic',
   };
+
+  const isAgentSlotId = (value: number): value is AgentSlotId => value >= 1 && value <= 4;
 
   const handleSelectRole = (role: string) => {
     setSelectedRole(role);
@@ -48,14 +52,14 @@ const AgentSystemDesigner: React.FC = () => {
 
     setAvailableRoles(availableRoles.filter(r => r !== selectedRole));
     
-    if (correctMapping[targetId] === selectedRole) {
+    if (isAgentSlotId(targetId) && correctMapping[targetId] === selectedRole) {
       setCorrect(prev => prev + 1);
     }
     setSelectedRole(null);
 
     const allAssigned = newTargets.every(t => t.role);
     if (allAssigned) {
-        const score = newTargets.reduce((acc, t) => acc + (correctMapping[t.id] === t.role ? 1 : 0), 0);
+        const score = newTargets.reduce((acc, t) => acc + (isAgentSlotId(t.id) && correctMapping[t.id] === t.role ? 1 : 0), 0);
         setFeedback(`All roles assigned! You got ${score} out of 4 correct. The correct order is Planner, Researcher, Summarizer, Critic.`);
     }
   };

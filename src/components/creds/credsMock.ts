@@ -4,7 +4,9 @@ export type CredentialTheme = 'Aurora Glass' | 'Obsidian Chrome' | 'Solar Gold' 
 
 export type BadgeStyle = 'Prism Seal' | 'Orbital Crest' | 'Institutional Glyph' | 'Signal Mark' | 'Founders Sigil';
 
-export type VerificationStatus = 'pending' | 'confirmed' | 'anchored';
+export type ProofStandard = 'W3C VC' | 'Open Badges 3.0' | 'EAS' | 'Custom Registry';
+
+export type VerificationStatus = 'prepared' | 'attestation-ready' | 'anchored';
 
 export type CredentialDesign = {
     participantName: string;
@@ -15,7 +17,9 @@ export type CredentialDesign = {
     holographicIntensity: number;
     particleDensity: number;
     badgeStyle: BadgeStyle;
-    chainLabel: string;
+    networkLabel: string;
+    issuerLabel: string;
+    proofStandard: ProofStandard;
 };
 
 export type MockAchievement = {
@@ -38,6 +42,10 @@ export type CredentialMetadata = {
     cohort: string;
     tier: CredentialTier;
     visual_theme: CredentialTheme;
+    proof_standard: ProofStandard;
+    issuer: string;
+    network: string;
+    registry_mode: 'dry-run';
     achievements: Array<{
         id: string;
         label: string;
@@ -46,8 +54,6 @@ export type CredentialMetadata = {
         transaction_hash: string;
         status: VerificationStatus;
     }>;
-    issuer: string;
-    chain: string;
     image_uri: string;
     metadata_uri: string;
     created_at: string;
@@ -56,21 +62,26 @@ export type CredentialMetadata = {
 };
 
 export type MintPayload = {
-    action: 'mock_prepare_credential';
+    action: 'prepare_attestation_payload';
     dry_run: true;
     credential_id: string;
-    recipient_placeholder: string;
-    network_placeholder: string;
+    recipient_address_placeholder: string;
+    issuer_address_placeholder: string;
+    network: string;
+    proof_standard: ProofStandard;
     metadata_uri: string;
     image_uri: string;
     credential_hash: string;
+    schema_ref_placeholder: string;
+    resolver_ref_placeholder: string;
+    revocation_ref_placeholder: string;
     achievements_count: number;
     issued_by: string;
     warning: string;
 };
 
-const MOCK_VERSION = 'credential-forge-prototype-v0.1';
-const MOCK_ISSUER = 'ZEN Credential Forge Prototype Issuer';
+const MOCK_VERSION = 'creds-dry-run-v0.2';
+const DEFAULT_ISSUER = 'ZEN CREDS Dry-Run Issuer';
 
 const normalize = (value: string) =>
     value
@@ -91,7 +102,7 @@ const encodeSeed = (seed: string) => {
     return (hash >>> 0).toString(16).padStart(8, '0');
 };
 
-export function generateCredentialHash(seed: string, prefix = '0xZEN'): string {
+export function generateCredentialHash(seed: string, prefix = '0xCRD'): string {
     const now = Date.now().toString(36);
     const primary = encodeSeed(`${seed}:${now}:primary`);
     const secondary = encodeSeed(`${now}:${seed}:secondary`);
@@ -105,7 +116,7 @@ export function prepareCredentialMetadata(
     now = new Date().toISOString()
 ): CredentialMetadata {
     const identity = normalize(`${design.participantName}-${design.credentialTitle}-${design.cohort}`) || 'credential-holder';
-    const credentialId = `zen-forge-${identity}-${encodeSeed(identity).slice(0, 6)}`;
+    const credentialId = `zen-creds-${identity}-${encodeSeed(identity).slice(0, 6)}`;
 
     return {
         credential_id: credentialId,
@@ -114,6 +125,10 @@ export function prepareCredentialMetadata(
         cohort: design.cohort,
         tier: design.tier,
         visual_theme: design.theme,
+        proof_standard: design.proofStandard,
+        issuer: design.issuerLabel || DEFAULT_ISSUER,
+        network: design.networkLabel,
+        registry_mode: 'dry-run',
         achievements: achievements.map((achievement) => ({
             id: achievement.id,
             label: achievement.label,
@@ -122,10 +137,8 @@ export function prepareCredentialMetadata(
             transaction_hash: achievement.transaction_hash,
             status: achievement.status,
         })),
-        issuer: MOCK_ISSUER,
-        chain: design.chainLabel,
-        image_uri: `mock://credential-forge/images/${credentialId}.png`,
-        metadata_uri: `mock://credential-forge/metadata/${credentialId}.json`,
+        image_uri: `mock://creds/images/${credentialId}.png`,
+        metadata_uri: `mock://creds/metadata/${credentialId}.json`,
         created_at: achievements[0]?.stamped_at ?? now,
         updated_at: now,
         version: MOCK_VERSION,
@@ -134,17 +147,22 @@ export function prepareCredentialMetadata(
 
 export function buildMintPayload(metadata: CredentialMetadata): MintPayload {
     return {
-        action: 'mock_prepare_credential',
+        action: 'prepare_attestation_payload',
         dry_run: true,
         credential_id: metadata.credential_id,
-        recipient_placeholder: 'wallet://future-holder-address',
-        network_placeholder: metadata.chain,
+        recipient_address_placeholder: 'wallet://future-holder-address',
+        issuer_address_placeholder: 'wallet://future-issuer-address',
+        network: metadata.network,
+        proof_standard: metadata.proof_standard,
         metadata_uri: metadata.metadata_uri,
         image_uri: metadata.image_uri,
         credential_hash: generateCredentialHash(JSON.stringify(metadata)),
+        schema_ref_placeholder: 'schema://future-attestation-schema',
+        resolver_ref_placeholder: 'resolver://future-proof-resolver',
+        revocation_ref_placeholder: 'revocation://future-registry-path',
         achievements_count: metadata.achievements.length,
         issued_by: metadata.issuer,
-        warning: 'Prototype payload only. No wallet connection, contract write, database write, or real minting is performed.',
+        warning: 'Dry-run payload only. No wallet signature, chain write, attestation registry write, database write, or real issuance is performed.',
     };
 }
 
@@ -154,9 +172,9 @@ export function stampAchievementMock(achievement: MockAchievement, seed: string)
     return {
         ...achievement,
         stamped_at: stampedAt,
-        verification_hash: generateCredentialHash(`${seed}:${achievement.id}:verification`, '0xVERIFY'),
-        transaction_hash: generateCredentialHash(`${seed}:${achievement.id}:transaction`, '0xMOCKTX'),
-        status: 'pending',
+        verification_hash: generateCredentialHash(`${seed}:${achievement.id}:verification`, '0xPROOF'),
+        transaction_hash: generateCredentialHash(`${seed}:${achievement.id}:transaction`, '0xDRYRUN'),
+        status: 'prepared',
     };
 }
 

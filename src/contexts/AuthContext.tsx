@@ -5,7 +5,7 @@ import { dal } from '../services/dal';
 import { reconcileUserProgress } from '../services/progressEngine';
 
 interface AuthContextType {
-    user: User | null;
+    user: AuthContextUser | null;
     loading: boolean;
     isAuthenticated: boolean;
     login: (email: string, password: string) => Promise<void>;
@@ -25,6 +25,11 @@ interface AuthContextType {
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+type AuthContextUser = User & {
+    points: number;
+    progress: ModuleProgress;
+};
 
 const PREVIEW_USER_STORAGE_KEY = 'zenPreviewUser';
 const LOCAL_PREVIEW_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
@@ -456,7 +461,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateModuleProgress(currentModuleId, sectionOrInteractiveId, type);
     }, [currentModuleId, updateModuleProgress]);
 
-    const userWithLegacyProgress = useMemo(() => {
+    const userWithLegacyProgress = useMemo<AuthContextUser | null>(() => {
         if (!user) {
             return null;
         }

@@ -1,0 +1,462 @@
+[
+  {
+    "moduleId": "vanguard-module-1",
+    "sectionId": "module-1",
+    "lessonId": "1-1",
+    "miniAppId": "neural-evolution-1",
+    "componentName": "NeuralEvolutionChronicle",
+    "sourceFile": "src/modules/module1/components/interactive/NeuralEvolutionChronicle.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-1",
+    "sectionId": "module-1",
+    "lessonId": "1-1",
+    "miniAppId": "arms-race-1",
+    "componentName": "ModelArmsRaceTimeline",
+    "sourceFile": "src/modules/module1/components/interactive/ModelArmsRaceTimeline.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-1",
+    "sectionId": "module-1",
+    "lessonId": "1-1",
+    "miniAppId": "beginner-chat-1",
+    "componentName": "InteractiveChatbot",
+    "sourceFile": "src/modules/module1/components/interactive/InteractiveChatbot.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-1",
+    "sectionId": "module-1",
+    "lessonId": "1-1",
+    "miniAppId": "quiz-1-1",
+    "componentName": "SectionQuiz",
+    "sourceFile": "src/modules/module1/components/interactive/SectionQuiz.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-1",
+    "sectionId": "module-1",
+    "lessonId": "1-2",
+    "miniAppId": "simple-model-1",
+    "componentName": "SimplePredictiveModel",
+    "sourceFile": "src/modules/module1/components/interactive/SimplePredictiveModel.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-1",
+    "sectionId": "module-1",
+    "lessonId": "1-2",
+    "miniAppId": "quiz-1-2",
+    "componentName": "SectionQuiz",
+    "sourceFile": "src/modules/module1/components/interactive/SectionQuiz.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-1",
+    "sectionId": "module-1",
+    "lessonId": "1-10",
+    "miniAppId": "mastery-check-1-10",
+    "componentName": "MasteryCheckGate",
+    "sourceFile": "src/modules/module1/components/interactive/MasteryCheckGate.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-1",
+    "sectionId": "module-1",
+    "lessonId": "1-11",
+    "miniAppId": "temp-playground-1",
+    "componentName": "TemperaturePlayground",
+    "sourceFile": "src/modules/module1/components/interactive/TemperaturePlayground.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-1",
+    "sectionId": "module-1",
+    "lessonId": "1-12",
+    "miniAppId": "token-receipt-1",
+    "componentName": "TokenReceiptPrinter",
+    "sourceFile": "src/modules/module1/components/interactive/TokenReceiptPrinter.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-1",
+    "sectionId": "module-1",
+    "lessonId": "1-13",
+    "miniAppId": "json-surgeon-1",
+    "componentName": "JsonSurgeon",
+    "sourceFile": "src/modules/module1/components/interactive/JsonSurgeon.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-1",
+    "sectionId": "module-1",
+    "lessonId": "1-14",
+    "miniAppId": "agent-sim-1",
+    "componentName": "MiniAgentSimulator",
+    "sourceFile": "src/modules/module1/components/interactive/MiniAgentSimulator.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-1",
+    "sectionId": "module-1",
+    "lessonId": "1-15",
+    "miniAppId": "semantic-search-1",
+    "componentName": "SemanticSearchLab",
+    "sourceFile": "src/modules/module1/components/interactive/SemanticSearchLab.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-1",
+    "sectionId": "module-1",
+    "lessonId": "1-16",
+    "miniAppId": "approach-tree-1",
+    "componentName": "ApproachDecisionTree",
+    "sourceFile": "src/modules/module1/components/interactive/ApproachDecisionTree.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-1",
+    "sectionId": "module-1",
+    "lessonId": "1-17",
+    "miniAppId": "red-team-1",
+    "componentName": "RedTeamBot",
+    "sourceFile": "src/modules/module1/components/interactive/RedTeamBot.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-1",
+    "sectionId": "module-1",
+    "lessonId": "1-18",
+    "miniAppId": "prompt-tester-1",
+    "componentName": "PromptUnitTester",
+    "sourceFile": "src/modules/module1/components/interactive/PromptUnitTester.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-1",
+    "sectionId": "module-1",
+    "lessonId": "1-19",
+    "miniAppId": "model-picker-1",
+    "componentName": "ModelPickerLab",
+    "sourceFile": "src/modules/module1/components/interactive/ModelPickerLab.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-1",
+    "sectionId": "module-1",
+    "lessonId": "1-20",
+    "miniAppId": "credential-mint-1",
+    "componentName": "CredentialMintPreview",
+    "sourceFile": "src/modules/module1/components/interactive/CredentialMintPreview.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-1",
+    "sectionId": "module-1",
+    "lessonId": "1-22",
+    "miniAppId": "quiz-1-exit",
+    "componentName": "SectionQuiz",
+    "sourceFile": "src/modules/module1/components/interactive/SectionQuiz.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-1",
+    "sectionId": "module-2",
+    "lessonId": "2-8",
+    "miniAppId": "int-graph-2",
+    "componentName": "LangGraphVisualizer",
+    "sourceFile": "src/modules/module1/components/interactive/LangGraphVisualizer.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-1",
+    "sectionId": "module-2",
+    "lessonId": "2-10",
+    "miniAppId": "future-poll-2",
+    "componentName": "FutureScenarioPoll",
+    "sourceFile": "src/modules/module1/components/interactive/FutureScenarioPoll.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-2",
+    "sectionId": "part-2",
+    "lessonId": "2-1",
+    "miniAppId": "quiz-2-1",
+    "componentName": "SectionQuiz",
+    "sourceFile": "src/modules/module2/components/interactive/SectionQuiz.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-2",
+    "sectionId": "part-2",
+    "lessonId": "2-2",
+    "miniAppId": "quiz-2-2",
+    "componentName": "SectionQuiz",
+    "sourceFile": "src/modules/module2/components/interactive/SectionQuiz.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-3",
+    "sectionId": "part-1",
+    "lessonId": "3-1",
+    "miniAppId": "quiz-3-1",
+    "componentName": "SectionQuiz",
+    "sourceFile": "src/modules/module3/components/interactive/SectionQuiz.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-3",
+    "sectionId": "part-1",
+    "lessonId": "3-2",
+    "miniAppId": "digital-janitor-lab-1",
+    "componentName": "DigitalJanitorLab",
+    "sourceFile": "src/modules/module3/components/interactive/DigitalJanitorLab.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-3",
+    "sectionId": "part-1",
+    "lessonId": "3-2",
+    "miniAppId": "quiz-3-2",
+    "componentName": "SectionQuiz",
+    "sourceFile": "src/modules/module3/components/interactive/SectionQuiz.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-3",
+    "sectionId": "part-1",
+    "lessonId": "3-3",
+    "miniAppId": "rag-builder-1",
+    "componentName": "RagBuilder",
+    "sourceFile": "src/modules/module3/components/interactive/RagBuilder.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-3",
+    "sectionId": "part-1",
+    "lessonId": "3-4",
+    "miniAppId": "fact-checker-1",
+    "componentName": "FactCheckerSimulator",
+    "sourceFile": "src/modules/module3/components/interactive/FactCheckerSimulator.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-3",
+    "sectionId": "part-1",
+    "lessonId": "3-5",
+    "miniAppId": "knowledge-graph-1",
+    "componentName": "KnowledgeGraphBuilder",
+    "sourceFile": "src/modules/module3/components/interactive/KnowledgeGraphBuilder.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-3",
+    "sectionId": "part-1",
+    "lessonId": "3-6",
+    "miniAppId": "research-assistant-1",
+    "componentName": "ResearchAssistantWorkflow",
+    "sourceFile": "src/modules/module3/components/interactive/ResearchAssistantWorkflow.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-3",
+    "sectionId": "part-2",
+    "lessonId": "3-12",
+    "miniAppId": "decision-fatigue-1",
+    "componentName": "DecisionFatigueMeter",
+    "sourceFile": "src/modules/module3/components/interactive/DecisionFatigueMeter.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-3",
+    "sectionId": "part-2",
+    "lessonId": "3-13",
+    "miniAppId": "decision-matrix-1",
+    "componentName": "DecisionMatrixCalculator",
+    "sourceFile": "src/modules/module3/components/interactive/DecisionMatrixCalculator.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-3",
+    "sectionId": "part-2",
+    "lessonId": "3-14",
+    "miniAppId": "scenario-simulator-1",
+    "componentName": "ScenarioSimulator",
+    "sourceFile": "src/modules/module3/components/interactive/ScenarioSimulator.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-3",
+    "sectionId": "part-2",
+    "lessonId": "3-15",
+    "miniAppId": "schedule-planner-1",
+    "componentName": "SchedulePlanner",
+    "sourceFile": "src/modules/module3/components/interactive/SchedulePlanner.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-3",
+    "sectionId": "part-2",
+    "lessonId": "3-16",
+    "miniAppId": "bias-detector-1",
+    "componentName": "CognitiveBiasDetector",
+    "sourceFile": "src/modules/module3/components/interactive/CognitiveBiasDetector.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-3",
+    "sectionId": "part-2",
+    "lessonId": "3-17",
+    "miniAppId": "executive-brief-1",
+    "componentName": "ExecutiveBriefBuilder",
+    "sourceFile": "src/modules/module3/components/interactive/ExecutiveBriefBuilder.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-4",
+    "sectionId": "part-1",
+    "lessonId": "1-1",
+    "miniAppId": "quiz-4-1",
+    "componentName": "SectionQuiz",
+    "sourceFile": "src/modules/module4/components/interactive/SectionQuiz.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-4",
+    "sectionId": "part-1",
+    "lessonId": "1-2",
+    "miniAppId": "quiz-4-2",
+    "componentName": "SectionQuiz",
+    "sourceFile": "src/modules/module4/components/interactive/SectionQuiz.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-4",
+    "sectionId": "part-1",
+    "lessonId": "1-4",
+    "miniAppId": "rag-builder-1",
+    "componentName": "RagBuilder",
+    "sourceFile": "src/modules/module4/components/interactive/RagBuilder.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-4",
+    "sectionId": "part-1",
+    "lessonId": "1-5",
+    "miniAppId": "data-sanity-scanner-1",
+    "componentName": "DataVisualizer",
+    "sourceFile": "src/modules/module4/components/interactive/DataVisualizer.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-4",
+    "sectionId": "part-1",
+    "lessonId": "1-6",
+    "miniAppId": "adversarial-simulator-1",
+    "componentName": "AdversarialAttackSimulator",
+    "sourceFile": "src/modules/module4/components/interactive/AdversarialAttackSimulator.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-4",
+    "sectionId": "part-1",
+    "lessonId": "1-7",
+    "miniAppId": "correlation-explorer-1",
+    "componentName": "SimplePredictiveModel",
+    "sourceFile": "src/modules/module4/components/interactive/SimplePredictiveModel.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-4",
+    "sectionId": "part-1",
+    "lessonId": "1-8",
+    "miniAppId": "access-visualizer-1",
+    "componentName": "LangGraphVisualizer",
+    "sourceFile": "src/modules/module4/components/interactive/LangGraphVisualizer.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-4",
+    "sectionId": "part-2",
+    "lessonId": "2-2",
+    "miniAppId": "outlier-detector-1",
+    "componentName": "AlgorithmVisualizer",
+    "sourceFile": "src/modules/module4/components/interactive/AlgorithmVisualizer.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-4",
+    "sectionId": "part-2",
+    "lessonId": "2-4",
+    "miniAppId": "alignment-tuner-1",
+    "componentName": "AiAlignmentTuner",
+    "sourceFile": "src/modules/module4/components/interactive/AiAlignmentTuner.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-4",
+    "sectionId": "part-2",
+    "lessonId": "2-5",
+    "miniAppId": "smart-contract-1",
+    "componentName": "SmartContractEventListener",
+    "sourceFile": "src/modules/module4/components/interactive/SmartContractEventListener.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  },
+  {
+    "moduleId": "vanguard-module-4",
+    "sectionId": "part-2",
+    "lessonId": "2-9",
+    "miniAppId": "sdg-matcher-1",
+    "componentName": "SdgMatcher",
+    "sourceFile": "src/modules/module4/components/interactive/SdgMatcher.tsx",
+    "currentCompletionMode": "section-scroll",
+    "recommendedAction": "Add an interactive completion hook that calls updateModuleProgress(moduleId, interactiveId, \"interactive\") after meaningful learner action."
+  }
+]

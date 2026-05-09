@@ -109,7 +109,7 @@ async function loadFullUser(supabaseUser: { id: string; email?: string }): Promi
         const newProfile = {
             id: supabaseUser.id,
             email,
-            name: email.split('@')[0] ?? 'Vanguard Pioneer',
+            name: email.split('@')[0] ?? 'Vanguard Learner',
             picture: `https://api.dicebear.com/7.x/initials/svg?seed=${email}`,
             total_points: 0,
             final_certification_id: null,

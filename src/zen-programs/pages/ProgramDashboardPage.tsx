@@ -1,8 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
+import { useBilling } from '../../contexts/BillingContext';
+import { useAuth } from '../../hooks/useAuth';
+import { getTierDefinition, type EntitlementDecision } from '../../entitlements';
 import { getCurriculumByProgramId } from '../curriculum';
-import { getAccentClasses, getProgramById } from '../programsRegistry';
-import { getProgramProgress, saveProgramProgress, type ProgramContentItem, type ProgramSection } from '../types';
+import PioneerLearningAssets from '../components/PioneerLearningAssets';
+import ProgramCodeBlock from '../components/ProgramCodeBlock';
+import {
+    canAdminPreviewProgram,
+    getAccentClasses,
+    getProgramById,
+    isProgramPubliclyAvailable,
+} from '../programsRegistry';
+import { useProgramPublishSettings } from '../useProgramPublishSettings';
+import { getProgramProgress, saveProgramProgress, type ProgramContentItem, type ProgramManifest, type ProgramSection } from '../types';
 import { repairContent, repairText } from '../../utils/text';
 
 const flattenSections = (sections: ProgramSection[]): ProgramSection[] => (
@@ -35,11 +46,85 @@ const findSection = (sections: ProgramSection[], sectionId: string): ProgramSect
     return null;
 };
 
+const getAccessNotice = (decision: EntitlementDecision) => {
+    if (decision.allowed) {
+        return {
+            label: 'Included in your plan',
+            title: 'Full access is included.',
+            body: decision.reason,
+            tone: 'included',
+            cta: null,
+        };
+    }
+
+    if (decision.previewAvailable) {
+        const tierLabel = decision.upgradeTier ? getTierDefinition(decision.upgradeTier).label : null;
+
+        return {
+            label: 'Preview access',
+            title: tierLabel ? `Unlock full access with ${tierLabel}.` : 'Full access is available as an upgrade.',
+            body: decision.reason,
+            tone: 'preview',
+            cta: tierLabel ? `Upgrade to ${tierLabel}` : 'View upgrade options',
+        };
+    }
+
+    const requiredTier = decision.upgradeTier
+        ? getTierDefinition(decision.upgradeTier).label
+        : decision.requiredTiers[0]
+            ? getTierDefinition(decision.requiredTiers[0]).label
+            : null;
+
+    return {
+        label: 'Upgrade',
+        title: requiredTier ? `${requiredTier} access required.` : 'Upgrade required.',
+        body: decision.reason,
+        tone: 'locked',
+        cta: requiredTier ? `Upgrade to ${requiredTier}` : 'View upgrade options',
+    };
+};
+
+interface UnavailableProgramPageProps {
+    program: ProgramManifest;
+}
+
+const UnavailableProgramPage: React.FC<UnavailableProgramPageProps> = ({ program }) => (
+    <div className="min-h-screen bg-[linear-gradient(180deg,_#020617_0%,_#0A1628_48%,_#060B18_100%)] px-5 py-12 text-white">
+        <div className="mx-auto flex min-h-[70vh] max-w-4xl items-center justify-center">
+            <section className="w-full rounded-[2rem] border border-zen-gold/12 bg-zen-surface/70 p-6 text-center shadow-zen-card backdrop-blur-xl sm:p-8">
+                <span className="inline-flex rounded-full border border-zen-gold/20 bg-zen-gold/[0.08] px-3 py-1 text-xs font-bold uppercase tracking-[0.24em] text-zen-gold-light">
+                    {program.availability.publicLabel}
+                </span>
+                <h1 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl">{program.name}</h1>
+                <p className="mx-auto mt-4 max-w-2xl text-sm leading-8 text-slate-300 sm:text-base">{program.description}</p>
+                <div className="mx-auto mt-6 max-w-2xl rounded-[1.4rem] border border-zen-gold/10 bg-zen-navy/60 p-5 text-left">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-zen-gold/60">Expected outcome</p>
+                    <p className="mt-3 text-sm leading-7 text-slate-200">{program.coreOutput}</p>
+                </div>
+                <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-slate-400">
+                    This program is staged for ZEN/Arsenal publishing and is not publicly available yet.
+                </p>
+                <Link to="/hub" className="mt-6 inline-flex rounded-full bg-gradient-to-r from-zen-gold to-zen-gold-light px-5 py-3 text-sm font-semibold text-zen-navy">
+                    Back to Program Hub
+                </Link>
+            </section>
+        </div>
+    </div>
+);
+
 const ProgramDashboardPage: React.FC = () => {
     const { programId } = useParams<{ programId: string }>();
+    const { getProgramManifestById: getMergedProgramManifestById } = useProgramPublishSettings();
     const program = programId ? getProgramById(programId) : undefined;
+    const manifest = programId ? getMergedProgramManifestById(programId) : undefined;
     const curriculum = programId ? getCurriculumByProgramId(programId) : undefined;
     const colors = program ? getAccentClasses(program.accentColor) : null;
+    const { user } = useAuth();
+    const { evaluateAccess } = useBilling();
+    const accessDecision = program ? evaluateAccess(program.programId ?? program.id) : null;
+    const accessNotice = accessDecision ? getAccessNotice(accessDecision) : null;
+    const isAdminPreview = manifest ? canAdminPreviewProgram(user, manifest) : false;
+    const isUnavailableForUser = manifest ? !isProgramPubliclyAvailable(manifest) && !isAdminPreview : false;
     const [activeSection, setActiveSection] = useState('');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [progress, setProgress] = useState(() => (
@@ -93,6 +178,10 @@ const ProgramDashboardPage: React.FC = () => {
         return <Navigate to="/dashboard" replace />;
     }
 
+    if (manifest && isUnavailableForUser) {
+        return <UnavailableProgramPage program={manifest} />;
+    }
+
     if (!curriculum) {
         return (
             <div className="min-h-screen bg-zen-navy flex items-center justify-center px-5 text-center text-white">
@@ -112,11 +201,18 @@ const ProgramDashboardPage: React.FC = () => {
     const previousSection = currentIndex > 0 ? allSections[currentIndex - 1] : null;
     const nextSection = currentIndex < allSections.length - 1 ? allSections[currentIndex + 1] : null;
     const progressPercent = allSections.length > 0 ? Math.round((progress.completedSections.length / allSections.length) * 100) : 0;
+    const isPioneerProgram = program.programId === 'ai-pioneer' || program.id === 'pioneer';
+    const isPioneerLaunchSection = isPioneerProgram && (
+        currentSection.id === 'module-3'
+        || currentSection.id.startsWith('3-')
+        || currentSection.id === 'module-4'
+        || currentSection.id.startsWith('4-')
+    );
 
     const renderContentItem = (item: ProgramContentItem, index: number) => {
-        const repairedContent = repairContent(item.content);
-
         if (item.type === 'heading') {
+            const repairedContent = repairContent(item.content);
+
             return (
                 <h3 key={`${item.type}-${index}`} className="mt-8 text-xl font-bold text-white first:mt-0">
                     {repairText(repairedContent as string)}
@@ -125,6 +221,8 @@ const ProgramDashboardPage: React.FC = () => {
         }
 
         if (item.type === 'paragraph') {
+            const repairedContent = repairContent(item.content);
+
             return (
                 <p key={`${item.type}-${index}`} className="mt-4 text-sm leading-8 text-slate-300 first:mt-0">
                     {repairText(repairedContent as string)}
@@ -133,6 +231,8 @@ const ProgramDashboardPage: React.FC = () => {
         }
 
         if (item.type === 'quote') {
+            const repairedContent = repairContent(item.content);
+
             return (
                 <blockquote key={`${item.type}-${index}`} className={`mt-6 rounded-2xl border-l-4 ${colors?.border} bg-zen-gold/[0.03] p-5 text-sm leading-8 text-slate-300`}>
                     {repairText(repairedContent as string)}
@@ -141,6 +241,8 @@ const ProgramDashboardPage: React.FC = () => {
         }
 
         if (item.type === 'list') {
+            const repairedContent = repairContent(item.content);
+
             return (
                 <ul key={`${item.type}-${index}`} className="mt-4 space-y-3">
                     {(repairedContent as string[]).map((listItem) => (
@@ -150,6 +252,93 @@ const ProgramDashboardPage: React.FC = () => {
                         </li>
                     ))}
                 </ul>
+            );
+        }
+
+        if (item.type === 'code') {
+            return (
+                <div key={`${item.type}-${index}`} className="mt-5">
+                    <ProgramCodeBlock
+                        code={item.content}
+                        filename={item.filename}
+                        language={item.language}
+                        title={item.title}
+                    />
+                </div>
+            );
+        }
+
+        if (item.type === 'checklist') {
+            return (
+                <div key={`${item.type}-${index}`} className="mt-5 rounded-2xl border border-emerald-300/15 bg-emerald-300/[0.04] p-5">
+                    {item.title && <h3 className="text-base font-bold text-white">{repairText(item.title)}</h3>}
+                    <ul className="mt-4 space-y-3">
+                        {item.content.map((checklistItem) => (
+                            <li key={checklistItem} className="flex items-start gap-3 text-sm leading-7 text-slate-300">
+                                <span className="mt-2 h-4 w-4 flex-shrink-0 rounded-md border border-emerald-200/30" />
+                                <span>{repairText(checklistItem)}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            );
+        }
+
+        if (item.type === 'callout') {
+            const repairedContent = repairContent(item.content);
+            const toneClass = item.tone === 'warning'
+                ? 'border-amber-300/20 bg-amber-300/[0.05] text-amber-50'
+                : item.tone === 'success'
+                    ? 'border-emerald-300/20 bg-emerald-300/[0.05] text-emerald-50'
+                    : 'border-cyan-300/20 bg-cyan-300/[0.05] text-cyan-50';
+
+            return (
+                <div key={`${item.type}-${index}`} className={`mt-5 rounded-2xl border p-5 text-sm leading-7 ${toneClass}`}>
+                    {item.title && <h3 className="mb-3 text-base font-bold text-white">{repairText(item.title)}</h3>}
+                    {Array.isArray(repairedContent) ? (
+                        <ul className="space-y-2">
+                            {repairedContent.map((calloutItem) => (
+                                <li key={calloutItem}>{repairText(calloutItem)}</li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p>{repairText(repairedContent)}</p>
+                    )}
+                </div>
+            );
+        }
+
+        if (item.type === 'resource') {
+            const repairedContent = item.content ? repairContent(item.content) : null;
+
+            return (
+                <div key={`${item.type}-${index}`} className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                    <h3 className="text-base font-bold text-white">{repairText(item.title)}</h3>
+                    {Array.isArray(repairedContent) ? (
+                        <ul className="mt-3 space-y-2 text-sm leading-7 text-slate-300">
+                            {repairedContent.map((resourceItem) => (
+                                <li key={resourceItem}>{repairText(resourceItem)}</li>
+                            ))}
+                        </ul>
+                    ) : repairedContent ? (
+                        <p className="mt-3 text-sm leading-7 text-slate-300">{repairText(repairedContent)}</p>
+                    ) : null}
+                    {item.href && (
+                        <a href={item.href} target="_blank" rel="noreferrer" className="mt-4 inline-flex rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300/15">
+                            Open resource
+                        </a>
+                    )}
+                </div>
+            );
+        }
+
+        if (item.type === 'template') {
+            return (
+                <div key={`${item.type}-${index}`} className="mt-5 rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.04] p-5 text-sm leading-7 text-slate-300">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-200/70">Template reference</p>
+                    <p className="mt-2 font-semibold text-white">{item.templateId}</p>
+                    {item.content && <p className="mt-2">{repairText(item.content)}</p>}
+                </div>
             );
         }
 
@@ -197,10 +386,10 @@ const ProgramDashboardPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[radial-gradient(ellipse_80%_60%_at_15%_20%,_rgba(201,168,76,0.06),_transparent_50%),linear-gradient(180deg,_#020617_0%,_#0A1628_48%,_#060B18_100%)]">
+        <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[radial-gradient(ellipse_80%_60%_at_15%_20%,_rgba(201,168,76,0.06),_transparent_50%),linear-gradient(180deg,_#020617_0%,_#0A1628_48%,_#060B18_100%)]">
             {/* Sticky header */}
             <header className="sticky top-0 z-30 border-b border-zen-gold/10 bg-[linear-gradient(180deg,rgba(6,11,24,0.96)_0%,rgba(15,23,42,0.92)_100%)] backdrop-blur-2xl">
-                <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8 lg:px-10">
+                <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8 lg:px-10">
                     <div className="min-w-0">
                         <Link to="/hub" className="text-xs font-semibold uppercase tracking-[0.3em] text-zen-gold/60 transition hover:text-zen-gold">
                             ← Back to Program Hub
@@ -240,7 +429,20 @@ const ProgramDashboardPage: React.FC = () => {
                 </div>
             </header>
 
-            <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:px-10">
+            <div className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 lg:px-10">
+                {manifest && isAdminPreview && !isProgramPubliclyAvailable(manifest) && (
+                    <section className="mb-8 rounded-[1.75rem] border border-blue-300/20 bg-blue-300/[0.06] p-5 shadow-zen-card backdrop-blur-xl sm:p-6">
+                        <span className="inline-flex rounded-full border border-blue-300/20 bg-blue-300/[0.08] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-blue-100">
+                            Admin Preview
+                        </span>
+                        <h2 className="mt-3 text-xl font-bold text-white">This program is not publicly available.</h2>
+                        <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-300">
+                            Current state: {manifest.availability.adminLabel}. Arsenal readiness: {manifest.availability.arsenalReadyStatus}.
+                            Admin preview does not publish the program or grant public access.
+                        </p>
+                    </section>
+                )}
+
                 {/* Info cards */}
                 <div className="mb-8 grid gap-4 lg:grid-cols-3">
                     <div className="rounded-[1.6rem] border border-zen-gold/10 bg-zen-surface/60 p-6 shadow-zen-card backdrop-blur-xl">
@@ -265,6 +467,38 @@ const ProgramDashboardPage: React.FC = () => {
                     </div>
                 </div>
 
+                {accessNotice && !accessDecision?.allowed && (
+                    <section className={`mb-8 rounded-[1.75rem] border p-5 shadow-zen-card backdrop-blur-xl sm:p-6 ${
+                        accessNotice.tone === 'locked'
+                            ? 'border-amber-300/20 bg-amber-300/[0.06]'
+                            : 'border-cyan-300/20 bg-cyan-300/[0.05]'
+                    }`}>
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="min-w-0">
+                                <span className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] ${
+                                    accessNotice.tone === 'locked'
+                                        ? 'border-amber-300/20 bg-amber-300/[0.08] text-amber-100'
+                                        : 'border-cyan-300/20 bg-cyan-300/[0.08] text-cyan-100'
+                                }`}>
+                                    {accessNotice.label}
+                                </span>
+                                <h2 className="mt-3 text-xl font-bold text-white">{accessNotice.title}</h2>
+                                <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-300">
+                                    {accessNotice.body} This is a non-blocking access notice; the current route remains available during the frontend entitlement preview.
+                                </p>
+                            </div>
+                            {accessNotice.cta && (
+                                <Link
+                                    to="/paywall"
+                                    className="inline-flex flex-shrink-0 rounded-full border border-zen-gold/20 bg-zen-gold/[0.08] px-5 py-3 text-sm font-semibold text-zen-gold transition hover:-translate-y-0.5 hover:bg-zen-gold/[0.12]"
+                                >
+                                    {accessNotice.cta}
+                                </Link>
+                            )}
+                        </div>
+                    </section>
+                )}
+
                 {/* Main content area */}
                 <div className="grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)]">
                     {/* Sidebar */}
@@ -278,8 +512,8 @@ const ProgramDashboardPage: React.FC = () => {
                     </aside>
 
                     {/* Article content */}
-                    <main className="space-y-6">
-                        <article className="rounded-[1.9rem] border border-zen-gold/10 bg-zen-surface/60 p-6 shadow-zen-card backdrop-blur-xl sm:p-8">
+                    <main className="min-w-0 space-y-6">
+                        <article className="min-w-0 rounded-[1.9rem] border border-zen-gold/10 bg-zen-surface/60 p-6 shadow-zen-card backdrop-blur-xl sm:p-8">
                             <div className="flex flex-wrap items-center gap-3">
                                 <span className={`inline-flex rounded-full bg-gradient-to-r ${colors?.gradient} px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-white`}>
                                     {program.level}
@@ -287,6 +521,11 @@ const ProgramDashboardPage: React.FC = () => {
                                 <span className="rounded-full border border-zen-gold/15 bg-zen-gold/[0.06] px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-zen-gold/80">
                                     {program.duration}
                                 </span>
+                                {accessDecision?.allowed && (
+                                    <span className="rounded-full border border-emerald-300/20 bg-emerald-300/[0.08] px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-100">
+                                        Included in your plan
+                                    </span>
+                                )}
                             </div>
 
                             <h2 className="mt-5 text-3xl font-black tracking-tight text-white">
@@ -297,6 +536,8 @@ const ProgramDashboardPage: React.FC = () => {
                                 {currentSection.content.map((item, index) => renderContentItem(item, index))}
                             </div>
                         </article>
+
+                        {isPioneerLaunchSection && <PioneerLearningAssets />}
 
                         {/* Skills and next actions */}
                         <section className="rounded-[1.9rem] border border-zen-gold/10 bg-zen-surface/60 p-6 shadow-zen-card backdrop-blur-xl sm:p-8">

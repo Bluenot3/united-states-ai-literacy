@@ -1,11 +1,7 @@
 import type { BadgeKind, ModuleProgress, User, UserBadge } from '../types';
+import { VANGUARD_MODULE_TOTALS } from '../zen-programs/manifests/vanguardManifest';
 
-export const VANGUARD_MODULE_TOTALS: Record<1 | 2 | 3 | 4, number> = {
-    1: 50,
-    2: 40,
-    3: 40,
-    4: 60,
-};
+export { VANGUARD_MODULE_TOTALS };
 
 export const VANGUARD_MODULE_NAMES: Record<1 | 2 | 3 | 4, string> = {
     1: 'AI Foundations',

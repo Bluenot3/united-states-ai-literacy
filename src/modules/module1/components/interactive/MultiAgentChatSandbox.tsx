@@ -9,7 +9,9 @@ const agents = {
     Critic: { color: 'bg-red-500', icon: '🧐' },
 };
 
-const script = [
+type AgentName = keyof typeof agents;
+
+const script: Array<{ agent: AgentName; text: string }> = [
     { agent: 'Planner', text: "Task received: 'Summarize the impact of AI on renewable energy.' I'll create a plan: 1. Research recent breakthroughs. 2. Identify key impact areas. 3. Draft a summary." },
     { agent: 'Researcher', text: "Executing step 1. Found articles on AI-optimized wind turbine placement and predictive maintenance for solar farms. Key impact areas: efficiency, cost reduction, and grid management." },
     { agent: 'Writer', text: "Drafting summary based on research. 'AI is revolutionizing renewable energy by optimizing turbine placement for up to 20% more efficiency and using predictive models to reduce solar farm maintenance costs...'" },
@@ -21,7 +23,7 @@ const script = [
 
 const MultiAgentChatSandbox: React.FC<InteractiveComponentProps> = ({ interactiveId }) => {
     const { addPoints, updateModuleProgress, getModuleProgress } = useAuth();
-    const [messages, setMessages] = useState<{ agent: string, text: string }[]>([]);
+    const [messages, setMessages] = useState<Array<{ agent: AgentName; text: string }>>([]);
     const [isPlaying, setIsPlaying] = useState(false);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);

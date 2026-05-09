@@ -35,15 +35,15 @@ const Header: React.FC = () => {
     const completionPercent = Math.round((completedModules / 4) * 100);
 
     return (
-        <header className="sticky top-0 z-30 border-b border-zen-border bg-[linear-gradient(180deg,rgba(5,10,24,0.98)_0%,rgba(8,14,29,0.95)_100%)] backdrop-blur-2xl">
-            <div className="relative px-4 py-3 lg:px-6">
+        <header className="sticky top-0 z-30 w-full max-w-full overflow-x-hidden border-b border-zen-border bg-[linear-gradient(180deg,rgba(5,10,24,0.98)_0%,rgba(8,14,29,0.95)_100%)] backdrop-blur-2xl">
+            <div className="relative min-w-0 max-w-full px-4 py-3 lg:px-6">
                 <div className="pointer-events-none absolute inset-0 overflow-hidden">
                     <div className="absolute left-10 top-0 h-16 w-44 rounded-full bg-zen-gold/[0.06] blur-3xl" />
                     <div className="absolute right-12 top-0 h-16 w-52 rounded-full bg-brand-cyan/[0.06] blur-3xl" />
                     <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-zen-gold/20 to-transparent" />
                 </div>
 
-                <div className="relative flex items-center justify-between gap-4">
+                <div className="relative flex min-w-0 items-center justify-between gap-4">
                     {/* Left: page identity */}
                     <div className="flex items-center gap-3 min-w-0">
                         {/* Sidebar toggle — visible when sidebar is collapsed */}

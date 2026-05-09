@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useBilling } from '../contexts/BillingContext';
+import type { SubscriptionTier } from '../entitlements';
 
 const includedFeatures = [
     { label: '4 structured AI learning modules', icon: '◈' },
@@ -9,27 +10,37 @@ const includedFeatures = [
     { label: 'Program Hub and guided learning paths', icon: '◈' },
 ];
 
+const tierOptions: Array<{ tier: SubscriptionTier; label: string; description: string }> = [
+    { tier: 'starter', label: 'Starter', description: 'AI Pioneer lite, basic templates, and limited agents.' },
+    { tier: 'builder', label: 'Builder', description: 'Full AI Pioneer, Hugging Face templates, and Builder Labs.' },
+    { tier: 'pro', label: 'Pro', description: 'Vanguard, advanced templates, automation labs, and Arsenal tools.' },
+    { tier: 'educator', label: 'Educator', description: 'Train-the-Trainer, rubrics, and facilitator resources.' },
+    { tier: 'family', label: 'Family', description: 'Homeschool Kit, parent guide, records, and capstone support.' },
+    { tier: 'business', label: 'Business', description: 'Business automation materials, workflow agents, and team resources.' },
+    { tier: 'org', label: 'Org', description: 'Bulk enrollment, cohort reporting, and custom support.' },
+];
+
 const PaywallPage: React.FC = () => {
     const { createCheckoutSession, adminBypass, error } = useBilling();
     const [showAdminModal, setShowAdminModal] = useState(false);
     const [adminUsername, setAdminUsername] = useState('');
     const [adminPassword, setAdminPassword] = useState('');
     const [adminError, setAdminError] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [loadingTier, setLoadingTier] = useState<SubscriptionTier | 'legacy' | null>(null);
 
-    const handleSubscribe = async () => {
-        setLoading(true);
-        const url = await createCheckoutSession();
+    const handleSubscribe = async (tier?: SubscriptionTier) => {
+        setLoadingTier(tier ?? 'legacy');
+        const url = await createCheckoutSession(tier);
         if (url) {
             window.location.href = url;
         }
-        setLoading(false);
+        setLoadingTier(null);
     };
 
     const handleAdminLogin = async (event: React.FormEvent) => {
         event.preventDefault();
         setAdminError('');
-        setLoading(true);
+        setLoadingTier('legacy');
 
         const success = await adminBypass(adminUsername, adminPassword);
 
@@ -39,7 +50,7 @@ const PaywallPage: React.FC = () => {
             setAdminError('Admin access unavailable or credentials rejected.');
         }
 
-        setLoading(false);
+        setLoadingTier(null);
     };
 
     const closeAdminModal = () => {
@@ -117,11 +128,11 @@ const PaywallPage: React.FC = () => {
 
                         {/* Subscribe CTA */}
                         <button
-                            onClick={handleSubscribe}
-                            disabled={loading}
+                            onClick={() => void handleSubscribe()}
+                            disabled={loadingTier !== null}
                             className="mt-7 w-full rounded-full bg-gradient-to-r from-zen-gold via-zen-gold-light to-zen-gold px-6 py-4 text-sm font-bold text-zen-navy shadow-glowing-gold transition hover:opacity-90 hover:shadow-[0_0_40px_rgba(201,168,76,0.35)] disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            {loading ? (
+                            {loadingTier === 'legacy' ? (
                                 <span className="flex items-center justify-center gap-2">
                                     <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
@@ -133,6 +144,34 @@ const PaywallPage: React.FC = () => {
                                 'Subscribe Now'
                             )}
                         </button>
+
+                        <div className="mt-7">
+                            <p className="text-center text-[10px] font-semibold uppercase tracking-[0.25em] text-zen-gold/60">
+                                Tier-ready checkout
+                            </p>
+                            <div className="mt-4 grid gap-3">
+                                {tierOptions.map((option) => (
+                                    <button
+                                        key={option.tier}
+                                        type="button"
+                                        onClick={() => void handleSubscribe(option.tier)}
+                                        disabled={loadingTier !== null}
+                                        className="rounded-2xl border border-zen-gold/10 bg-zen-navy/45 px-4 py-3 text-left transition hover:border-zen-gold/20 hover:bg-zen-gold/[0.05] disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        <div className="flex items-center justify-between gap-3">
+                                            <span className="text-sm font-bold text-white">{option.label}</span>
+                                            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-zen-gold/70">
+                                                {loadingTier === option.tier ? 'Starting...' : 'Select'}
+                                            </span>
+                                        </div>
+                                        <p className="mt-1 text-xs leading-6 text-slate-500">{option.description}</p>
+                                    </button>
+                                ))}
+                            </div>
+                            <p className="mt-3 text-center text-xs leading-6 text-slate-600">
+                                Tier buttons require matching server price env vars. The original subscription button above still uses the legacy Stripe price.
+                            </p>
+                        </div>
 
                         {/* Stripe trust badge */}
                         <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-600">
@@ -191,7 +230,7 @@ const PaywallPage: React.FC = () => {
                                 value={adminUsername}
                                 onChange={(event) => setAdminUsername(event.target.value)}
                                 placeholder="Username"
-                                disabled={loading}
+                                disabled={loadingTier !== null}
                                 className="w-full rounded-2xl border border-zen-gold/10 bg-zen-navy/80 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-zen-gold/30 focus:ring-2 focus:ring-zen-gold/10"
                             />
                             <input
@@ -199,7 +238,7 @@ const PaywallPage: React.FC = () => {
                                 value={adminPassword}
                                 onChange={(event) => setAdminPassword(event.target.value)}
                                 placeholder="Password"
-                                disabled={loading}
+                                disabled={loadingTier !== null}
                                 className="w-full rounded-2xl border border-zen-gold/10 bg-zen-navy/80 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-zen-gold/30 focus:ring-2 focus:ring-zen-gold/10"
                             />
 
@@ -211,10 +250,10 @@ const PaywallPage: React.FC = () => {
 
                             <button
                                 type="submit"
-                                disabled={loading || !adminUsername || !adminPassword}
+                                disabled={loadingTier !== null || !adminUsername || !adminPassword}
                                 className="w-full rounded-full border border-slate-700 bg-slate-800 px-6 py-3 text-sm font-bold text-slate-200 transition hover:border-slate-600 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                                {loading ? 'Verifying…' : 'Continue'}
+                                {loadingTier === 'legacy' ? 'Verifying…' : 'Continue'}
                             </button>
                         </form>
                     </div>

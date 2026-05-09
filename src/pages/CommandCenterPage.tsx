@@ -89,12 +89,12 @@ const commandTiles: CommandTile[] = [
     {
         title: 'Web3 Credentials',
         label: 'Proof-Linked Credential Layer',
-        description: 'Issue portable, blockchain-ready certificates tied to learner identity, deployment artifacts, review trails, and portfolio evidence.',
-        cta: 'Open Credential Forge',
+        description: 'Design CREDS payloads tied to learner identity, deployment artifacts, review trails, and future attestation or onchain proof mechanisms.',
+        cta: 'Open CREDS',
         icon: 'verify',
         tone: 'from-zen-emerald/80 via-brand-cyan/70 to-zen-gold/70',
         destination: 'internal',
-        to: '/credential-forge',
+        to: '/creds',
     },
     {
         title: 'ZEN Overview',
@@ -118,7 +118,7 @@ const proofHighlights = [
     'Learners deploy agents, apps, automations, credentials, and portfolios',
     'Every learner ships real agents, apps, or automation systems',
     'AI-assisted and human-reviewed assessment at each milestone',
-    'Blockchain-ready certificates tied to portfolio artifacts',
+    'CREDS payloads positioned for future attestation and portfolio proof',
     'Git-based learner projects, semantic curriculum versions, and rollback paths',
 ];
 
@@ -206,9 +206,9 @@ const launchReadiness = [
         detail: 'Inputs, processes, outputs, audit trails, versioning, and credential standards are visible as the operating model.',
     },
     {
-        title: 'Credential Forge routed',
+        title: 'CREDS routed',
         state: 'Live',
-        detail: 'The Web3 credential tile opens the proof-linked credential layer already mounted in the app.',
+        detail: 'The Web3 credential tile opens the CREDS workbench already mounted in the app, with dry-run attestation payloads and future integration hooks.',
     },
     {
         title: 'AI Social distribution',
@@ -353,7 +353,7 @@ const CommandCenterPage: React.FC = () => {
                             ZEN Ecosystem Command Center
                         </h1>
                         <p className="mt-6 max-w-3xl text-base leading-8 text-slate-300 sm:text-lg">
-                            Enter the operating layer connecting Arsenal, AI literacy programs, automation systems, AI social tools, business solutions, and blockchain-verified credentials.
+                            Enter the operating layer connecting Arsenal, AI literacy programs, automation systems, AI social tools, business solutions, and proof-linked CREDS infrastructure.
                         </p>
 
                         <div className="mt-8 flex flex-col gap-3 sm:flex-row">

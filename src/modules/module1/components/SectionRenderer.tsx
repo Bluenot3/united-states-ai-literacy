@@ -1,5 +1,5 @@
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useRef, useState } from 'react';
 import type { ContentItem, Section } from '../types';
 import CodeBlock from './CodeBlock';
 import MermaidDiagram from './MermaidDiagram';
@@ -222,6 +222,80 @@ interface SectionRendererProps {
     itemIndex: number;
 }
 
+interface InteractiveLabMountProps {
+    componentName: string;
+    interactiveId: string;
+    animationStyle: React.CSSProperties;
+    InteractiveComponent: React.LazyExoticComponent<React.FC<any>>;
+}
+
+const InteractiveLabMount: React.FC<InteractiveLabMountProps> = ({
+    componentName,
+    interactiveId,
+    animationStyle,
+    InteractiveComponent,
+}) => {
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const [shouldMount, setShouldMount] = useState(false);
+
+    useEffect(() => {
+        const element = containerRef.current;
+
+        if (!element || typeof IntersectionObserver === 'undefined') {
+            setShouldMount(true);
+            return;
+        }
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry?.isIntersecting) {
+                    setShouldMount(true);
+                    observer.disconnect();
+                }
+            },
+            { rootMargin: '900px 0px 900px 0px', threshold: 0.01 },
+        );
+
+        observer.observe(element);
+
+        return () => observer.disconnect();
+    }, []);
+
+    return (
+        <div ref={containerRef} className="animate-slide-in-up my-6" style={animationStyle}>
+            <div className="flex items-center gap-3 mb-4 pl-1">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-violet-400/25 bg-violet-400/[0.08]">
+                    <svg className="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
+                    </svg>
+                </div>
+                <span className="text-[11px] font-bold uppercase tracking-[0.28em] text-violet-300">Interactive Lab</span>
+            </div>
+
+            {shouldMount ? (
+                <Suspense fallback={
+                    <div className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-[linear-gradient(160deg,rgba(7,14,30,0.95),rgba(12,20,39,0.9))] p-12 flex flex-col items-center justify-center gap-4">
+                        <div className="relative">
+                            <div className="w-10 h-10 rounded-full border-2 border-violet-400/20 border-t-violet-400 animate-spin" />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="w-2 h-2 rounded-full bg-violet-400/60" />
+                            </div>
+                        </div>
+                        <p className="text-sm text-slate-400 font-medium">Loading Lab...</p>
+                    </div>
+                }>
+                    <InteractiveComponent interactiveId={interactiveId} />
+                </Suspense>
+            ) : (
+                <div className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-[linear-gradient(160deg,rgba(7,14,30,0.82),rgba(12,20,39,0.74))] p-6">
+                    <p className="text-sm font-semibold text-slate-200">{componentName}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-400">This lab loads when it comes into view.</p>
+                </div>
+            )}
+        </div>
+    );
+};
+
 const formatText = (text: string): React.ReactNode => {
     if (!text) return '';
 
@@ -298,29 +372,12 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ item, section, itemIn
                 const InteractiveComponent = componentMap[item.component];
                 if (InteractiveComponent) {
                     return (
-                        <div className="animate-slide-in-up my-6" style={animationStyle}>
-                            <div className="flex items-center gap-3 mb-4 pl-1">
-                                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-violet-400/25 bg-violet-400/[0.08]">
-                                    <svg className="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
-                                    </svg>
-                                </div>
-                                <span className="text-[11px] font-bold uppercase tracking-[0.28em] text-violet-300">Interactive Lab</span>
-                            </div>
-                            <Suspense fallback={
-                                <div className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-[linear-gradient(160deg,rgba(7,14,30,0.95),rgba(12,20,39,0.9))] p-12 flex flex-col items-center justify-center gap-4">
-                                    <div className="relative">
-                                        <div className="w-10 h-10 rounded-full border-2 border-violet-400/20 border-t-violet-400 animate-spin" />
-                                        <div className="absolute inset-0 flex items-center justify-center">
-                                            <div className="w-2 h-2 rounded-full bg-violet-400/60" />
-                                        </div>
-                                    </div>
-                                    <p className="text-sm text-slate-400 font-medium">Loading Lab...</p>
-                                </div>
-                            }>
-                                <InteractiveComponent interactiveId={item.interactiveId || section.id} />
-                            </Suspense>
-                        </div>
+                        <InteractiveLabMount
+                            animationStyle={animationStyle}
+                            componentName={item.component}
+                            interactiveId={item.interactiveId || section.id}
+                            InteractiveComponent={InteractiveComponent}
+                        />
                     );
                 }
             }

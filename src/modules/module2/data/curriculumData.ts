@@ -656,7 +656,7 @@ export const curriculumData: Curriculum = {
             },
 
             { type: 'heading', content: 'The one thing that confuses beginners: API keys' },
-            { type: 'paragraph', content: 'If your app calls OpenAI / Google / etc., it needs a secret key. You do not paste keys inside app.py. Instead: Space Settings → Secrets. Add something like: OPENAI_API_KEY = your_key_here or GOOGLE_API_KEY = your_key_here. Then in code, it reads from environment variables. This is safer and the normal professional method.' },
+            { type: 'paragraph', content: 'If your app calls OpenAI / Google / etc., it needs a secret key. You do not paste keys inside app.py. Instead: Space Settings → Secrets. Add something like: OPENAI_API_KEY=<OPENAI_API_KEY> or GOOGLE_API_KEY = your_key_here. Then in code, it reads from environment variables. This is safer and the normal professional method.' },
 
             { type: 'heading', content: 'How to know it’s working' },
             {
@@ -1488,7 +1488,7 @@ export const curriculumData: Curriculum = {
             },
 
             { type: 'heading', content: 'The one thing that confuses beginners: API keys' },
-            { type: 'paragraph', content: 'If your app calls OpenAI / Google / etc., it needs a secret key. You do not paste keys inside app.py. Instead: Space Settings → Secrets. Add something like: OPENAI_API_KEY = your_key_here or GOOGLE_API_KEY = your_key_here. Then in code, it reads from environment variables. This is safer and the normal professional method.' },
+            { type: 'paragraph', content: 'If your app calls OpenAI / Google / etc., it needs a secret key. You do not paste keys inside app.py. Instead: Space Settings → Secrets. Add something like: OPENAI_API_KEY=<OPENAI_API_KEY> or GOOGLE_API_KEY = your_key_here. Then in code, it reads from environment variables. This is safer and the normal professional method.' },
 
             { type: 'heading', content: 'How to know it’s working' },
             {

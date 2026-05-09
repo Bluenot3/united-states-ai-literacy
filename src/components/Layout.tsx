@@ -66,13 +66,13 @@ const Layout: React.FC = () => {
     const sidebarMargin = isHubPage ? '' : isCollapsed ? 'lg:ml-16' : 'lg:ml-52';
 
     const content = (
-        <div className={`relative flex min-h-screen font-sans text-brand-text ${isOpsMode ? 'bg-[var(--ops-base)]' : 'bg-transparent'}`}>
+        <div className={`relative flex min-h-screen w-full max-w-full overflow-x-hidden font-sans text-brand-text ${isOpsMode ? 'bg-[var(--ops-base)]' : 'bg-transparent'}`}>
             {!isOpsMode && <AnimatedBackground />}
             <LuxuryClickEffects />
 
             {!isHubPage && <GlobalSidebar />}
 
-            <div className={`relative z-10 flex min-h-screen flex-1 flex-col transition-all duration-300 ${sidebarMargin}`}>
+            <div className={`relative z-10 flex min-h-screen min-w-0 max-w-full flex-1 flex-col overflow-x-hidden transition-all duration-300 ${sidebarMargin}`}>
                 {/* Hide the global header on module pages — each module has its own header */}
                 {!isModulePage && <Header />}
 
@@ -88,7 +88,7 @@ const Layout: React.FC = () => {
                 <main
                     id="main-content"
                     ref={mainContentRef}
-                    className={`no-scrollbar flex-1 ${isModulePage ? 'p-0' : 'p-4 lg:p-8'}`}
+                    className={`no-scrollbar min-w-0 max-w-full flex-1 overflow-x-hidden ${isModulePage ? 'p-0' : 'p-4 lg:p-8'}`}
                 >
                     <Outlet />
                 </main>

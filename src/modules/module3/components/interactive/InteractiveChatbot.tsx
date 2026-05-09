@@ -59,7 +59,7 @@ const InteractiveChatbot: React.FC<InteractiveComponentProps> = ({ interactiveId
 
     try {
       const response = await chatRef.current.sendMessage({ message: input });
-      const botMessage: Message = { text: response.text, sender: 'bot' };
+      const botMessage: Message = { text: response.text ?? '', sender: 'bot' };
       setMessages(prev => [...prev, botMessage]);
       if (!hasCompleted) {
         addPoints(1); // Give a point per interaction

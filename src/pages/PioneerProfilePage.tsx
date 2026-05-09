@@ -50,7 +50,7 @@ const PioneerProfilePage: React.FC = () => {
                         <div className="flex-1 text-center md:text-left space-y-2">
                             <div className="flex flex-col md:flex-row items-center md:items-end gap-3 justify-center md:justify-start">
                                 <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white drop-shadow-lg">
-                                    {user?.name || 'Pioneer Command'}
+                                    {user?.name || 'Vanguard Command'}
                                 </h1>
                                 <span className="mb-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold uppercase tracking-wider glow-amber">
                                     Lvl {Math.floor((user?.totalPoints || 0) / 1000) + 1} Scout
@@ -151,7 +151,7 @@ const PioneerProfilePage: React.FC = () => {
                         onClick={() => setActiveTab('notebook')}
                         className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'notebook' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
                     >
-                        Field Notebook
+                        Vanguard Notebook
                     </button>
                     <button
                         onClick={() => setActiveTab('gallery')}

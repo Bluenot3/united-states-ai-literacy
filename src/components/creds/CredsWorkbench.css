@@ -1,4 +1,4 @@
-.credential-forge {
+.creds-workbench {
     --cf-bg: #02040a;
     --cf-panel: rgba(8, 17, 31, 0.74);
     --cf-panel-strong: rgba(11, 24, 42, 0.88);
@@ -21,13 +21,13 @@
     overflow: hidden;
 }
 
-.credential-forge *,
-.credential-forge *::before,
-.credential-forge *::after {
+.creds-workbench *,
+.creds-workbench *::before,
+.creds-workbench *::after {
     box-sizing: border-box;
 }
 
-.credential-forge::before {
+.creds-workbench::before {
     content: "";
     position: fixed;
     inset: 0;
@@ -84,6 +84,15 @@
     color: #dbe8f8;
     font-size: clamp(15px, 1.4vw, 18px);
     line-height: 1.55;
+}
+
+.cf-hero .cf-boundary-note {
+    margin-top: 14px;
+    color: #f8d98a;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
 .cf-hero-status {
@@ -1075,7 +1084,7 @@
 }
 
 @media (max-width: 940px) {
-    .credential-forge {
+    .creds-workbench {
         margin: 0;
         padding: 18px 12px 88px;
         overflow-x: hidden;
@@ -1126,7 +1135,7 @@
 }
 
 @media (max-width: 560px) {
-    .credential-forge {
+    .creds-workbench {
         padding: 14px 10px 88px;
     }
 
@@ -1178,3 +1187,4 @@
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-7px); }
 }
+

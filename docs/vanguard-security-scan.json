@@ -1,0 +1,44 @@
+{
+  "generatedAt": "2026-05-08T03:03:08.051Z",
+  "sanitizedReplacements": [
+    {
+      "file": ".env.example",
+      "line": 60,
+      "type": "supabase-service-role-env",
+      "placeholder": "SUPABASE_SERVICE_ROLE_KEY=<SUPABASE_SERVICE_ROLE_KEY>"
+    },
+    {
+      "file": ".env.local",
+      "line": 8,
+      "type": "openai-env",
+      "placeholder": "OPENAI_API_KEY=<OPENAI_API_KEY>"
+    },
+    {
+      "file": "src/modules/module2/data/curriculumData.ts",
+      "line": 659,
+      "type": "openai-demo-env",
+      "placeholder": "OPENAI_API_KEY=<OPENAI_API_KEY>"
+    },
+    {
+      "file": "src/modules/module2/data/curriculumData.ts",
+      "line": 1491,
+      "type": "openai-demo-env",
+      "placeholder": "OPENAI_API_KEY=<OPENAI_API_KEY>"
+    },
+    {
+      "file": "SYLLABUS/MODULE_2_SYLLABUS.md",
+      "line": 453,
+      "type": "openai-demo-env",
+      "placeholder": "OPENAI_API_KEY=<OPENAI_API_KEY>"
+    }
+  ],
+  "falsePositiveRestored": [
+    {
+      "file": "server/index.js",
+      "line": 44,
+      "type": "process-env-read",
+      "status": "Restored as process.env.OPENAI_API_KEY; not a hard-coded secret."
+    }
+  ],
+  "remainingFindings": []
+}

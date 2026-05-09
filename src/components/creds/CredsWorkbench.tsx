@@ -5,18 +5,20 @@ import {
     CredentialTheme,
     CredentialTier,
     MockAchievement,
+    ProofStandard,
     StampedAchievement,
     VerificationStatus,
     buildMintPayload,
     prepareCredentialMetadata,
     stampAchievementMock,
     verifyCredentialMock,
-} from './credentialForgeMock';
-import './CredentialForge.css';
+} from './credsMock';
+import './CredsWorkbench.css';
 
 const tiers: CredentialTier[] = ['Member', 'Builder', 'Operator', 'Architect', 'Founder', 'Partner'];
 const themes: CredentialTheme[] = ['Aurora Glass', 'Obsidian Chrome', 'Solar Gold', 'Ultraviolet', 'Crystal Matrix'];
 const badgeStyles: BadgeStyle[] = ['Prism Seal', 'Orbital Crest', 'Institutional Glyph', 'Signal Mark', 'Founders Sigil'];
+const proofStandards: ProofStandard[] = ['W3C VC', 'Open Badges 3.0', 'EAS', 'Custom Registry'];
 
 const themeProfiles: Record<CredentialTheme, {
     architecture: string;
@@ -99,7 +101,9 @@ const premiumPresets: CredentialDesign[] = [
         holographicIntensity: 78,
         particleDensity: 58,
         badgeStyle: 'Prism Seal',
-        chainLabel: 'ZEN Testnet Placeholder',
+        networkLabel: 'Base Sepolia',
+        issuerLabel: 'ZEN CREDS Preview Issuer',
+        proofStandard: 'W3C VC',
     },
     {
         participantName: 'Jordan Vale',
@@ -110,7 +114,9 @@ const premiumPresets: CredentialDesign[] = [
         holographicIntensity: 64,
         particleDensity: 42,
         badgeStyle: 'Institutional Glyph',
-        chainLabel: 'Mock L2 Credential Layer',
+        networkLabel: 'Optimism Sepolia',
+        issuerLabel: 'ZEN Ops Issuer',
+        proofStandard: 'EAS',
     },
     {
         participantName: 'Mika Chen',
@@ -121,7 +127,9 @@ const premiumPresets: CredentialDesign[] = [
         holographicIntensity: 86,
         particleDensity: 72,
         badgeStyle: 'Orbital Crest',
-        chainLabel: 'Proof Layer Sandbox',
+        networkLabel: 'Polygon Amoy',
+        issuerLabel: 'ZEN Architecture Issuer',
+        proofStandard: 'Open Badges 3.0',
     },
     {
         participantName: 'Noah Rivers',
@@ -132,13 +140,15 @@ const premiumPresets: CredentialDesign[] = [
         holographicIntensity: 72,
         particleDensity: 38,
         badgeStyle: 'Founders Sigil',
-        chainLabel: 'Credential Registry Mock',
+        networkLabel: 'Arbitrum Sepolia',
+        issuerLabel: 'ZEN Founders Registry',
+        proofStandard: 'Custom Registry',
     },
 ];
 
 const defaultDesign = premiumPresets[0];
 
-const statusOrder: VerificationStatus[] = ['pending', 'confirmed', 'anchored'];
+const statusOrder: VerificationStatus[] = ['prepared', 'attestation-ready', 'anchored'];
 
 const copyToClipboard = async (value: string) => {
     if (!navigator.clipboard) {
@@ -181,7 +191,7 @@ const CredentialCard: React.FC<{
     stampedAchievements: StampedAchievement[];
     pulseKey: number;
 }> = ({ design, stampedAchievements, pulseKey }) => {
-    const latestStatus = stampedAchievements.length ? stampedAchievements[stampedAchievements.length - 1].status : 'pending';
+    const latestStatus = stampedAchievements.length ? stampedAchievements[stampedAchievements.length - 1].status : 'prepared';
     const themeClass = getThemeClass(design.theme);
     const themeProfile = themeProfiles[design.theme];
     const credentialSeed = `${design.participantName}-${design.credentialTitle}-${design.cohort}`;
@@ -213,8 +223,8 @@ const CredentialCard: React.FC<{
                 </div>
 
                 <div className="cf-card-topline">
-                    <span>Credential Forge</span>
-                    <span>{design.chainLabel || 'Network Placeholder'}</span>
+                    <span>CREDS</span>
+                    <span>{design.networkLabel || 'Network Placeholder'}</span>
                 </div>
 
                 <div className="cf-card-main">
@@ -266,15 +276,15 @@ const CredentialCard: React.FC<{
                 </div>
 
                 <div className="cf-card-footer">
-                    <span>Verification glow: {latestStatus}</span>
-                    <span>Microtext: ZEN proof layer prototype only</span>
+                    <span>Attestation state: {latestStatus}</span>
+                    <span>Microtext: dry-run only, awaiting issuer and wallet integration</span>
                 </div>
             </div>
         </section>
     );
 };
 
-const CredentialForge: React.FC = () => {
+const CredsWorkbench: React.FC = () => {
     const [design, setDesign] = useState<CredentialDesign>(defaultDesign);
     const [stampedAchievements, setStampedAchievements] = useState<StampedAchievement[]>([]);
     const [selectedAchievementId, setSelectedAchievementId] = useState(achievements[0].id);
@@ -313,18 +323,18 @@ const CredentialForge: React.FC = () => {
             return [...withoutExisting, stamped];
         });
         setPulseKey((current) => current + 1);
-        setCopyState('Achievement pending');
+        setCopyState('Attestation prepared');
 
-        const confirmedTimer = window.setTimeout(() => {
-            updateAchievementStatus(stamped.id, 'confirmed');
-            setCopyState('Achievement confirmed');
+        const readyTimer = window.setTimeout(() => {
+            updateAchievementStatus(stamped.id, 'attestation-ready');
+            setCopyState('Attestation payload ready');
         }, 850);
         const anchoredTimer = window.setTimeout(() => {
             updateAchievementStatus(stamped.id, 'anchored');
-            setCopyState('Achievement anchored');
+            setCopyState('Anchoring simulated');
         }, 1750);
 
-        timersRef.current.push(confirmedTimer, anchoredTimer);
+        timersRef.current.push(readyTimer, anchoredTimer);
     };
 
     const resetDesign = () => {
@@ -348,7 +358,7 @@ const CredentialForge: React.FC = () => {
             tier: tiers[Math.floor(Math.random() * tiers.length)],
         });
         setPulseKey((current) => current + 1);
-        setCopyState('Premium variant generated');
+        setCopyState('CREDS variant generated');
     };
 
     const handleCopy = async (label: string, value: string) => {
@@ -363,21 +373,24 @@ const CredentialForge: React.FC = () => {
     const latestAchievement = stampedAchievements.length ? stampedAchievements[stampedAchievements.length - 1] : undefined;
 
     return (
-        <div className="credential-forge">
+        <div className="creds-workbench">
             <div className="cf-shell">
                 <header className="cf-hero">
                     <div>
-                        <p className="cf-system-label">Experimental Prototype</p>
-                        <h1>Credential Forge</h1>
+                        <p className="cf-system-label">Credential Attestation Dry Run</p>
+                        <h1>CREDS</h1>
                         <p>
-                            Design premium holographic credential cards, simulate achievement stamps, and inspect mock metadata without
-                            connecting wallets, chains, databases, or production user records.
+                            Design premium proof cards, simulate issuer-side achievement attestations, and inspect dry-run metadata and
+                            payloads aligned to future wallet, registry, and anchoring flows without touching production learner records.
+                        </p>
+                        <p className="cf-boundary-note">
+                            Credential simulation / dry-run attestation workbench. Not production issuer pipeline.
                         </p>
                     </div>
-                    <div className="cf-hero-status" aria-label="Prototype safety status">
+                    <div className="cf-hero-status" aria-label="Dry-run infrastructure status">
                         <span>No chain writes</span>
-                        <span>No user data</span>
-                        <span>No backend calls</span>
+                        <span>No wallet signing</span>
+                        <span>Dry-run payloads</span>
                     </div>
                 </header>
 
@@ -453,8 +466,22 @@ const CredentialForge: React.FC = () => {
                         </div>
 
                         <label className="cf-field">
-                            <span>Chain/network label placeholder</span>
-                            <input value={design.chainLabel} onChange={(event) => updateDesign('chainLabel', event.target.value)} />
+                            <span>Network label</span>
+                            <input value={design.networkLabel} onChange={(event) => updateDesign('networkLabel', event.target.value)} />
+                        </label>
+
+                        <label className="cf-field">
+                            <span>Issuer label</span>
+                            <input value={design.issuerLabel} onChange={(event) => updateDesign('issuerLabel', event.target.value)} />
+                        </label>
+
+                        <label className="cf-field">
+                            <span>Proof standard</span>
+                            <select value={design.proofStandard} onChange={(event) => updateDesign('proofStandard', event.target.value as ProofStandard)}>
+                                {proofStandards.map((proofStandard) => (
+                                    <option key={proofStandard} value={proofStandard}>{proofStandard}</option>
+                                ))}
+                            </select>
                         </label>
 
                         <label className="cf-slider">
@@ -484,14 +511,14 @@ const CredentialForge: React.FC = () => {
 
                     <CredentialCard design={design} stampedAchievements={stampedAchievements} pulseKey={pulseKey} />
 
-                    <aside className="cf-panel cf-metadata" aria-label="Achievement stamps and mock metadata">
+                    <aside className="cf-panel cf-metadata" aria-label="Achievement attestations and dry-run metadata">
                         <div className="cf-panel-heading">
                             <span>02</span>
-                            <h2>Stamps and Metadata</h2>
+                            <h2>Attestations and Metadata</h2>
                         </div>
 
                         <label className="cf-field">
-                            <span>Achievement to stamp</span>
+                            <span>Achievement to attest</span>
                             <select value={selectedAchievementId} onChange={(event) => setSelectedAchievementId(event.target.value)}>
                                 {achievements.map((achievement) => (
                                     <option key={achievement.id} value={achievement.id}>{achievement.label}</option>
@@ -500,10 +527,10 @@ const CredentialForge: React.FC = () => {
                         </label>
 
                         <button className="cf-primary-action" type="button" onClick={stampAchievement}>
-                            Stamp Achievement
+                            Prepare Attestation
                         </button>
 
-                        <div className="cf-status-rail" aria-label="Mock verification status progression">
+                        <div className="cf-status-rail" aria-label="Dry-run attestation status progression">
                             {statusOrder.map((status) => (
                                 <div
                                     className={`cf-status-node ${latestAchievement?.status === status ? 'is-active' : ''} ${
@@ -537,30 +564,30 @@ const CredentialForge: React.FC = () => {
                                 </article>
                             )) : (
                                 <div className="cf-empty-state">
-                                    <strong>No stamps yet</strong>
-                                    <span>Select an achievement and run the mock stamping sequence.</span>
+                                    <strong>No attestations yet</strong>
+                                    <span>Select an achievement and run the dry-run attestation sequence.</span>
                                 </div>
                             )}
                         </div>
 
                         <div className="cf-json-block">
                             <div>
-                                <span>Live mock credential JSON</span>
-                                <strong>{metadata.achievements.length} stamps</strong>
+                                <span>Live dry-run credential JSON</span>
+                                <strong>{metadata.achievements.length} attestations</strong>
                             </div>
                             <pre>{metadataJson}</pre>
                         </div>
                     </aside>
                 </main>
 
-                <section className="cf-export-panel" aria-label="Export and mock actions">
+                <section className="cf-export-panel" aria-label="Export and dry-run actions">
                     <div>
                         <span>Export console</span>
                         <strong>{copyState}</strong>
                     </div>
                     <div className="cf-export-actions">
                         <button type="button" onClick={() => handleCopy('Metadata JSON', metadataJson)}>Copy Metadata JSON</button>
-                        <button type="button" onClick={() => handleCopy('Mint payload', mintPayloadJson)}>Copy Mint Payload</button>
+                        <button type="button" onClick={() => handleCopy('Attestation payload', mintPayloadJson)}>Copy Attestation Payload</button>
                         <button type="button" onClick={resetDesign}>Reset Design</button>
                         <button type="button" onClick={randomizePremiumCard}>Randomize Premium Card</button>
                     </div>
@@ -569,10 +596,11 @@ const CredentialForge: React.FC = () => {
                 <section className="cf-dev-note">
                     <h2>Developer Note</h2>
                     <p>
-                        The mock functions are intentionally pure client-side utilities. Later, `prepareCredentialMetadata` can be backed
-                        by durable storage, `generateCredentialHash` can be replaced with a canonical hashing service, `buildMintPayload`
-                        can target a contract-safe payload schema, `stampAchievementMock` can consume verified completion events, and
-                        `verifyCredentialMock` can read real indexer or attestation status. This prototype performs none of those writes.
+                        The dry-run utilities are intentionally client-side only. Later, `prepareCredentialMetadata` can be backed by
+                        canonical learner and artifact storage, `generateCredentialHash` can be replaced with a reviewed hashing service,
+                        `buildMintPayload` can target an issuer-backed VC, attestation, or contract schema, `stampAchievementMock` can
+                        consume verified completion events, and `verifyCredentialMock` can read wallet signature, registry, indexer, or
+                        anchoring state. This workbench performs none of those writes today.
                     </p>
                 </section>
             </div>
@@ -580,4 +608,4 @@ const CredentialForge: React.FC = () => {
     );
 };
 
-export default CredentialForge;
+export default CredsWorkbench;

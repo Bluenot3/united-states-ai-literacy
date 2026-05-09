@@ -60,7 +60,7 @@ const GeminiChat: React.FC = () => {
 
         try {
             const response = await chatRef.current.sendMessage({ message: input });
-            const botMessage: Message = { text: response.text, sender: 'bot' };
+            const botMessage: Message = { text: response.text ?? '', sender: 'bot' };
             setMessages(prev => [...prev, botMessage]);
         } catch (err) {
             setError('Sorry, I encountered an error. Please try again.');

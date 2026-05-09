@@ -418,7 +418,7 @@ User command: "${inputCmd}"`;
                                 </div>
                                 <div className="ml-3 border-l border-slate-800 pl-16 text-slate-300">
                                     {log.content}
-                                    {log.metadata && (
+                                    {log.metadata !== undefined && (
                                         <pre className="mt-2 overflow-x-auto rounded bg-black/20 p-2 text-[10px] text-slate-500">
                                             {JSON.stringify(log.metadata, null, 2)}
                                         </pre>

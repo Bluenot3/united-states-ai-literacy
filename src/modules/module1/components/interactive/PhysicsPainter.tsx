@@ -5,10 +5,12 @@ import { useAuth } from '../../hooks/useAuth';
 const PhysicsPainter: React.FC<InteractiveComponentProps> = ({ interactiveId }) => {
     const { addPoints, updateModuleProgress, getModuleProgress } = useAuth();
     const [isPainting, setIsPainting] = useState(false);
+    const moduleProgress = getModuleProgress(1);
+    const hasCompleted = moduleProgress.completedInteractives.includes(interactiveId);
 
     const handlePaint = () => {
         setIsPainting(true);
-        if (user && !user.progress.completedInteractives.includes(interactiveId)) {
+        if (!hasCompleted) {
             addPoints(1, 25);
             updateModuleProgress(1, interactiveId, 'interactive');
         }

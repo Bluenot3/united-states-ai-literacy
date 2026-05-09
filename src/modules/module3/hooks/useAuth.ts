@@ -9,7 +9,10 @@ export const useAuth = () => {
     return {
         ...auth,
         // Override addPoints to include module ID automatically for module 3 components
-        addPoints: (amount: number) => auth.addPoints(MODULE_ID, amount),
+        addPoints: (...args: [number] | [1 | 2 | 3 | 4, number]) => {
+            const amount = args.length === 1 ? args[0] : args[1];
+            auth.addPoints(MODULE_ID, amount);
+        },
         // Override updateProgress to use the correct method signature
         updateProgress: (interactiveId: string, type: 'section' | 'interactive') =>
             auth.updateModuleProgress(MODULE_ID, interactiveId, type),

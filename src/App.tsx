@@ -7,7 +7,7 @@ import Dashboard from './pages/Dashboard';
 import CommandCenterPage from './pages/CommandCenterPage';
 
 const LoginPage = React.lazy(() => import('./modules/module1/components/auth/LoginPage'));
-const CredentialForgePage = React.lazy(() => import('./pages/CredentialForgePage'));
+const CredsPage = React.lazy(() => import('./pages/CredsPage'));
 const ResetPasswordPage = React.lazy(() => import('./pages/ResetPasswordPage'));
 const Module1Page = React.lazy(() => import('./pages/Module1Page'));
 const Module2Page = React.lazy(() => import('./pages/Module2Page'));
@@ -107,10 +107,10 @@ const documentMetaMatchers: Array<{
         },
     },
     {
-        match: (pathname) => pathname === '/credential-forge',
+        match: (pathname) => pathname === '/creds' || pathname === '/credential-forge',
         meta: {
-            title: 'Credential Forge | ZEN Vanguard',
-            description: 'Experimental holographic credential card designer with mock achievement stamps and prototype metadata output.',
+            title: 'CREDS | ZEN Vanguard',
+            description: 'Dry-run credential attestation workbench for proof-linked CREDS metadata, issuer payloads, and future blockchain integration planning.',
             robots: 'noindex,nofollow',
             themeColor: '#02040a',
         },
@@ -158,7 +158,7 @@ const documentMetaMatchers: Array<{
     {
         match: (pathname) => pathname === '/profile',
         meta: {
-            title: 'Pioneer Profile | ZEN Vanguard',
+            title: 'Vanguard Profile | ZEN Vanguard',
             description: 'Review your learner identity, program proof, and personalized Vanguard trajectory.',
             themeColor: '#081021',
         },
@@ -371,7 +371,8 @@ const App: React.FC = () => {
                 >
                     <Route index element={<Navigate to="/command-center" replace />} />
                     <Route path="command-center" element={<CommandCenterPage />} />
-                    <Route path="credential-forge" element={<Suspense fallback={<PageLoader />}><CredentialForgePage /></Suspense>} />
+                    <Route path="creds" element={<Suspense fallback={<PageLoader />}><CredsPage /></Suspense>} />
+                    <Route path="credential-forge" element={<Navigate to="/creds" replace />} />
                     <Route path="hub" element={<Suspense fallback={<PageLoader />}><ProgramHubPage /></Suspense>} />
                     <Route path="programs/:programId" element={<Suspense fallback={<PageLoader />}><ProgramDashboardPage /></Suspense>} />
                     <Route path="dashboard" element={<Dashboard />} />

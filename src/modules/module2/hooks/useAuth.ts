@@ -28,12 +28,17 @@ export const useAuth = () => {
   }, [mainAuth.user, mainAuth.getModuleProgress]);
 
   // Adapter for addPoints - forward to module 2
-  const addPoints = useCallback((amount: number) => {
+  const addPoints = useCallback((...args: [number] | [1 | 2 | 3 | 4, number]) => {
+    const amount = args.length === 1 ? args[0] : args[1];
     mainAuth.addPoints(2, amount);
   }, [mainAuth.addPoints]);
 
   // Adapter for updateProgress - forward to module 2
   const updateProgress = useCallback((id: string, type: 'section' | 'interactive') => {
+    mainAuth.updateModuleProgress(2, id, type);
+  }, [mainAuth.updateModuleProgress]);
+
+  const updateModuleProgress = useCallback((_moduleId: 1 | 2 | 3 | 4, id: string, type: 'section' | 'interactive') => {
     mainAuth.updateModuleProgress(2, id, type);
   }, [mainAuth.updateModuleProgress]);
 
@@ -45,8 +50,11 @@ export const useAuth = () => {
   return {
     user,
     loading: mainAuth.loading,
+    login: mainAuth.login,
+    signup: mainAuth.signup,
     addPoints,
     updateProgress,
+    updateModuleProgress,
     resetProgress,
     isResetting: false, // Legacy property - not used in new auth
     // Also expose new API for components that want to use it

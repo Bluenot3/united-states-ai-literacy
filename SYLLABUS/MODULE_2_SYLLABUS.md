@@ -450,7 +450,7 @@ Most Spaces like yours use Gradio, which is a Python library that makes instant 
 
 #### The one thing that confuses beginners: API keys
 
-If your app calls OpenAI / Google / etc., it needs a secret key. You do not paste keys inside app.py. Instead: Space Settings → Secrets. Add something like: OPENAI_API_KEY = your_key_here or GOOGLE_API_KEY = your_key_here. Then in code, it reads from environment variables. This is safer and the normal professional method.
+If your app calls OpenAI / Google / etc., it needs a secret key. You do not paste keys inside app.py. Instead: Space Settings → Secrets. Add something like: OPENAI_API_KEY=<OPENAI_API_KEY> or GOOGLE_API_KEY = your_key_here. Then in code, it reads from environment variables. This is safer and the normal professional method.
 
 #### How to know it’s working
 

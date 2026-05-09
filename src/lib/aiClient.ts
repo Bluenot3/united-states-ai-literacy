@@ -5,6 +5,24 @@ type Message = {
     content: string;
 };
 
+type SupabaseSessionResult = {
+    data: {
+        session: {
+            access_token?: string;
+        } | null;
+    };
+};
+
+async function getAccessToken(): Promise<string | undefined> {
+    const { supabase } = await import('./supabase');
+    const authClient = supabase.auth as {
+        getSession?: () => Promise<SupabaseSessionResult>;
+    };
+
+    const sessionResult = await authClient.getSession?.();
+    return sessionResult?.data.session?.access_token;
+}
+
 function buildMessages(config: any): Message[] {
     const messages: Message[] = [];
 
@@ -47,8 +65,7 @@ function buildMessages(config: any): Message[] {
 }
 
 async function proxyChatCompletion(messages: Message[], temperature = 0.7, maxTokens = 2048): Promise<string> {
-    const { data: { session } } = await import('./supabase').then(m => m.supabase.auth.getSession());
-    const token = session?.access_token;
+    const token = await getAccessToken();
     
     const response = await fetch(`${API_BASE}/api/ai/generate`, {
         method: 'POST',
@@ -73,8 +90,7 @@ async function proxyChatCompletion(messages: Message[], temperature = 0.7, maxTo
 }
 
 async function proxyImageGeneration(prompt: string): Promise<string> {
-    const { data: { session } } = await import('./supabase').then(m => m.supabase.auth.getSession());
-    const token = session?.access_token;
+    const token = await getAccessToken();
 
     const response = await fetch(`${API_BASE}/api/ai/image`, {
         method: 'POST',

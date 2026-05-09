@@ -1,0 +1,1634 @@
+[
+  {
+    "componentName": "AgentSystemDesigner",
+    "sourceFile": "src/modules/module1/components/interactive/AgentSystemDesigner.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "AiAlignmentTuner",
+    "sourceFile": "src/modules/module1/components/interactive/AiAlignmentTuner.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "AiEthicsTracker",
+    "sourceFile": "src/modules/module1/components/interactive/AiEthicsTracker.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "AiPaletteSynthesizer",
+    "sourceFile": "src/modules/module1/components/interactive/AiPaletteSynthesizer.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "AlgorithmVisualizer",
+    "sourceFile": "src/modules/module1/components/interactive/AlgorithmVisualizer.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "BenefitSorter",
+    "sourceFile": "src/modules/module1/components/interactive/BenefitSorter.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "BlockchainExplorer",
+    "sourceFile": "src/modules/module1/components/interactive/BlockchainExplorer.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "BusinessModelCanvas",
+    "sourceFile": "src/modules/module1/components/interactive/BusinessModelCanvas.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "CodeDebugger",
+    "sourceFile": "src/modules/module1/components/interactive/CodeDebugger.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "DockerCommandQuiz",
+    "sourceFile": "src/modules/module1/components/interactive/DockerCommandQuiz.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "EmotionBlendMixer",
+    "sourceFile": "src/modules/module1/components/interactive/EmotionBlendMixer.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "FeatureExplorer",
+    "sourceFile": "src/modules/module1/components/interactive/FeatureExplorer.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "FundingPulseTicker",
+    "sourceFile": "src/modules/module1/components/interactive/FundingPulseTicker.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "GenerativeSculptor3D",
+    "sourceFile": "src/modules/module1/components/interactive/GenerativeSculptor3D.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "ImagePromptEnhancer",
+    "sourceFile": "src/modules/module1/components/interactive/ImagePromptEnhancer.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "JobImpactSimulator",
+    "sourceFile": "src/modules/module1/components/interactive/JobImpactSimulator.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "LivePatentRadar",
+    "sourceFile": "src/modules/module1/components/interactive/LivePatentRadar.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "MultiAgentChatSandbox",
+    "sourceFile": "src/modules/module1/components/interactive/MultiAgentChatSandbox.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PedagogyMatcher",
+    "sourceFile": "src/modules/module1/components/interactive/PedagogyMatcher.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PersonalizationSimulator",
+    "sourceFile": "src/modules/module1/components/interactive/PersonalizationSimulator.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PhysicsPainter",
+    "sourceFile": "src/modules/module1/components/interactive/PhysicsPainter.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PoeticFusionGenerator",
+    "sourceFile": "src/modules/module1/components/interactive/PoeticFusionGenerator.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "RagBuilder",
+    "sourceFile": "src/modules/module1/components/interactive/RagBuilder.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "RlhfTrainerGame",
+    "sourceFile": "src/modules/module1/components/interactive/RlhfTrainerGame.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "RobotSimulator",
+    "sourceFile": "src/modules/module1/components/interactive/RobotSimulator.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SchedulePlanner",
+    "sourceFile": "src/modules/module1/components/interactive/SchedulePlanner.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SdgMatcher",
+    "sourceFile": "src/modules/module1/components/interactive/SdgMatcher.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SensorDataInterpreter",
+    "sourceFile": "src/modules/module1/components/interactive/SensorDataInterpreter.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SmartContractEventListener",
+    "sourceFile": "src/modules/module1/components/interactive/SmartContractEventListener.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SpatialNarrativeEngine",
+    "sourceFile": "src/modules/module1/components/interactive/SpatialNarrativeEngine.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "TextureAlchemyLab",
+    "sourceFile": "src/modules/module1/components/interactive/TextureAlchemyLab.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "TokenEconomySimulator",
+    "sourceFile": "src/modules/module1/components/interactive/TokenEconomySimulator.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "UiFeedback",
+    "sourceFile": "src/modules/module1/components/interactive/UiFeedback.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "VocabularyLockIn",
+    "sourceFile": "src/modules/module1/components/interactive/VocabularyLockIn.tsx",
+    "owningModule": "module1",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "AiAlignmentTuner",
+    "sourceFile": "src/modules/module2/components/interactive/AiAlignmentTuner.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "AiEthicsTracker",
+    "sourceFile": "src/modules/module2/components/interactive/AiEthicsTracker.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "AiPaletteSynthesizer",
+    "sourceFile": "src/modules/module2/components/interactive/AiPaletteSynthesizer.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "AmbientArchitect",
+    "sourceFile": "src/modules/module2/components/interactive/AmbientArchitect.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "ArchitectureBuilderSandbox",
+    "sourceFile": "src/modules/module2/components/interactive/ArchitectureBuilderSandbox.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "BenefitSorter",
+    "sourceFile": "src/modules/module2/components/interactive/BenefitSorter.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "BlockchainExplorer",
+    "sourceFile": "src/modules/module2/components/interactive/BlockchainExplorer.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "BusinessModelCanvas",
+    "sourceFile": "src/modules/module2/components/interactive/BusinessModelCanvas.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "CinematicPromptSequencer",
+    "sourceFile": "src/modules/module2/components/interactive/CinematicPromptSequencer.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "CodeDebugger",
+    "sourceFile": "src/modules/module2/components/interactive/CodeDebugger.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "CompositorCanvasPro",
+    "sourceFile": "src/modules/module2/components/interactive/CompositorCanvasPro.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "ContextWindowExplorer",
+    "sourceFile": "src/modules/module2/components/interactive/ContextWindowExplorer.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "DataVisualizer",
+    "sourceFile": "src/modules/module2/components/interactive/DataVisualizer.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "DiffusionFieldExplorer",
+    "sourceFile": "src/modules/module2/components/interactive/DiffusionFieldExplorer.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "DockerCommandQuiz",
+    "sourceFile": "src/modules/module2/components/interactive/DockerCommandQuiz.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "DreamspaceConstructor",
+    "sourceFile": "src/modules/module2/components/interactive/DreamspaceConstructor.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "EmotionBlendMixer",
+    "sourceFile": "src/modules/module2/components/interactive/EmotionBlendMixer.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "EnergyCarbonTracker",
+    "sourceFile": "src/modules/module2/components/interactive/EnergyCarbonTracker.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "EthicalBiasMirror",
+    "sourceFile": "src/modules/module2/components/interactive/EthicalBiasMirror.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "EthicalDilemmaSimulator",
+    "sourceFile": "src/modules/module2/components/interactive/EthicalDilemmaSimulator.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "EthicalStyleInspector",
+    "sourceFile": "src/modules/module2/components/interactive/EthicalStyleInspector.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "ExplainabilityPanel",
+    "sourceFile": "src/modules/module2/components/interactive/ExplainabilityPanel.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "FeatureExplorer",
+    "sourceFile": "src/modules/module2/components/interactive/FeatureExplorer.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "FundingPulseTicker",
+    "sourceFile": "src/modules/module2/components/interactive/FundingPulseTicker.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "FutureScenarioPoll",
+    "sourceFile": "src/modules/module2/components/interactive/FutureScenarioPoll.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "GenerativeSculptor3D",
+    "sourceFile": "src/modules/module2/components/interactive/GenerativeSculptor3D.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "GestureAnimator",
+    "sourceFile": "src/modules/module2/components/interactive/GestureAnimator.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "ImagePromptEnhancer",
+    "sourceFile": "src/modules/module2/components/interactive/ImagePromptEnhancer.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "InteractiveChatbot",
+    "sourceFile": "src/modules/module2/components/interactive/InteractiveChatbot.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "InteractiveDebates",
+    "sourceFile": "src/modules/module2/components/interactive/InteractiveDebates.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "JobImpactSimulator",
+    "sourceFile": "src/modules/module2/components/interactive/JobImpactSimulator.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "LightingPhysicsLab",
+    "sourceFile": "src/modules/module2/components/interactive/LightingPhysicsLab.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "LossLandscapeNavigator",
+    "sourceFile": "src/modules/module2/components/interactive/LossLandscapeNavigator.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "MeetingSummarizer",
+    "sourceFile": "src/modules/module2/components/interactive/MeetingSummarizer.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "MelodyMakerAI",
+    "sourceFile": "src/modules/module2/components/interactive/MelodyMakerAI.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "ModelArmsRaceTimeline",
+    "sourceFile": "src/modules/module2/components/interactive/ModelArmsRaceTimeline.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "MotionPhysicsPlayground",
+    "sourceFile": "src/modules/module2/components/interactive/MotionPhysicsPlayground.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "NeuralEvolutionChronicle",
+    "sourceFile": "src/modules/module2/components/interactive/NeuralEvolutionChronicle.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "ParameterUniverseExplorer",
+    "sourceFile": "src/modules/module2/components/interactive/ParameterUniverseExplorer.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PatternGenomeSynthesizer",
+    "sourceFile": "src/modules/module2/components/interactive/PatternGenomeSynthesizer.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PedagogyMatcher",
+    "sourceFile": "src/modules/module2/components/interactive/PedagogyMatcher.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PersonalizationSimulator",
+    "sourceFile": "src/modules/module2/components/interactive/PersonalizationSimulator.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PhysicsPainter",
+    "sourceFile": "src/modules/module2/components/interactive/PhysicsPainter.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PitchBuilder",
+    "sourceFile": "src/modules/module2/components/interactive/PitchBuilder.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PoeticFusionGenerator",
+    "sourceFile": "src/modules/module2/components/interactive/PoeticFusionGenerator.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "ProfessionalEmailWriter",
+    "sourceFile": "src/modules/module2/components/interactive/ProfessionalEmailWriter.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PromptArchitectWorkbench",
+    "sourceFile": "src/modules/module2/components/interactive/PromptArchitectWorkbench.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PromptMutationStudio",
+    "sourceFile": "src/modules/module2/components/interactive/PromptMutationStudio.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "RobotSimulator",
+    "sourceFile": "src/modules/module2/components/interactive/RobotSimulator.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SceneDirectorXR",
+    "sourceFile": "src/modules/module2/components/interactive/SceneDirectorXR.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SdgMatcher",
+    "sourceFile": "src/modules/module2/components/interactive/SdgMatcher.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SensorDataInterpreter",
+    "sourceFile": "src/modules/module2/components/interactive/SensorDataInterpreter.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SimplePredictiveModel",
+    "sourceFile": "src/modules/module2/components/interactive/SimplePredictiveModel.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SmartContractEventListener",
+    "sourceFile": "src/modules/module2/components/interactive/SmartContractEventListener.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SoundfieldComposer",
+    "sourceFile": "src/modules/module2/components/interactive/SoundfieldComposer.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SpatialNarrativeEngine",
+    "sourceFile": "src/modules/module2/components/interactive/SpatialNarrativeEngine.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SpeechEmotionAnalyzer",
+    "sourceFile": "src/modules/module2/components/interactive/SpeechEmotionAnalyzer.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "StoryboardForgePlus",
+    "sourceFile": "src/modules/module2/components/interactive/StoryboardForgePlus.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "TextureAlchemyLab",
+    "sourceFile": "src/modules/module2/components/interactive/TextureAlchemyLab.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "UiFeedback",
+    "sourceFile": "src/modules/module2/components/interactive/UiFeedback.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "VoiceDrivenEditingDesk",
+    "sourceFile": "src/modules/module2/components/interactive/VoiceDrivenEditingDesk.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "VoiceMorphStudio",
+    "sourceFile": "src/modules/module2/components/interactive/VoiceMorphStudio.tsx",
+    "owningModule": "module2",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "AdversarialAttackSimulator",
+    "sourceFile": "src/modules/module3/components/interactive/AdversarialAttackSimulator.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "AgentSystemDesigner",
+    "sourceFile": "src/modules/module3/components/interactive/AgentSystemDesigner.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "AiAlignmentTuner",
+    "sourceFile": "src/modules/module3/components/interactive/AiAlignmentTuner.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "AiEthicsTracker",
+    "sourceFile": "src/modules/module3/components/interactive/AiEthicsTracker.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "AiPaletteSynthesizer",
+    "sourceFile": "src/modules/module3/components/interactive/AiPaletteSynthesizer.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "AlgorithmVisualizer",
+    "sourceFile": "src/modules/module3/components/interactive/AlgorithmVisualizer.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "AmbientArchitect",
+    "sourceFile": "src/modules/module3/components/interactive/AmbientArchitect.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "ArchitectureBuilderSandbox",
+    "sourceFile": "src/modules/module3/components/interactive/ArchitectureBuilderSandbox.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "AudioVisualSyncLab",
+    "sourceFile": "src/modules/module3/components/interactive/AudioVisualSyncLab.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "BenefitSorter",
+    "sourceFile": "src/modules/module3/components/interactive/BenefitSorter.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "BlockchainExplorer",
+    "sourceFile": "src/modules/module3/components/interactive/BlockchainExplorer.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "BusinessModelCanvas",
+    "sourceFile": "src/modules/module3/components/interactive/BusinessModelCanvas.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "CinematicPromptSequencer",
+    "sourceFile": "src/modules/module3/components/interactive/CinematicPromptSequencer.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "CodeDebugger",
+    "sourceFile": "src/modules/module3/components/interactive/CodeDebugger.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "CompositorCanvasPro",
+    "sourceFile": "src/modules/module3/components/interactive/CompositorCanvasPro.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "ContextWindowExplorer",
+    "sourceFile": "src/modules/module3/components/interactive/ContextWindowExplorer.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "DataDecisionFlowchartBuilder",
+    "sourceFile": "src/modules/module3/components/interactive/DataDecisionFlowchartBuilder.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "DataVisualizer",
+    "sourceFile": "src/modules/module3/components/interactive/DataVisualizer.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "DiffusionFieldExplorer",
+    "sourceFile": "src/modules/module3/components/interactive/DiffusionFieldExplorer.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "DreamspaceConstructor",
+    "sourceFile": "src/modules/module3/components/interactive/DreamspaceConstructor.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "EmotionBlendMixer",
+    "sourceFile": "src/modules/module3/components/interactive/EmotionBlendMixer.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "EnergyCarbonTracker",
+    "sourceFile": "src/modules/module3/components/interactive/EnergyCarbonTracker.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "EthicalBiasMirror",
+    "sourceFile": "src/modules/module3/components/interactive/EthicalBiasMirror.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "EthicalStyleInspector",
+    "sourceFile": "src/modules/module3/components/interactive/EthicalStyleInspector.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "ExplainabilityPanel",
+    "sourceFile": "src/modules/module3/components/interactive/ExplainabilityPanel.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "FeatureExplorer",
+    "sourceFile": "src/modules/module3/components/interactive/FeatureExplorer.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "FundingPulseTicker",
+    "sourceFile": "src/modules/module3/components/interactive/FundingPulseTicker.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "FutureScenarioPoll",
+    "sourceFile": "src/modules/module3/components/interactive/FutureScenarioPoll.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "GenerativeSculptor3D",
+    "sourceFile": "src/modules/module3/components/interactive/GenerativeSculptor3D.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "GestureAnimator",
+    "sourceFile": "src/modules/module3/components/interactive/GestureAnimator.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "ImagePromptEnhancer",
+    "sourceFile": "src/modules/module3/components/interactive/ImagePromptEnhancer.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "InteractiveChatbot",
+    "sourceFile": "src/modules/module3/components/interactive/InteractiveChatbot.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "InteractiveDebates",
+    "sourceFile": "src/modules/module3/components/interactive/InteractiveDebates.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "JobImpactSimulator",
+    "sourceFile": "src/modules/module3/components/interactive/JobImpactSimulator.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "LangGraphVisualizer",
+    "sourceFile": "src/modules/module3/components/interactive/LangGraphVisualizer.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "LightingPhysicsLab",
+    "sourceFile": "src/modules/module3/components/interactive/LightingPhysicsLab.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "LivePatentRadar",
+    "sourceFile": "src/modules/module3/components/interactive/LivePatentRadar.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "LossLandscapeNavigator",
+    "sourceFile": "src/modules/module3/components/interactive/LossLandscapeNavigator.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "MelodyMakerAI",
+    "sourceFile": "src/modules/module3/components/interactive/MelodyMakerAI.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "ModelArmsRaceTimeline",
+    "sourceFile": "src/modules/module3/components/interactive/ModelArmsRaceTimeline.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "MotionPhysicsPlayground",
+    "sourceFile": "src/modules/module3/components/interactive/MotionPhysicsPlayground.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "MultiAgentChatSandbox",
+    "sourceFile": "src/modules/module3/components/interactive/MultiAgentChatSandbox.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "NeuralEvolutionChronicle",
+    "sourceFile": "src/modules/module3/components/interactive/NeuralEvolutionChronicle.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "ParameterUniverseExplorer",
+    "sourceFile": "src/modules/module3/components/interactive/ParameterUniverseExplorer.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PatternGenomeSynthesizer",
+    "sourceFile": "src/modules/module3/components/interactive/PatternGenomeSynthesizer.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PedagogyMatcher",
+    "sourceFile": "src/modules/module3/components/interactive/PedagogyMatcher.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PersonalizationSimulator",
+    "sourceFile": "src/modules/module3/components/interactive/PersonalizationSimulator.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PhysicsPainter",
+    "sourceFile": "src/modules/module3/components/interactive/PhysicsPainter.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PoeticFusionGenerator",
+    "sourceFile": "src/modules/module3/components/interactive/PoeticFusionGenerator.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PromptMutationStudio",
+    "sourceFile": "src/modules/module3/components/interactive/PromptMutationStudio.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "RlhfTrainerGame",
+    "sourceFile": "src/modules/module3/components/interactive/RlhfTrainerGame.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "RobotSimulator",
+    "sourceFile": "src/modules/module3/components/interactive/RobotSimulator.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SceneDirectorXR",
+    "sourceFile": "src/modules/module3/components/interactive/SceneDirectorXR.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SdgMatcher",
+    "sourceFile": "src/modules/module3/components/interactive/SdgMatcher.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SensorDataInterpreter",
+    "sourceFile": "src/modules/module3/components/interactive/SensorDataInterpreter.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SimplePredictiveModel",
+    "sourceFile": "src/modules/module3/components/interactive/SimplePredictiveModel.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SmartContractEventListener",
+    "sourceFile": "src/modules/module3/components/interactive/SmartContractEventListener.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SoundfieldComposer",
+    "sourceFile": "src/modules/module3/components/interactive/SoundfieldComposer.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SpatialNarrativeEngine",
+    "sourceFile": "src/modules/module3/components/interactive/SpatialNarrativeEngine.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SpeechEmotionAnalyzer",
+    "sourceFile": "src/modules/module3/components/interactive/SpeechEmotionAnalyzer.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "StoryboardForgePlus",
+    "sourceFile": "src/modules/module3/components/interactive/StoryboardForgePlus.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "TextureAlchemyLab",
+    "sourceFile": "src/modules/module3/components/interactive/TextureAlchemyLab.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "TokenEconomySimulator",
+    "sourceFile": "src/modules/module3/components/interactive/TokenEconomySimulator.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "UiFeedback",
+    "sourceFile": "src/modules/module3/components/interactive/UiFeedback.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "VoiceDrivenEditingDesk",
+    "sourceFile": "src/modules/module3/components/interactive/VoiceDrivenEditingDesk.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "VoiceMorphStudio",
+    "sourceFile": "src/modules/module3/components/interactive/VoiceMorphStudio.tsx",
+    "owningModule": "module3",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "AiPaletteSynthesizer",
+    "sourceFile": "src/modules/module4/components/interactive/AiPaletteSynthesizer.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "AmbientArchitect",
+    "sourceFile": "src/modules/module4/components/interactive/AmbientArchitect.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "ArchitectureBuilderSandbox",
+    "sourceFile": "src/modules/module4/components/interactive/ArchitectureBuilderSandbox.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "AudioVisualSyncLab",
+    "sourceFile": "src/modules/module4/components/interactive/AudioVisualSyncLab.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "BlockchainExplorer",
+    "sourceFile": "src/modules/module4/components/interactive/BlockchainExplorer.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "CinematicPromptSequencer",
+    "sourceFile": "src/modules/module4/components/interactive/CinematicPromptSequencer.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "CompositorCanvasPro",
+    "sourceFile": "src/modules/module4/components/interactive/CompositorCanvasPro.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "DiffusionFieldExplorer",
+    "sourceFile": "src/modules/module4/components/interactive/DiffusionFieldExplorer.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "DreamspaceConstructor",
+    "sourceFile": "src/modules/module4/components/interactive/DreamspaceConstructor.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "EmotionBlendMixer",
+    "sourceFile": "src/modules/module4/components/interactive/EmotionBlendMixer.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "FeatureExplorer",
+    "sourceFile": "src/modules/module4/components/interactive/FeatureExplorer.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "GenerativeSculptor3D",
+    "sourceFile": "src/modules/module4/components/interactive/GenerativeSculptor3D.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "GestureAnimator",
+    "sourceFile": "src/modules/module4/components/interactive/GestureAnimator.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "ImagePromptEnhancer",
+    "sourceFile": "src/modules/module4/components/interactive/ImagePromptEnhancer.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "InteractiveChatbot",
+    "sourceFile": "src/modules/module4/components/interactive/InteractiveChatbot.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "LightingPhysicsLab",
+    "sourceFile": "src/modules/module4/components/interactive/LightingPhysicsLab.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "MelodyMakerAI",
+    "sourceFile": "src/modules/module4/components/interactive/MelodyMakerAI.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "ModelArmsRaceTimeline",
+    "sourceFile": "src/modules/module4/components/interactive/ModelArmsRaceTimeline.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "MotionPhysicsPlayground",
+    "sourceFile": "src/modules/module4/components/interactive/MotionPhysicsPlayground.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "ParameterUniverseExplorer",
+    "sourceFile": "src/modules/module4/components/interactive/ParameterUniverseExplorer.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PatternGenomeSynthesizer",
+    "sourceFile": "src/modules/module4/components/interactive/PatternGenomeSynthesizer.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PedagogyMatcher",
+    "sourceFile": "src/modules/module4/components/interactive/PedagogyMatcher.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PhysicsPainter",
+    "sourceFile": "src/modules/module4/components/interactive/PhysicsPainter.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PoeticFusionGenerator",
+    "sourceFile": "src/modules/module4/components/interactive/PoeticFusionGenerator.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "ProfessionalEmailWriter",
+    "sourceFile": "src/modules/module4/components/interactive/ProfessionalEmailWriter.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "PromptArchitectWorkbench",
+    "sourceFile": "src/modules/module4/components/interactive/PromptArchitectWorkbench.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "RobotSimulator",
+    "sourceFile": "src/modules/module4/components/interactive/RobotSimulator.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SceneDirectorXR",
+    "sourceFile": "src/modules/module4/components/interactive/SceneDirectorXR.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SchedulePlanner",
+    "sourceFile": "src/modules/module4/components/interactive/SchedulePlanner.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SensorDataInterpreter",
+    "sourceFile": "src/modules/module4/components/interactive/SensorDataInterpreter.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SoundfieldComposer",
+    "sourceFile": "src/modules/module4/components/interactive/SoundfieldComposer.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SpatialNarrativeEngine",
+    "sourceFile": "src/modules/module4/components/interactive/SpatialNarrativeEngine.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "SpeechEmotionAnalyzer",
+    "sourceFile": "src/modules/module4/components/interactive/SpeechEmotionAnalyzer.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "StoryboardForgePlus",
+    "sourceFile": "src/modules/module4/components/interactive/StoryboardForgePlus.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "TextureAlchemyLab",
+    "sourceFile": "src/modules/module4/components/interactive/TextureAlchemyLab.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "UiFeedback",
+    "sourceFile": "src/modules/module4/components/interactive/UiFeedback.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "VoiceDrivenEditingDesk",
+    "sourceFile": "src/modules/module4/components/interactive/VoiceDrivenEditingDesk.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "VoiceMorphStudio",
+    "sourceFile": "src/modules/module4/components/interactive/VoiceMorphStudio.tsx",
+    "owningModule": "module4",
+    "likelyCategory": "module-interactive",
+    "recommendedAction": "bind",
+    "reason": "Component file exists in the owning module but no curriculumData reference was found."
+  },
+  {
+    "componentName": "CREDS",
+    "sourceFile": "src/components/creds/CredsWorkbench.tsx",
+    "owningModule": "global",
+    "likelyCategory": "credential-simulation",
+    "recommendedAction": "review",
+    "reason": "Standalone dry-run credential attestation route. README explicitly states mock metadata and no production integrations yet."
+  },
+  {
+    "componentName": "Documentation Copilot",
+    "sourceFile": "src/pages/DocumentationPage.tsx",
+    "owningModule": "global",
+    "likelyCategory": "route-tool",
+    "recommendedAction": "review",
+    "reason": "Repo-owned docs assistant, not lesson-bound. Uses API proxy rather than a curriculum mapping layer."
+  },
+  {
+    "componentName": "Notebook",
+    "sourceFile": "src/components/notebook/Notebook.tsx",
+    "owningModule": "global",
+    "likelyCategory": "notebook",
+    "recommendedAction": "review",
+    "reason": "Profile notebook persists to localStorage under pioneer_* keys and is not linked to lesson artifacts."
+  },
+  {
+    "componentName": "OnboardingChat",
+    "sourceFile": "src/components/onboarding/OnboardingChat.tsx",
+    "owningModule": "global",
+    "likelyCategory": "onboarding",
+    "recommendedAction": "archive-later",
+    "reason": "Global onboarding flow is not connected to module, section, or lesson IDs."
+  }
+]

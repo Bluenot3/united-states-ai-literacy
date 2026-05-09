@@ -15,14 +15,15 @@ const Notebook: React.FC = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
-    // Load notes from localStorage on mount
     useEffect(() => {
         if (!user) return;
-        const savedNotes = localStorage.getItem(`pioneer_notes_${user.email}`);
+        const vanguardNotesKey = `vanguard_notes_${user.email}`;
+        const legacyPioneerNotesKey = `pioneer_notes_${user.email}`;
+        const savedNotes = localStorage.getItem(vanguardNotesKey) ?? localStorage.getItem(legacyPioneerNotesKey);
+
         if (savedNotes) {
             try {
                 const parsed = JSON.parse(savedNotes);
-                // Convert date strings back to Date objects
                 const hydratedDetails = parsed.map((n: any) => ({
                     ...n,
                     lastModified: new Date(n.lastModified)
@@ -31,15 +32,18 @@ const Notebook: React.FC = () => {
                 if (hydratedDetails.length > 0) {
                     setActiveNoteId(hydratedDetails[0].id);
                 }
+
+                if (!localStorage.getItem(vanguardNotesKey)) {
+                    localStorage.setItem(vanguardNotesKey, JSON.stringify(hydratedDetails));
+                }
             } catch (e) {
                 console.error("Failed to load notes", e);
             }
         } else {
-            // Create default welcome note
             const welcomeNote: Note = {
                 id: crypto.randomUUID(),
                 title: 'Mission Log 001',
-                content: 'Welcome to your Pioneer Field Notebook.\n\nUse this secure terminal to record observations, mission data, and hypothesis tracking.\n\n// COMMANDS:\n- Create new logs via the + button\n- Data is encrypted locally\n- Access restricted to Pioneer clearance level',
+                content: 'Welcome to your Vanguard Field Notebook.\n\nUse this secure terminal to record observations, mission data, and hypothesis tracking.\n\n// COMMANDS:\n- Create new logs via the + button\n- Data is stored locally\n- Access scoped to your Vanguard workspace',
                 lastModified: new Date()
             };
             setNotes([welcomeNote]);
@@ -47,14 +51,13 @@ const Notebook: React.FC = () => {
         }
     }, [user]);
 
-    // Save to localStorage whenever notes change
     useEffect(() => {
         if (!user || notes.length === 0) return;
         setIsSaving(true);
         const timeout = setTimeout(() => {
-            localStorage.setItem(`pioneer_notes_${user.email}`, JSON.stringify(notes));
+            localStorage.setItem(`vanguard_notes_${user.email}`, JSON.stringify(notes));
             setIsSaving(false);
-        }, 1000); // Debounce save
+        }, 1000);
         return () => clearTimeout(timeout);
     }, [notes, user]);
 

@@ -3,7 +3,7 @@ import CodeBlock from './CodeBlock';
 
 interface SimulatedTerminalProps {
   code: string;
-  language: 'python' | 'solidity' | 'bash' | 'javascript';
+  language: string;
   output: string;
   onRunCustomEffect?: () => void;
   effectId?: string;

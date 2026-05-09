@@ -27,6 +27,8 @@ const DockerCommandQuiz: React.FC<InteractiveComponentProps> = ({ interactiveId 
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
     const [feedback, setFeedback] = useState('');
     const [isFinished, setIsFinished] = useState(false);
+    const moduleProgress = getModuleProgress(1);
+    const hasCompleted = moduleProgress.completedInteractives.includes(interactiveId);
 
     const handleOptionSelect = (option: string) => {
         if(selectedOption) return;
@@ -46,7 +48,7 @@ const DockerCommandQuiz: React.FC<InteractiveComponentProps> = ({ interactiveId 
         if(currentQuestionIndex < questions.length - 1){
             setCurrentQuestionIndex(currentQuestionIndex + 1);
         } else {
-            if (user && !user.progress.completedInteractives.includes(interactiveId)) {
+            if (!hasCompleted) {
                 const points = (score + (selectedOption === questions[currentQuestionIndex].answer ? 1 : 0)) * 10;
                 addPoints(points);
                 updateModuleProgress(1, interactiveId, 'interactive');
@@ -68,7 +70,7 @@ const DockerCommandQuiz: React.FC<InteractiveComponentProps> = ({ interactiveId 
             <div className="my-8 p-6 bg-brand-bg rounded-2xl shadow-neumorphic-out text-center">
                 <h4 className="font-bold text-xl text-brand-text mb-4">Quiz Complete!</h4>
                 <p className="text-lg text-brand-text-light">Your final score is: {score} out of {questions.length}</p>
-                 {!moduleProgress.completedInteractives.includes(interactiveId) &&
+                 {!hasCompleted &&
                     <p className="font-semibold text-pale-green">You earned {score * 10} points!</p>
                 }
                 <button onClick={handleReset} className="mt-4 px-6 py-2 rounded-lg shadow-neumorphic-out hover:shadow-neumorphic-in">Restart Quiz</button>

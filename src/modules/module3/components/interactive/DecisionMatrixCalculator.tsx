@@ -42,18 +42,13 @@ export const DecisionMatrixCalculator: React.FC = () => {
         }, 0);
     };
 
-    const getWinner = () => {
-        let maxScore = -1;
-        let winner: Option | null = null;
-        options.forEach(opt => {
-            const score = calculateScore(opt);
-            if (score > maxScore) {
-                maxScore = score;
-                winner = opt;
-            }
-        });
-        return winner;
-    };
+    const getWinner = () => options.reduce<Option | null>((winner, option) => {
+        if (!winner) {
+            return option;
+        }
+
+        return calculateScore(option) > calculateScore(winner) ? option : winner;
+    }, null);
 
     const handleWeightChange = (criterionId: string, newWeight: number) => {
         setCriteria(prev => {
