@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import ZenModuleGlyph from '../components/zen/ZenModuleGlyph';
 import type { ZenGlyphName } from '../components/zen/ZenModuleGlyph';
@@ -122,46 +122,150 @@ const proofHighlights = [
     'Git-based learner projects, semantic curriculum versions, and rollback paths',
 ];
 
-const ecosystemLayers = [
+type EcosystemLayerAction =
+    | {
+        destination: 'internal';
+        label: string;
+        to: string;
+    }
+    | {
+        destination: 'external';
+        label: string;
+        href: string;
+    }
+    | {
+        destination: 'anchor';
+        label: string;
+        href: string;
+    }
+    | {
+        destination: 'none';
+        label: string;
+    };
+
+type EcosystemLayer = {
+    title: string;
+    detail: string;
+    status: string;
+    signal: string;
+    proof: string;
+    icon: ZenGlyphName;
+    tone: string;
+    action: EcosystemLayerAction;
+};
+
+const ecosystemLayers: EcosystemLayer[] = [
     {
-        title: 'Learners',
-        detail: 'Youth, young adults, and professionals entering guided or self-directed AI literacy tracks.',
-        status: 'Input',
+        title: 'Programs',
+        detail: 'The ZEN program hub organizes Vanguard, youth AI literacy, homeschool, blockchain, trainer, and Hermes pathways into one navigable catalog.',
+        status: 'Live route',
+        signal: 'Curriculum and cohorts',
+        proof: 'Program hub plus per-program dashboards are mounted inside this app.',
+        icon: 'programs',
+        tone: 'from-zen-gold/90 via-purple-300/70 to-brand-cyan/75',
+        action: {
+            destination: 'internal',
+            label: 'Explore programs',
+            to: '/hub',
+        },
     },
     {
-        title: 'Curriculum',
-        detail: 'Four progressive modules moving from first AI interactions to production-grade multi-agent workflows.',
-        status: 'Input',
+        title: 'Platforms',
+        detail: 'Learner dashboard, module workspaces, documentation, profile, certificates, and admin consoles form the internal platform layer.',
+        status: 'Live route',
+        signal: 'Workspace surfaces',
+        proof: 'Dashboard, docs, profile, module, and certificate routes are active.',
+        icon: 'dashboard',
+        tone: 'from-brand-cyan/85 via-blue-400/70 to-zen-emerald/75',
+        action: {
+            destination: 'internal',
+            label: 'Open dashboard',
+            to: '/dashboard',
+        },
     },
     {
-        title: 'Tools',
-        detail: 'Gemini, OpenAI, Hugging Face, Supabase, Solana, Vercel, and Arsenal as deployment surfaces.',
-        status: 'Input',
+        title: 'Automation Systems',
+        detail: 'Automation programs and builder labs are staged here, while the dedicated Arsenal product remains its own external application.',
+        status: 'Hybrid',
+        signal: 'Builder labs and Arsenal',
+        proof: 'Internal readiness content exists; production automation launches through Arsenal.',
+        icon: 'telemetry',
+        tone: 'from-zen-emerald/80 via-brand-cyan/70 to-zen-gold/70',
+        action: {
+            destination: 'internal',
+            label: 'View builder labs',
+            to: '/programs/arsenal-builder-labs',
+        },
     },
     {
-        title: 'Partners',
-        detail: 'Boys & Girls Clubs, educational institutions, enterprises, mentors, and ZEN graduates.',
-        status: 'Input',
+        title: 'Credentials',
+        detail: 'CREDS is the dry-run attestation workbench for proof payloads, issuer metadata, learner artifacts, and future blockchain verification.',
+        status: 'Live route',
+        signal: 'Proof-linked CREDS',
+        proof: 'CREDS is mounted at /creds with future wallet and registry hooks positioned accurately.',
+        icon: 'verify',
+        tone: 'from-zen-emerald/85 via-brand-cyan/70 to-zen-gold/75',
+        action: {
+            destination: 'internal',
+            label: 'Open CREDS',
+            to: '/creds',
+        },
     },
     {
-        title: 'Deployment Pipeline',
-        detail: 'Interactive learning, artifact shipping, AI plus human review, credentialing, and community showcase loops.',
-        status: 'Process',
+        title: 'Partners & Clients',
+        detail: 'Partner proof, reach, institutional context, and customer-facing outcomes are summarized in the ZEN overview and launch readiness sections.',
+        status: 'Mapped',
+        signal: 'Partner evidence',
+        proof: 'Identity, reach, partner context, and readiness notes are visible below this viewport.',
+        icon: 'identity',
+        tone: 'from-zen-gold/80 via-slate-200/60 to-brand-cyan/70',
+        action: {
+            destination: 'anchor',
+            label: 'View overview',
+            href: '#zen-overview',
+        },
     },
     {
-        title: 'Proof Artifacts',
-        detail: 'Agents, apps, automations, verifiable certificates, and public-facing competency portfolios.',
-        status: 'Output',
+        title: 'Student-Built AI Agents',
+        detail: 'Learner-built assistants, RAG systems, agent workflows, and module artifacts are tracked through the module path and program dashboards.',
+        status: 'Live route',
+        signal: 'Shipped learner artifacts',
+        proof: 'Module 3 and Module 4 focus on single-purpose agents and production-grade multi-agent workflows.',
+        icon: 'module4',
+        tone: 'from-purple-300/80 via-brand-cyan/70 to-zen-emerald/70',
+        action: {
+            destination: 'internal',
+            label: 'Open Module 4',
+            to: '/module/4',
+        },
     },
     {
-        title: 'Audit Trail',
-        detail: 'Timestamp, learner ID, artifact hash, tool calls, human review state, and security scan posture.',
-        status: 'Governance',
+        title: 'Workforce Pathways',
+        detail: 'Pathways connect AI literacy, credentials, certificates, and role-based readiness into a learner record that can move across cohorts and programs.',
+        status: 'Live route',
+        signal: 'Readiness records',
+        proof: 'Progress cards, certificates, badges, and email-keyed records write back to the user profile.',
+        icon: 'progress',
+        tone: 'from-zen-gold/85 via-zen-emerald/70 to-brand-cyan/70',
+        action: {
+            destination: 'internal',
+            label: 'View profile',
+            to: '/profile',
+        },
     },
     {
-        title: 'Credential Standards',
-        detail: 'ZEN Certified, ZEN Pro, and ZEN Mentor credentials mapped to specific deployment requirements.',
-        status: 'Governance',
+        title: 'Business Infrastructure',
+        detail: 'Documentation, admin settings, entitlement rules, billing, Supabase-backed program settings, and readiness metadata support the merge path.',
+        status: 'Operational',
+        signal: 'Docs and admin systems',
+        proof: 'Internal docs and admin configuration pages expose the operational control layer.',
+        icon: 'resources',
+        tone: 'from-slate-200/70 via-zen-gold/75 to-brand-cyan/70',
+        action: {
+            destination: 'internal',
+            label: 'Open docs',
+            to: '/docs',
+        },
     },
 ];
 
@@ -293,8 +397,51 @@ const CommandTileCard: React.FC<{ tile: CommandTile; index: number }> = ({ tile,
     );
 };
 
+const EcosystemLayerActionLink: React.FC<{ action: EcosystemLayerAction }> = ({ action }) => {
+    const className = 'inline-flex items-center justify-center gap-2 rounded-full border border-zen-gold/20 bg-zen-gold/[0.08] px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-zen-gold transition duration-300 hover:-translate-y-0.5 hover:border-brand-cyan/35 hover:bg-brand-cyan/[0.08] hover:text-brand-cyan focus:outline-none focus-visible:ring-2 focus-visible:ring-zen-gold/70';
+    const arrow = (
+        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m-6-6 6 6-6 6" />
+        </svg>
+    );
+
+    if (action.destination === 'internal') {
+        return (
+            <Link to={action.to} className={className}>
+                {action.label}
+                {arrow}
+            </Link>
+        );
+    }
+
+    if (action.destination === 'external') {
+        return (
+            <a href={action.href} target="_blank" rel="noreferrer" className={className}>
+                {action.label}
+                {arrow}
+            </a>
+        );
+    }
+
+    if (action.destination === 'anchor') {
+        return (
+            <a href={action.href} className={className}>
+                {action.label}
+                {arrow}
+            </a>
+        );
+    }
+
+    return (
+        <span className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-slate-500">
+            {action.label}
+        </span>
+    );
+};
+
 const CommandCenterPage: React.FC = () => {
     const { user, getModuleProgress } = useAuth();
+    const [activeLayer, setActiveLayer] = useState(ecosystemLayers[0]?.title ?? '');
     const marqueeItems = [...proofHighlights, ...proofHighlights];
     const progressSummary = getVanguardProgressSummary(user);
     const recentBadges = (user?.badges ?? []).slice(0, 3);
@@ -378,11 +525,23 @@ const CommandCenterPage: React.FC = () => {
                     </div>
 
                     <div className="relative">
-                        <div className="overflow-hidden rounded-[1.7rem] border border-white/10 bg-white/[0.045] p-5 shadow-[0_30px_120px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
-                            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                        <div className="pointer-events-none absolute -inset-6 rounded-[2rem] bg-[radial-gradient(circle_at_50%_18%,rgba(34,211,238,0.18),transparent_34%),radial-gradient(circle_at_78%_72%,rgba(201,168,76,0.18),transparent_38%)] blur-2xl" />
+                        <div className="relative overflow-hidden rounded-[1.7rem] border border-white/12 bg-[#06101d]/85 p-5 shadow-[0_30px_120px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-2xl">
+                            <div className="pointer-events-none absolute inset-0 opacity-60">
+                                <div className="absolute right-[-5rem] top-[-5rem] h-64 w-64 rounded-full border border-brand-cyan/15" />
+                                <div className="absolute right-[-2.8rem] top-[-2.8rem] h-44 w-44 rounded-full border border-zen-gold/15" />
+                                <div className="absolute right-8 top-12 h-16 w-16 rounded-full bg-[conic-gradient(from_110deg,rgba(201,168,76,0.45),rgba(34,211,238,0.3),rgba(52,211,153,0.4),rgba(201,168,76,0.45))] p-px opacity-80">
+                                    <div className="h-full w-full rounded-full bg-[#06101d]/90" />
+                                </div>
+                            </div>
+
+                            <div className="relative flex items-center justify-between border-b border-white/10 pb-4">
                                 <div>
                                     <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-zen-gold/70">Ecosystem map</p>
-                                    <p className="mt-2 text-lg font-black text-white">Central operating layer</p>
+                                    <p className="mt-2 text-lg font-black text-white">Operational routing layer</p>
+                                    <p className="mt-1 max-w-sm text-xs font-semibold leading-5 text-slate-500">
+                                        Live surfaces, external systems, and merge-ready infrastructure.
+                                    </p>
                                 </div>
                                 <div className="flex gap-1.5">
                                     <span className="h-2.5 w-2.5 rounded-full bg-zen-gold/80" />
@@ -391,18 +550,52 @@ const CommandCenterPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="mt-5 grid gap-3">
+                            <div className="relative mt-5 grid gap-3">
                                 {ecosystemLayers.map((layer, index) => (
-                                    <div key={layer.title} className="flex items-center gap-3 rounded-2xl border border-white/8 bg-[#07101d]/80 px-4 py-3">
-                                        <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-zen-gold/20 bg-zen-gold/[0.08] text-[11px] font-black text-zen-gold">
-                                            {String(index + 1).padStart(2, '0')}
-                                        </span>
-                                        <span className="flex-1 text-sm font-semibold text-slate-200">{layer.title}</span>
-                                        <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                                            {layer.status}
-                                        </span>
-                                        <span className="h-1.5 w-10 rounded-full bg-gradient-to-r from-zen-gold/80 to-brand-cyan/70" />
-                                    </div>
+                                    <article
+                                        key={layer.title}
+                                        className={`group overflow-hidden rounded-2xl border transition duration-300 ${activeLayer === layer.title ? 'border-zen-gold/35 bg-white/[0.075] shadow-[0_18px_60px_rgba(0,0,0,0.28)]' : 'border-white/10 bg-[#07101d]/76 hover:border-white/18 hover:bg-white/[0.055]'}`}
+                                    >
+                                        <button
+                                            type="button"
+                                            aria-expanded={activeLayer === layer.title}
+                                            onClick={() => setActiveLayer((current) => (current === layer.title ? '' : layer.title))}
+                                            className="flex w-full items-center gap-3 px-4 py-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-zen-gold/70"
+                                        >
+                                            <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${layer.tone} p-px shadow-[0_12px_32px_rgba(0,0,0,0.28)]`}>
+                                                <span className="flex h-full w-full items-center justify-center rounded-[0.7rem] bg-[#050816]/92 text-white">
+                                                    <ZenModuleGlyph name={layer.icon} className="h-4 w-4" />
+                                                </span>
+                                            </span>
+                                            <span className="min-w-0 flex-1">
+                                                <span className="flex items-center gap-2">
+                                                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-zen-gold/65">{String(index + 1).padStart(2, '0')}</span>
+                                                    <span className="text-sm font-black leading-tight text-slate-100">{layer.title}</span>
+                                                </span>
+                                                <span className="mt-1 block text-xs font-semibold leading-tight text-slate-500">{layer.signal}</span>
+                                            </span>
+                                            <span className="hidden rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500 sm:inline-flex">
+                                                {layer.status}
+                                            </span>
+                                            <span className={`hidden h-1.5 w-10 shrink-0 rounded-full bg-gradient-to-r sm:block ${layer.tone}`} />
+                                            <svg className={`h-4 w-4 shrink-0 text-slate-500 transition duration-300 ${activeLayer === layer.title ? 'rotate-180 text-zen-gold' : 'group-hover:text-slate-300'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+                                            </svg>
+                                        </button>
+
+                                        {activeLayer === layer.title && (
+                                            <div className="border-t border-white/10 px-4 pb-4 pt-3">
+                                                <p className="text-sm leading-6 text-slate-300">{layer.detail}</p>
+                                                <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+                                                    <div className="rounded-2xl border border-white/8 bg-black/20 p-3">
+                                                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-cyan/60">Proof</p>
+                                                        <p className="mt-1 text-xs leading-5 text-slate-400">{layer.proof}</p>
+                                                    </div>
+                                                    <EcosystemLayerActionLink action={layer.action} />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </article>
                                 ))}
                             </div>
                         </div>
