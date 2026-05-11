@@ -12,12 +12,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping Supabase REST health endpoint
+        env:
+          SUPABASE_URL: https://csmuunvhcekcamuccsnn.supabase.co
+          SUPABASE_ANON_KEY: sb_publishable_pb9OZgtWXijMZy-kdoiZrQ_HXalYKSC
         run: |
           echo "Pinging Supabase project csmuunvhcekcamuccsnn..."
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            "https://csmuunvhcekcamuccsnn.supabase.co/rest/v1/" \
-            -H "apikey: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}")
+            "${SUPABASE_URL}/rest/v1/" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
           echo "Response status: $STATUS"
           if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 500 ]; then
             echo "✅ Supabase project is alive (HTTP $STATUS)"
