@@ -47,6 +47,7 @@ const createDefaultModules = (): User['modules'] => ({
 });
 
 const createPreviewUser = (): User => ({
+    id: 'standalone-preview-user',
     email: 'preview@zenai.world',
     name: 'ZEN Preview User',
     picture: 'https://api.dicebear.com/7.x/initials/svg?seed=ZEN',
