@@ -6,7 +6,6 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 
 const LoginPage = React.lazy(() => import('./modules/module1/components/auth/LoginPage'));
-const CommandCenterPage = React.lazy(() => import('./pages/CommandCenterPage'));
 const CredentialForgePage = React.lazy(() => import('./pages/CredentialForgePage'));
 const ResetPasswordPage = React.lazy(() => import('./pages/ResetPasswordPage'));
 const Module1Page = React.lazy(() => import('./pages/Module1Page'));
@@ -380,8 +379,8 @@ const App: React.FC = () => {
                         </ProtectedRoute>
                     }
                 >
-                    <Route index element={<Navigate to="/command-center" replace />} />
-                    <Route path="command-center" element={<Suspense fallback={<PageLoader />}><CommandCenterPage /></Suspense>} />
+                    <Route index element={<Navigate to="/programs" replace />} />
+                    <Route path="command-center" element={<Navigate to="/programs" replace />} />
                     <Route path="credential-forge" element={<Suspense fallback={<PageLoader />}><CredentialForgePage /></Suspense>} />
                     <Route path="hub" element={<Suspense fallback={<PageLoader />}><ProgramHubPage /></Suspense>} />
                     <Route path="programs/:programId" element={<Suspense fallback={<PageLoader />}><ProgramDashboardPage /></Suspense>} />
