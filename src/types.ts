@@ -200,6 +200,7 @@ export interface SessionRecord {
 
 // Main user type with multi-module tracking
 export interface User {
+    id?: string;
     email: string;
     name: string;
     picture?: string;
