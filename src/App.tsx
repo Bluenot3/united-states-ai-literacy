@@ -27,6 +27,10 @@ const AdminSettings = React.lazy(() => import('./pages/AdminSettings'));
 const AdminActivityLog = React.lazy(() => import('./pages/AdminActivityLog'));
 const ProgramHubPage = React.lazy(() => import('./zen-programs/pages/ProgramHubPage'));
 const ProgramDashboardPage = React.lazy(() => import('./zen-programs/pages/ProgramDashboardPage'));
+const ProgramSuitePage = React.lazy(() => import('./zen-programs/pages/ProgramSuitePage'));
+const ProgramDetailPage = React.lazy(() => import('./zen-programs/pages/ProgramDetailPage'));
+const ProgramRegisterPage = React.lazy(() => import('./zen-programs/pages/ProgramRegisterPage'));
+const ProgramAdminPanel = React.lazy(() => import('./zen-programs/admin/ProgramAdminPanel'));
 const PaywallPage = React.lazy(() => import('./pages/PaywallPage'));
 const BillingSuccessPage = React.lazy(() => import('./pages/BillingSuccessPage'));
 const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
@@ -124,10 +128,10 @@ const documentMetaMatchers: Array<{
         },
     },
     {
-        match: (pathname) => pathname.startsWith('/programs/'),
+        match: (pathname) => pathname === '/programs' || pathname.startsWith('/programs/') || pathname.startsWith('/register/'),
         meta: {
-            title: 'Program Dashboard | ZEN Vanguard',
-            description: 'Track readiness, curriculum progress, and active program execution inside ZEN Vanguard.',
+            title: 'ZEN Program Ecosystem',
+            description: 'Browse programs, register interest, preview available tracks, and keep full curriculum access gated until enrollment.',
             themeColor: '#081021',
         },
     },
@@ -359,7 +363,14 @@ const App: React.FC = () => {
                     <Route path="messages" element={<AdminMessages />} />
                     <Route path="analytics" element={<AdminAnalytics />} />
                     <Route path="settings" element={<AdminSettings />} />
+                    <Route path="programs" element={<ProgramAdminPanel />} />
                 </Route>
+
+                <Route path="/programs" element={<Suspense fallback={<PageLoader />}><ProgramSuitePage /></Suspense>} />
+                <Route path="/programs/:slug/register" element={<Suspense fallback={<PageLoader />}><ProgramRegisterPage /></Suspense>} />
+                <Route path="/register/:slug" element={<Suspense fallback={<PageLoader />}><ProgramRegisterPage /></Suspense>} />
+                <Route path="/programs/:programId/launch" element={<Suspense fallback={<PageLoader />}><ProgramDashboardPage /></Suspense>} />
+                <Route path="/programs/:slug" element={<Suspense fallback={<PageLoader />}><ProgramDetailPage /></Suspense>} />
 
                 <Route
                     path="/"

@@ -123,6 +123,7 @@ async function loadFullUser(supabaseUser: { id: string; email?: string }): Promi
         }
 
         return {
+            id: newProfile.id,
             email: newProfile.email,
             name: newProfile.name,
             picture: newProfile.picture,
@@ -163,6 +164,7 @@ async function loadFullUser(supabaseUser: { id: string; email?: string }): Promi
     }));
 
     return {
+        id: supabaseUser.id,
         email: profile.email as string,
         name: profile.name as string,
         picture: profile.picture as string,

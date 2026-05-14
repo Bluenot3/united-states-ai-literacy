@@ -7,3 +7,4 @@ export { default as ProgramSectionRenderer } from './ProgramSectionRenderer';
 export { default as ProgramFooter } from './ProgramFooter';
 export { default as ProgramCodeBlock } from './ProgramCodeBlock';
 export { default as PioneerLearningAssets } from './PioneerLearningAssets';
+export { default as ProgramAccessGate } from './ProgramAccessGate';

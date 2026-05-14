@@ -12,6 +12,9 @@ import {
     getProgramById,
     isProgramPubliclyAvailable,
 } from '../programsRegistry';
+import { getProgramAccessDecision, getProgramBySlug as getCatalogProgramBySlug, type UserProgramState } from '../programIntegrationContract';
+import { programRegistrationAdapter } from '../programRegistrationAdapter';
+import ProgramAccessGate, { getSyntheticStandaloneUserId } from '../components/ProgramAccessGate';
 import { useProgramPublishSettings } from '../useProgramPublishSettings';
 import { getProgramProgress, saveProgramProgress, type ProgramContentItem, type ProgramManifest, type ProgramSection } from '../types';
 import { repairContent, repairText } from '../../utils/text';
@@ -127,6 +130,7 @@ const ProgramDashboardPage: React.FC = () => {
     const isUnavailableForUser = manifest ? !isProgramPubliclyAvailable(manifest) && !isAdminPreview : false;
     const [activeSection, setActiveSection] = useState('');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [userProgramState, setUserProgramState] = useState<UserProgramState | null>(null);
     const [progress, setProgress] = useState(() => (
         programId ? getProgramProgress(programId) : { completedSections: [], lastViewedSection: '', startedAt: null }
     ));
@@ -170,6 +174,33 @@ const ProgramDashboardPage: React.FC = () => {
         saveProgramProgress(programId, activeSection);
     }, [activeSection, progress, programId]);
 
+    useEffect(() => {
+        if (!programId) {
+            return;
+        }
+
+        const catalogProgram = getCatalogProgramBySlug(programId);
+
+        if (!catalogProgram) {
+            return;
+        }
+
+        const userId = user?.id ?? getSyntheticStandaloneUserId(user?.email);
+        let active = true;
+
+        void programRegistrationAdapter.getRegistrationForProgram(userId, catalogProgram.programKey)
+            .then((nextState) => {
+                if (active) {
+                    setUserProgramState(nextState);
+                }
+            })
+            .catch((error) => console.warn('Program launch access state unavailable.', error));
+
+        return () => {
+            active = false;
+        };
+    }, [programId, user?.email, user?.id]);
+
     if (!programId || !program) {
         return <Navigate to="/hub" replace />;
     }
@@ -180,6 +211,34 @@ const ProgramDashboardPage: React.FC = () => {
 
     if (manifest && isUnavailableForUser) {
         return <UnavailableProgramPage program={manifest} />;
+    }
+
+    const catalogProgram = getCatalogProgramBySlug(programId);
+
+    if (catalogProgram) {
+        const isAuthenticated = Boolean(user);
+        const programGateDecision = getProgramAccessDecision({
+            program: catalogProgram,
+            userState: userProgramState,
+            isAuthenticated,
+            isAdmin: isAdminPreview,
+        });
+
+        if (!programGateDecision.canLaunchFullProgram) {
+            return (
+                <div className="min-h-screen bg-[linear-gradient(180deg,#020617_0%,#081321_52%,#050814_100%)] px-5 py-12 text-white sm:px-8">
+                    <div className="mx-auto max-w-4xl">
+                        <ProgramAccessGate
+                            program={catalogProgram}
+                            userProgramState={userProgramState}
+                            isAuthenticated={isAuthenticated}
+                            isAdmin={isAdminPreview}
+                            mode="full"
+                        />
+                    </div>
+                </div>
+            );
+        }
     }
 
     if (!curriculum) {

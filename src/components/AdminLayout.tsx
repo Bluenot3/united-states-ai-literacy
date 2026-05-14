@@ -17,6 +17,7 @@ const AdminLayout: React.FC = () => {
         { path: '/admin/activity', label: 'Activity Log', icon: 'activity' },
         { path: '/admin/messages', label: 'Messages', icon: 'mail' },
         { path: '/admin/analytics', label: 'Analytics', icon: 'chart' },
+        { path: '/admin/programs', label: 'Programs', icon: 'dashboard' },
         { path: '/admin/settings', label: 'Settings', icon: 'settings' },
     ];
 
