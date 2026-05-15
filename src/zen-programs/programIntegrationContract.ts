@@ -33,6 +33,13 @@ export type ProgramAccessLevel =
 
 export type ProgramVisibility = 'public' | 'authenticated' | 'private' | 'admin';
 
+export const ACTIVE_PUBLIC_PROGRAM_KEYS = ['vanguard', 'ai-pioneer'] as const satisfies readonly ProgramKey[];
+const ACTIVE_PUBLIC_PROGRAM_KEY_SET = new Set<ProgramKey>(ACTIVE_PUBLIC_PROGRAM_KEYS);
+
+export const isActivePublicProgramKey = (programKey: ProgramKey): boolean => (
+    ACTIVE_PUBLIC_PROGRAM_KEY_SET.has(programKey)
+);
+
 export interface ProgramCatalogItem {
     programKey: ProgramKey;
     slug: string;
@@ -138,7 +145,7 @@ const programKeyDefaults: Record<ProgramKey, Pick<ProgramCatalogItem, 'status' |
     },
     'homeschool-kit': {
         status: 'waitlist',
-        registrationEnabled: true,
+        registrationEnabled: false,
         previewEnabled: false,
         fullAccessRequiresEnrollment: true,
         visibility: 'public',
@@ -146,7 +153,7 @@ const programKeyDefaults: Record<ProgramKey, Pick<ProgramCatalogItem, 'status' |
     },
     'web3-literacy': {
         status: 'waitlist',
-        registrationEnabled: true,
+        registrationEnabled: false,
         previewEnabled: false,
         fullAccessRequiresEnrollment: true,
         visibility: 'public',
@@ -154,7 +161,7 @@ const programKeyDefaults: Record<ProgramKey, Pick<ProgramCatalogItem, 'status' |
     },
     'train-a-trainer': {
         status: 'waitlist',
-        registrationEnabled: true,
+        registrationEnabled: false,
         previewEnabled: false,
         fullAccessRequiresEnrollment: true,
         visibility: 'public',
@@ -265,6 +272,10 @@ export const getVisibleProgramsForUser = (
             return true;
         }
 
+        if (!isActivePublicProgramKey(program.programKey)) {
+            return false;
+        }
+
         const state = statesByProgramKey.get(program.programKey);
 
         if (program.status === 'draft') {
@@ -294,6 +305,18 @@ export const getProgramAccessDecision = ({
             reason: 'Admin preview enabled.',
             ctaLabel: 'Admin preview',
             badgeLabel: 'Admin',
+        };
+    }
+
+    if (!isActivePublicProgramKey(program.programKey)) {
+        return {
+            canViewOverview: false,
+            canRegister: false,
+            canViewPreview: false,
+            canLaunchFullProgram: false,
+            reason: 'This program is staged behind Arsenal admin release controls.',
+            ctaLabel: 'Restricted',
+            badgeLabel: 'Admin staged',
         };
     }
 

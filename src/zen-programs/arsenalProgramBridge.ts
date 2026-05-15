@@ -2,6 +2,7 @@ import {
     getProgramAccessDecision,
     getProgramByKey,
     getProgramCatalog,
+    getVisibleProgramsForUser,
     type ProgramAccessDecision,
     type ProgramCatalogItem,
     type ProgramKey,
@@ -219,7 +220,7 @@ export const getArsenalProgramBridgeCatalog = ({
 } = {}): ArsenalProgramBridgeItem[] => {
     const states = stateByProgramKey(userProgramStates);
 
-    return getProgramCatalog().map((program) => getArsenalProgramBridgeItem({
+    return getVisibleProgramsForUser(userProgramStates, isAdmin).map((program) => getArsenalProgramBridgeItem({
         program,
         userState: states.get(program.programKey),
         isAuthenticated,

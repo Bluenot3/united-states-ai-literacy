@@ -6,6 +6,7 @@ import { getAccentClasses } from '../programsRegistry';
 import {
     getProgramAccessDecision,
     getProgramBySlug,
+    isActivePublicProgramKey,
     type UserProgramState,
 } from '../programIntegrationContract';
 import { programRegistrationAdapter } from '../programRegistrationAdapter';
@@ -42,6 +43,10 @@ const ProgramDetailPage: React.FC = () => {
     ), [program]);
 
     if (!program || !colors) {
+        return <Navigate to="/programs" replace />;
+    }
+
+    if (!isAdmin && !isActivePublicProgramKey(program.programKey)) {
         return <Navigate to="/programs" replace />;
     }
 

@@ -72,9 +72,9 @@ Prepared link contracts:
 
 - `ai-pioneer`: `preview`, registration enabled, preview enabled, full access requires enrollment
 - `vanguard`: `preview`, registration enabled, preview enabled, full access requires enrollment
-- `homeschool-kit`: `waitlist`, registration enabled, preview disabled by default
-- `web3-literacy`: `waitlist`, registration enabled, preview disabled by default
-- `train-a-trainer`: `waitlist`, registration enabled, preview disabled by default
+- `homeschool-kit`: staged, public registration disabled, preview disabled by default
+- `web3-literacy`: staged, public registration disabled, preview disabled by default
+- `train-a-trainer`: staged, public registration disabled, preview disabled by default
 
 The existing internal registry ids are mapped to Arsenal-facing keys:
 
@@ -87,9 +87,10 @@ The existing internal registry ids are mapped to Arsenal-facing keys:
 
 Rules:
 
-- Admin can preview everything without publishing it.
-- Logged-out users can view overviews and registration CTAs.
-- Authenticated users can register when `registrationEnabled` is true.
+- `royaltokens@gmail.com` is the owner/admin account and can preview everything without publishing it.
+- Public/non-admin users can only view and register for Vanguard and AI Pioneer while the other tracks remain staged.
+- Logged-out users can view overviews and registration CTAs for active public programs.
+- Authenticated users can register for active public programs when `registrationEnabled` is true.
 - Registered users see waitlist state.
 - Full launch requires `enrolled`, `facilitator`, or `admin` access and program `open` or `live`.
 - Draft programs are admin-only.

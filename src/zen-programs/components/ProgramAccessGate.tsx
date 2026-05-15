@@ -75,12 +75,14 @@ export const ProgramAccessGate: React.FC<ProgramAccessGateProps> = ({
             <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">{body}</p>
             <div className="mt-5 flex flex-wrap gap-3">
                 {cta}
-                <Link
-                    to={program.embeddedRoute}
-                    className="inline-flex rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.08]"
-                >
-                    Continue preview
-                </Link>
+                {decision.canViewPreview && (
+                    <Link
+                        to={program.embeddedRoute}
+                        className="inline-flex rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.08]"
+                    >
+                        Continue preview
+                    </Link>
+                )}
             </div>
         </section>
     );

@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
+import { isAdminEmail } from '../../services/adminAccess';
 import { useAuth } from '../../hooks/useAuth';
-import { getProgramBySlug, parseProgramCampaignParams, type UserProgramState } from '../programIntegrationContract';
+import { getProgramBySlug, isActivePublicProgramKey, parseProgramCampaignParams, type UserProgramState } from '../programIntegrationContract';
 import { programRegistrationAdapter } from '../programRegistrationAdapter';
 import { getSyntheticStandaloneUserId } from '../components/ProgramAccessGate';
 
@@ -9,6 +10,7 @@ const ProgramRegisterPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const { search } = useLocation();
     const { user } = useAuth();
+    const isAdmin = isAdminEmail(user?.email);
     const program = slug ? getProgramBySlug(slug) : undefined;
     const campaign = useMemo(() => parseProgramCampaignParams(new URLSearchParams(search)), [search]);
     const [email, setEmail] = useState(user?.email ?? '');
@@ -18,6 +20,10 @@ const ProgramRegisterPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     if (!program) {
+        return <Navigate to="/programs" replace />;
+    }
+
+    if (!isAdmin && !isActivePublicProgramKey(program.programKey)) {
         return <Navigate to="/programs" replace />;
     }
 

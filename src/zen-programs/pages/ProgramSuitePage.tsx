@@ -1023,28 +1023,40 @@ const ProgramCard: React.FC<ProgramCardProps> = ({ program, bridge, state, isAut
     );
 };
 
-const FutureTrackRail: React.FC<{ programs: ProgramCatalogItem[] }> = ({ programs }) => (
+const FutureTrackRail: React.FC<{ programs: ProgramCatalogItem[]; isAdmin: boolean }> = ({ programs, isAdmin }) => (
     <section className="rounded-[30px] border border-white/8 bg-slate-950/48 p-4 shadow-[inset_7px_7px_18px_rgba(0,0,0,.34),inset_-6px_-6px_18px_rgba(37,99,235,.05)]">
         <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-                <p className="text-[10px] font-black uppercase tracking-[.28em] text-[#bfdbfe]">Future tracks</p>
-                <h2 className="mt-1 text-xl font-black text-white">Visible, but intentionally gated</h2>
+                <p className="text-[10px] font-black uppercase tracking-[.28em] text-[#bfdbfe]">{isAdmin ? 'Admin tracks' : 'Future tracks'}</p>
+                <h2 className="mt-1 text-xl font-black text-white">{isAdmin ? 'Unlocked for owner review' : 'Visible, but intentionally gated'}</h2>
             </div>
-            <p className="max-w-2xl text-sm leading-6 text-slate-400">All other programs stay muted until Arsenal admins publish or unlock them.</p>
+            <p className="max-w-2xl text-sm leading-6 text-slate-400">
+                {isAdmin
+                    ? 'royaltokens@gmail.com can inspect every staged program before public release.'
+                    : 'All other programs stay muted until Arsenal admins publish or unlock them.'}
+            </p>
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-3">
             {programs.map((program) => (
-                <article key={program.programKey} className="min-h-[168px] rounded-[22px] border border-white/8 bg-slate-950/66 p-4 opacity-45 grayscale">
+                <article key={program.programKey} className={`min-h-[168px] rounded-[22px] border border-white/8 bg-slate-950/66 p-4 ${isAdmin ? 'opacity-100' : 'opacity-45 grayscale'}`}>
                     <div className="flex items-center gap-2">
                         <span className="inline-flex h-9 w-9 items-center justify-center rounded-[14px] border border-white/10 bg-white/[.04] text-xs font-black text-slate-300">
                             {String(program.metadata.icon ?? program.title.slice(0, 2)).slice(0, 2)}
                         </span>
-                        <Chip label="Staged / gated" muted />
+                        <Chip label={isAdmin ? 'Admin unlocked' : 'Staged / gated'} muted={!isAdmin} />
                     </div>
                     <h3 className="mt-3 text-lg font-black text-white">{program.title}</h3>
                     <div className="mt-3 flex flex-wrap gap-2">
                         {(previewHighlights[program.programKey] ?? []).slice(0, 3).map((chip) => <Chip key={`${program.programKey}-${chip}`} label={chip} muted />)}
                     </div>
+                    {isAdmin && (
+                        <Link
+                            to={`/programs/${program.slug}`}
+                            className="mt-4 inline-flex rounded-full border border-white/20 bg-white/[.07] px-4 py-2 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-white/[.11] focus:outline-none focus:ring-2 focus:ring-white/60"
+                        >
+                            Admin preview
+                        </Link>
+                    )}
                 </article>
             ))}
         </div>
@@ -1251,7 +1263,7 @@ const ProgramSuitePage: React.FC = () => {
 
                 <div className="mt-5 grid gap-5 lg:grid-cols-[.9fr_1.1fr]">
                     <ProgramSignalMap selectedProgramKey={selectedProgramKey} onSelect={setSelectedProgramKey} />
-                    <FutureTrackRail programs={futurePrograms} />
+                    <FutureTrackRail programs={futurePrograms} isAdmin={isAdmin} />
                 </div>
             </main>
         </div>

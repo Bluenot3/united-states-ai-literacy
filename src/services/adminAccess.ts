@@ -1,4 +1,4 @@
-export const ADMIN_EMAILS = ['royaltokens@gmail.com', 'huxley@zenai.biz'] as const;
+export const ADMIN_EMAILS = ['royaltokens@gmail.com'] as const;
 
 const ADMIN_EMAIL_SET = new Set<string>(ADMIN_EMAILS);
 
