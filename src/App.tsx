@@ -2,6 +2,7 @@ import React, { Suspense, useEffect } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useAdmin } from './contexts/AdminContext';
 import { useAuth } from './hooks/useAuth';
+import { useBilling } from './contexts/BillingContext';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 
@@ -298,6 +299,27 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     return <>{children}</>;
 };
 
+// Requires both authentication AND an active paid subscription.
+// Unauthenticated → /login   |   Authenticated but unpaid → /paywall
+const BillingProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { isAuthenticated, loading: authLoading } = useAuth();
+    const { entitled, loading: billingLoading } = useBilling();
+
+    if (authLoading || billingLoading) {
+        return <PageLoader />;
+    }
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />;
+    }
+
+    if (!entitled) {
+        return <Navigate to="/paywall" replace />;
+    }
+
+    return <>{children}</>;
+};
+
 const App: React.FC = () => {
     return (
         <>
@@ -365,11 +387,47 @@ const App: React.FC = () => {
                     <Route path="programs" element={<ProgramAdminPanel />} />
                 </Route>
 
-                <Route path="/programs" element={<Suspense fallback={<PageLoader />}><ProgramSuitePage /></Suspense>} />
-                <Route path="/programs/:slug/register" element={<Suspense fallback={<PageLoader />}><ProgramRegisterPage /></Suspense>} />
-                <Route path="/register/:slug" element={<Suspense fallback={<PageLoader />}><ProgramRegisterPage /></Suspense>} />
-                <Route path="/programs/:programId/launch" element={<Suspense fallback={<PageLoader />}><ProgramDashboardPage /></Suspense>} />
-                <Route path="/programs/:slug" element={<Suspense fallback={<PageLoader />}><ProgramDetailPage /></Suspense>} />
+                {/* ── Program routes — require active paid subscription ── */}
+                <Route
+                    path="/programs"
+                    element={
+                        <BillingProtectedRoute>
+                            <Suspense fallback={<PageLoader />}><ProgramSuitePage /></Suspense>
+                        </BillingProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/programs/:slug/register"
+                    element={
+                        <BillingProtectedRoute>
+                            <Suspense fallback={<PageLoader />}><ProgramRegisterPage /></Suspense>
+                        </BillingProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/register/:slug"
+                    element={
+                        <BillingProtectedRoute>
+                            <Suspense fallback={<PageLoader />}><ProgramRegisterPage /></Suspense>
+                        </BillingProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/programs/:programId/launch"
+                    element={
+                        <BillingProtectedRoute>
+                            <Suspense fallback={<PageLoader />}><ProgramDashboardPage /></Suspense>
+                        </BillingProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/programs/:slug"
+                    element={
+                        <BillingProtectedRoute>
+                            <Suspense fallback={<PageLoader />}><ProgramDetailPage /></Suspense>
+                        </BillingProtectedRoute>
+                    }
+                />
 
                 <Route
                     path="/"
@@ -383,7 +441,7 @@ const App: React.FC = () => {
                     <Route path="command-center" element={<Navigate to="/programs" replace />} />
                     <Route path="credential-forge" element={<Suspense fallback={<PageLoader />}><CredentialForgePage /></Suspense>} />
                     <Route path="hub" element={<Suspense fallback={<PageLoader />}><ProgramHubPage /></Suspense>} />
-                    <Route path="programs/:programId" element={<Suspense fallback={<PageLoader />}><ProgramDashboardPage /></Suspense>} />
+                    <Route path="programs/:programId" element={<BillingProtectedRoute><Suspense fallback={<PageLoader />}><ProgramDashboardPage /></Suspense></BillingProtectedRoute>} />
                     <Route path="dashboard" element={<Dashboard />} />
                     <Route
                         path="guide"
