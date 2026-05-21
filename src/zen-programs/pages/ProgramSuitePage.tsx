@@ -1063,6 +1063,322 @@ const FutureTrackRail: React.FC<{ programs: ProgramCatalogItem[]; isAdmin: boole
     </section>
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// BackdropCanvas — full-screen RWB neural-network + fireworks
+// ─────────────────────────────────────────────────────────────────────────────
+const BackdropCanvas: React.FC = () => {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return undefined;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return undefined;
+
+        let raf = 0;
+
+        // Red / White / Blue node palette
+        const PALETTES = ['239,68,68', '255,255,255', '59,130,246', '248,113,113', '147,197,253', '220,38,38'];
+
+        type BNode = { x: number; y: number; vx: number; vy: number; r: number; phase: number; rgb: string };
+        type FPart = { x: number; y: number; vx: number; vy: number; life: number; r: number; rgb: string };
+        type FWork = { ox: number; oy: number; parts: FPart[]; alive: boolean };
+
+        const buildNodes = (w: number, h: number): BNode[] =>
+            Array.from({ length: 88 }, (_, i) => ({
+                x: Math.random() * w,
+                y: Math.random() * h,
+                vx: (Math.random() - 0.5) * 0.28,
+                vy: (Math.random() - 0.5) * 0.28,
+                r: 1.1 + Math.random() * 2.0,
+                phase: Math.random() * Math.PI * 2,
+                rgb: PALETTES[i % 3],   // alternate red / white / blue
+            }));
+
+        const spawnFw = (w: number, h: number): FWork => {
+            const rgb = PALETTES[Math.floor(Math.random() * 3)];
+            const rgb2 = PALETTES[Math.floor(Math.random() * 6)];
+            return {
+                ox: w * 0.1 + Math.random() * w * 0.8,
+                oy: h * 0.06 + Math.random() * h * 0.62,
+                alive: true,
+                parts: Array.from({ length: 72 }, () => {
+                    const a = Math.random() * Math.PI * 2;
+                    const spd = 0.6 + Math.random() * 2.8;
+                    return {
+                        x: 0, y: 0,
+                        vx: Math.cos(a) * spd,
+                        vy: Math.sin(a) * spd,
+                        life: 1,
+                        r: 0.7 + Math.random() * 1.4,
+                        rgb: Math.random() < 0.65 ? rgb : rgb2,
+                    };
+                }),
+            };
+        };
+
+        const resize = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+        resize();
+        window.addEventListener('resize', resize);
+
+        let nodes = buildNodes(canvas.width, canvas.height);
+        const fireworks: FWork[] = [];
+        let nextFw = performance.now() + 1800;
+
+        const render = (t: number) => {
+            const w = canvas.width;
+            const h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+
+            // ── move nodes ──────────────────────────────────────────────────
+            nodes.forEach(n => {
+                n.x += n.vx; n.y += n.vy;
+                if (n.x < 0 || n.x > w) { n.vx *= -1; n.x = Math.max(0, Math.min(w, n.x)); }
+                if (n.y < 0 || n.y > h) { n.vy *= -1; n.y = Math.max(0, Math.min(h, n.y)); }
+            });
+
+            // ── connections + traveling pulses ──────────────────────────────
+            const MAX_D = 170;
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const a = nodes[i]; const b = nodes[j];
+                    const dx = a.x - b.x; const dy = a.y - b.y;
+                    const d = Math.sqrt(dx * dx + dy * dy);
+                    if (d >= MAX_D) continue;
+                    const base = (1 - d / MAX_D) * 0.17;
+                    const pulse = Math.sin(t * 0.00085 + a.phase + b.phase) * 0.5 + 0.5;
+                    ctx.strokeStyle = `rgba(${a.rgb},${base * (0.40 + pulse * 0.60)})`;
+                    ctx.lineWidth = 0.55;
+                    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+
+                    // tiny signal packet racing along the wire
+                    if (pulse > 0.86) {
+                        const frac = (Math.sin(t * 0.0019 + a.phase) * 0.5 + 0.5);
+                        const px = a.x + (b.x - a.x) * frac;
+                        const py = a.y + (b.y - a.y) * frac;
+                        ctx.beginPath(); ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(${a.rgb},${base * 3.2})`; ctx.fill();
+                    }
+                }
+            }
+
+            // ── node glows ──────────────────────────────────────────────────
+            nodes.forEach(n => {
+                const pulse = Math.sin(t * 0.00068 + n.phase) * 0.5 + 0.5;
+                const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r * 7);
+                g.addColorStop(0, `rgba(${n.rgb},${0.22 + pulse * 0.14})`);
+                g.addColorStop(1, `rgba(${n.rgb},0)`);
+                ctx.beginPath(); ctx.arc(n.x, n.y, n.r * 7, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+                ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${n.rgb},${0.38 + pulse * 0.24})`; ctx.fill();
+            });
+
+            // ── fireworks ───────────────────────────────────────────────────
+            if (t >= nextFw) {
+                fireworks.push(spawnFw(w, h));
+                nextFw = t + 3600 + Math.random() * 5200;
+            }
+            for (let fi = fireworks.length - 1; fi >= 0; fi--) {
+                const fw = fireworks[fi];
+                let anyAlive = false;
+                fw.parts.forEach(p => {
+                    p.x += p.vx; p.y += p.vy;
+                    p.vy += 0.017;   // gravity
+                    p.vx *= 0.989;
+                    p.life -= 0.011;
+                    if (p.life <= 0) return;
+                    anyAlive = true;
+                    const a = p.life * p.life * 0.38;   // slightly brighter fade
+                    ctx.beginPath();
+                    ctx.arc(fw.ox + p.x, fw.oy + p.y, p.r * Math.max(0.08, p.life), 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${p.rgb},${a})`; ctx.fill();
+                });
+                if (!anyAlive) fireworks.splice(fi, 1);
+            }
+
+            raf = requestAnimationFrame(render);
+        };
+
+        raf = requestAnimationFrame(render);
+        return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    return (
+        <canvas
+            ref={canvasRef}
+            aria-hidden="true"
+            style={{
+                position: 'fixed', inset: 0, width: '100%', height: '100%',
+                zIndex: 1, pointerEvents: 'none', opacity: 0.60,
+            }}
+        />
+    );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SparklerCanvas — ultra-fine cursor sparkler in RWB
+// ─────────────────────────────────────────────────────────────────────────────
+const SparklerCanvas: React.FC = () => {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return undefined;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return undefined;
+
+        let raf = 0;
+        const mouse = { x: -9999, y: -9999, active: false };
+
+        type Spark = {
+            x: number; y: number; vx: number; vy: number;
+            life: number; decay: number; r: number; rgb: string;
+            trail: Array<{ x: number; y: number }>;
+        };
+
+        const sparks: Spark[] = [];
+        const MAX_SPARKS = 800;
+
+        // Weighted: ~50% white-hot, ~25% red, ~25% blue
+        const COLS = [
+            '255,255,255', '255,255,255', '255,255,255', '255,252,220', '255,248,200',
+            '239,68,68', '248,113,113', '255,80,80', '220,38,38',
+            '59,130,246', '96,165,250', '147,197,253', '37,99,235',
+        ];
+
+        const spawn = (x: number, y: number) => {
+            for (let i = 0; i < 18; i++) {
+                if (sparks.length >= MAX_SPARKS) break;
+                const angle = Math.random() * Math.PI * 2;
+                const spd = 1.0 + Math.random() * 4.5;
+                sparks.push({
+                    x, y,
+                    vx: Math.cos(angle) * spd,
+                    vy: Math.sin(angle) * spd - 1.6,   // strong upward bias like real sparks
+                    life: 1,
+                    decay: 0.014 + Math.random() * 0.022,   // slower decay = longer trails
+                    r: 0.7 + Math.random() * 1.6,
+                    rgb: COLS[Math.floor(Math.random() * COLS.length)],
+                    trail: [],
+                });
+            }
+        };
+
+        const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+        resize();
+        window.addEventListener('resize', resize);
+
+        const onMove = (e: MouseEvent) => { mouse.x = e.clientX; mouse.y = e.clientY; mouse.active = true; };
+        const onLeave = () => { mouse.active = false; };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseleave', onLeave);
+
+        let lastSpawn = 0;
+
+        const render = (t: number) => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (mouse.active && t - lastSpawn > 17) {
+                spawn(mouse.x, mouse.y);
+                lastSpawn = t;
+            }
+
+            // 'lighter' blend = additive glow → white-hot overlaps
+            ctx.globalCompositeOperation = 'lighter';
+
+            for (let i = sparks.length - 1; i >= 0; i--) {
+                const s = sparks[i];
+
+                // record trail
+                s.trail.push({ x: s.x, y: s.y });
+                if (s.trail.length > 6) s.trail.shift();
+
+                // physics
+                s.x += s.vx;
+                s.y += s.vy;
+                s.vy += 0.088;   // gravity
+                s.vx *= 0.976;   // air drag
+                s.life -= s.decay;
+
+                if (s.life <= 0) { sparks.splice(i, 1); continue; }
+
+                // ── trailing glow ──────────────────────────────────────────
+                for (let ti = 0; ti < s.trail.length; ti++) {
+                    const frac = (ti + 1) / s.trail.length;
+                    const ta = frac * s.life * 0.62;
+                    const tr = s.r * frac * s.life * 0.75;
+                    if (tr < 0.05) continue;
+                    ctx.beginPath();
+                    ctx.arc(s.trail[ti].x, s.trail[ti].y, tr, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${s.rgb},${ta})`;
+                    ctx.fill();
+                }
+
+                // ── spark core ─────────────────────────────────────────────
+                const a = s.life * s.life * 0.98;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.r * s.life, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${s.rgb},${a})`;
+                ctx.fill();
+
+                // ── bright glow halo on all sparks ─────────────────────────
+                if (s.life > 0.18) {
+                    const grd = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 5);
+                    grd.addColorStop(0, `rgba(${s.rgb},${a * 0.38})`);
+                    grd.addColorStop(1, `rgba(${s.rgb},0)`);
+                    ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 5, 0, Math.PI * 2);
+                    ctx.fillStyle = grd; ctx.fill();
+                }
+            }
+
+            // ── cursor white-hot focal glow ────────────────────────────────
+            if (mouse.active) {
+                // inner white-hot core
+                const cg = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 22);
+                cg.addColorStop(0, 'rgba(255,255,240,0.55)');
+                cg.addColorStop(0.28, 'rgba(255,230,150,0.22)');
+                cg.addColorStop(0.6, 'rgba(255,180,80,0.08)');
+                cg.addColorStop(1, 'rgba(255,100,40,0)');
+                ctx.beginPath(); ctx.arc(mouse.x, mouse.y, 22, 0, Math.PI * 2);
+                ctx.fillStyle = cg; ctx.fill();
+                // outer soft corona
+                const og = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 48);
+                og.addColorStop(0, 'rgba(255,255,200,0.08)');
+                og.addColorStop(1, 'rgba(255,255,200,0)');
+                ctx.beginPath(); ctx.arc(mouse.x, mouse.y, 48, 0, Math.PI * 2);
+                ctx.fillStyle = og; ctx.fill();
+            }
+
+            ctx.globalCompositeOperation = 'source-over';
+            raf = requestAnimationFrame(render);
+        };
+
+        raf = requestAnimationFrame(render);
+        return () => {
+            cancelAnimationFrame(raf);
+            window.removeEventListener('resize', resize);
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseleave', onLeave);
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    return (
+        <canvas
+            ref={canvasRef}
+            aria-hidden="true"
+            style={{
+                position: 'fixed', inset: 0, width: '100%', height: '100%',
+                zIndex: 9999, pointerEvents: 'none',
+            }}
+        />
+    );
+};
+
 const ProgramSuitePage: React.FC = () => {
     const { user, isAuthenticated } = useAuth();
     const isAdmin = isAdminEmail(user?.email);
@@ -1098,7 +1414,7 @@ const ProgramSuitePage: React.FC = () => {
     ), [isAdmin, isAuthenticated, states]);
 
     return (
-        <div className="program-suite-redblue min-h-screen overflow-x-hidden bg-[#020617] px-4 pb-12 pt-7 text-white sm:px-6 lg:px-8">
+        <div className="program-suite-redblue min-h-screen overflow-x-hidden bg-[#020617] text-white">
             <style>
                 {`
                     .program-suite-redblue {
@@ -1198,21 +1514,126 @@ const ProgramSuitePage: React.FC = () => {
                     @keyframes beadPulse { 0%, 100% { opacity: .85; } 50% { opacity: 1; } }
                     @keyframes faceSheen { 0%, 100% { transform: rotate(0deg); opacity: .36; } 50% { transform: rotate(3deg); opacity: .52; } }
                     @keyframes microEtch { from { background-position: 0 0, 0 0; } to { background-position: 38px 38px, -38px 38px; } }
+                    @keyframes suitePulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.65; } }
+                    @keyframes navSlideIn { from { opacity: 0; transform: translateY(-100%); } to { opacity: 1; transform: translateY(0); } }
+                    @keyframes ecoCardHover { from { box-shadow: 0 8px 32px rgba(0,0,0,0.3); } to { box-shadow: 0 24px 64px rgba(0,0,0,0.55); } }
+                    @keyframes ecoGlow { 0%,100% { opacity:0.4; } 50% { opacity:0.75; } }
+                    .suite-nav { animation: navSlideIn 0.55s cubic-bezier(0.22,1,0.36,1) both; }
+                    .suite-eco-link { transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease; }
+                    .suite-eco-link:hover { opacity: 0.88; transform: translateY(-1px); }
+                    .suite-eco-link--arsenal:hover { box-shadow: 0 6px 20px rgba(239,68,68,0.18); }
+                    .suite-eco-link--zen:hover { box-shadow: 0 6px 20px rgba(201,168,76,0.18); }
+                    .ecosystem-card { transition: transform 0.38s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.38s ease; }
+                    .ecosystem-card:hover { transform: translateY(-6px) scale(1.013); }
+                    .ecosystem-card:hover .eco-arrow { opacity: 1; transform: translate(2px,-2px); }
+                    .eco-arrow { transition: opacity 0.2s ease, transform 0.2s ease; opacity: 0.45; }
+                    .suite-footer-link { transition: color 0.2s ease, opacity 0.2s ease; }
+                    .suite-footer-link:hover { opacity: 1 !important; }
                     @media (prefers-reduced-motion: reduce) {
                         * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
                     }
                 `}
             </style>
 
-            <main className="relative z-10 mx-auto max-w-[1680px]">
-                <header className="mb-6 flex flex-wrap items-end justify-between gap-5">
+            {/* ── Full-screen backdrop: neural net + RWB fireworks ─────── */}
+            <BackdropCanvas />
+
+            {/* ── Cursor sparkler overlay ──────────────────────────────── */}
+            <SparklerCanvas />
+
+            {/* ── Cinematic Navigation Bar ─────────────────────────────── */}
+            <nav className="suite-nav sticky top-0 z-[100] w-full" style={{
+                background: 'linear-gradient(180deg, rgba(2,6,23,0.97) 0%, rgba(4,9,30,0.90) 100%)',
+                backdropFilter: 'blur(32px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+                borderBottom: '1px solid rgba(255,255,255,0.055)',
+                boxShadow: '0 1px 0 rgba(255,255,255,0.04), 0 12px 40px rgba(0,0,0,0.48)',
+            }}>
+                <div style={{ maxWidth: '1680px', margin: '0 auto', padding: '0 1.5rem', height: '54px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+                    {/* Brand */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '11px', flexShrink: 0 }}>
+                        <div style={{
+                            width: '30px', height: '30px', borderRadius: '9px', flexShrink: 0,
+                            background: 'linear-gradient(135deg, #ef4444 0%, #f8fafc 50%, #2563eb 100%)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            boxShadow: '0 4px 14px rgba(239,68,68,0.30), inset 0 1px 0 rgba(255,255,255,0.28)',
+                        }}>
+                            <span style={{ fontSize: '10px', fontWeight: 900, color: '#020617', letterSpacing: '-0.02em' }}>ZV</span>
+                        </div>
+                        <div style={{ lineHeight: 1 }}>
+                            <div style={{ fontSize: '11.5px', fontWeight: 900, color: '#ffffff', letterSpacing: '0.09em' }}>ZEN VANGUARD</div>
+                            <div style={{ fontSize: '8px', fontWeight: 800, color: 'rgba(191,219,254,0.52)', letterSpacing: '0.30em', marginTop: '2px' }}>U.S. AI LITERACY PROGRAM</div>
+                        </div>
+                    </div>
+
+                    {/* Centre pill — pathway steps */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0', padding: '4px 12px', borderRadius: '100px', border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)' }}>
+                        {(['Learn', 'Build', 'Deploy', 'Verify'] as const).map((step, i) => (
+                            <React.Fragment key={step}>
+                                {i > 0 && <span style={{ width: '14px', height: '1px', background: 'rgba(255,255,255,0.18)', display: 'inline-block', margin: '0 4px' }} />}
+                                <span style={{ fontSize: '8.5px', fontWeight: 800, color: i === 0 ? 'rgba(147,197,253,0.9)' : 'rgba(255,255,255,0.32)', letterSpacing: '0.20em' }}>{step}</span>
+                            </React.Fragment>
+                        ))}
+                    </div>
+
+                    {/* Ecosystem links */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                        <a href="https://zenai.world" target="_blank" rel="noopener noreferrer" className="suite-eco-link suite-eco-link--zen" style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '6px',
+                            padding: '5px 13px', borderRadius: '100px',
+                            border: '1px solid rgba(201,168,76,0.22)',
+                            background: 'rgba(201,168,76,0.07)',
+                            fontSize: '10.5px', fontWeight: 700,
+                            color: 'rgba(223,192,106,0.90)',
+                            letterSpacing: '0.05em', textDecoration: 'none',
+                        }}>
+                            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#DFC06A', boxShadow: '0 0 6px rgba(223,192,106,0.55)', flexShrink: 0 }} />
+                            ZEN AI Co.
+                        </a>
+                        <a href="https://arsenal.world" target="_blank" rel="noopener noreferrer" className="suite-eco-link suite-eco-link--arsenal" style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '6px',
+                            padding: '5px 13px', borderRadius: '100px',
+                            border: '1px solid rgba(248,250,252,0.16)',
+                            background: 'linear-gradient(90deg, rgba(239,68,68,0.11), rgba(37,99,235,0.11))',
+                            fontSize: '10.5px', fontWeight: 700,
+                            color: 'rgba(255,255,255,0.90)',
+                            letterSpacing: '0.05em', textDecoration: 'none',
+                        }}>
+                            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 6px rgba(239,68,68,0.55)', flexShrink: 0 }} />
+                            Arsenal.world ↗
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <main className="relative z-10 mx-auto max-w-[1680px] px-4 pb-16 pt-8 sm:px-6 lg:px-8">
+                <header className="mb-8 flex flex-wrap items-end justify-between gap-6">
                     <div>
+                        {/* Eyebrow badge */}
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '9px', padding: '5px 14px 5px 10px', borderRadius: '100px', border: '1px solid rgba(239,68,68,0.24)', background: 'rgba(239,68,68,0.07)', marginBottom: '18px' }}>
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 8px rgba(239,68,68,0.7)', display: 'inline-block', animation: 'suitePulse 2s ease-in-out infinite' }} />
+                            <span style={{ fontSize: '9.5px', fontWeight: 800, color: 'rgba(248,113,113,0.88)', letterSpacing: '0.28em' }}>LIVE PREVIEW MODE</span>
+                            <span style={{ width: '1px', height: '13px', background: 'rgba(255,255,255,0.14)', display: 'inline-block' }} />
+                            <a href="https://arsenal.world" target="_blank" rel="noopener noreferrer" className="suite-eco-link" style={{ fontSize: '9px', fontWeight: 700, color: 'rgba(191,219,254,0.65)', letterSpacing: '0.20em', textDecoration: 'none' }}>ARSENAL.WORLD ↗</a>
+                        </div>
                         <h1 className="max-w-5xl bg-[linear-gradient(112deg,#ffffff_0%,#bfdbfe_22%,#ef4444_54%,#2563eb_80%,#ffffff_100%)] bg-clip-text text-4xl font-black leading-[.9] tracking-[-.06em] text-transparent sm:text-6xl lg:text-7xl">
                             Choose the next ZEN operating track.
                         </h1>
                         <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300">
-                            Vanguard and AI Pioneer stay available for preview and registration while every other program remains staged behind Arsenal release controls.
+                            Vanguard and AI Pioneer are live for preview and registration. Every other track stays staged behind Arsenal release controls — part of the ZEN Ecosystem powering AI literacy across America.
                         </p>
+                        {/* Ecosystem attribution */}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px 20px', marginTop: '18px' }}>
+                            <a href="https://zenai.world" target="_blank" rel="noopener noreferrer" className="suite-eco-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: 'rgba(223,192,106,0.65)', textDecoration: 'none', letterSpacing: '0.04em' }}>
+                                <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#DFC06A' }} />
+                                ZEN AI Co. — zenai.world
+                            </a>
+                            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.18)' }}>·</span>
+                            <a href="https://arsenal.world" target="_blank" rel="noopener noreferrer" className="suite-eco-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: 'rgba(191,219,254,0.65)', textDecoration: 'none', letterSpacing: '0.04em' }}>
+                                <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#60a5fa' }} />
+                                Arsenal — Agentic OS
+                            </a>
+                        </div>
                     </div>
                     <div className="grid min-w-[280px] grid-cols-3 gap-2 rounded-[26px] border border-white/10 bg-slate-950/58 p-2 shadow-[inset_6px_6px_16px_rgba(0,0,0,.44),inset_-5px_-5px_14px_rgba(37,99,235,.07)]">
                         {[
@@ -1265,6 +1686,142 @@ const ProgramSuitePage: React.FC = () => {
                     <ProgramSignalMap selectedProgramKey={selectedProgramKey} onSelect={setSelectedProgramKey} />
                     <FutureTrackRail programs={futurePrograms} isAdmin={isAdmin} />
                 </div>
+
+                {/* ── ZEN Ecosystem Bridge ──────────────────────────────────── */}
+                <section className="mt-8" style={{
+                    background: 'linear-gradient(160deg, rgba(4,9,28,0.96) 0%, rgba(8,17,38,0.92) 100%)',
+                    border: '1px solid rgba(255,255,255,0.07)',
+                    borderRadius: '32px',
+                    padding: '36px 32px',
+                    position: 'relative',
+                    overflow: 'hidden',
+                }}>
+                    {/* Ambient glows */}
+                    <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 15% 60%, rgba(201,168,76,0.09), transparent 44%), radial-gradient(ellipse at 85% 40%, rgba(37,99,235,0.11), transparent 44%), radial-gradient(ellipse at 50% 0%, rgba(239,68,68,0.07), transparent 50%)', pointerEvents: 'none' }} />
+                    {/* Subtle grid overlay */}
+                    <div aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '44px 44px', pointerEvents: 'none', opacity: 0.6 }} />
+
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                        {/* Section header */}
+                        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '4px 14px', borderRadius: '100px', border: '1px solid rgba(201,168,76,0.20)', background: 'rgba(201,168,76,0.06)', marginBottom: '14px' }}>
+                                <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#DFC06A', animation: 'ecoGlow 3s ease-in-out infinite' }} />
+                                <span style={{ fontSize: '9px', fontWeight: 800, color: 'rgba(223,192,106,0.75)', letterSpacing: '0.32em' }}>ZEN ECOSYSTEM</span>
+                            </div>
+                            <h2 style={{ fontSize: 'clamp(1.6rem, 3.2vw, 2.4rem)', fontWeight: 900, color: '#ffffff', letterSpacing: '-0.045em', lineHeight: 1, margin: '0 0 12px' }}>
+                                Powered by the ZEN Platform
+                            </h2>
+                            <p style={{ fontSize: '13px', color: 'rgba(203,213,225,0.60)', maxWidth: '520px', margin: '0 auto', lineHeight: 1.75 }}>
+                                This program is part of a broader ecosystem of AI-native tools and agentic platforms built to advance America's AI workforce.
+                            </p>
+                        </div>
+
+                        {/* Two ecosystem cards */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+
+                            {/* Arsenal.world */}
+                            <a href="https://arsenal.world" target="_blank" rel="noopener noreferrer" className="ecosystem-card" style={{
+                                display: 'block', padding: '28px 26px',
+                                borderRadius: '22px',
+                                border: '1px solid rgba(248,250,252,0.09)',
+                                background: 'linear-gradient(148deg, rgba(15,23,42,0.92) 0%, rgba(30,41,59,0.72) 100%)',
+                                textDecoration: 'none',
+                                position: 'relative', overflow: 'hidden',
+                                boxShadow: '0 8px 36px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.06)',
+                            }}>
+                                <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 25% 25%, rgba(239,68,68,0.13), transparent 48%), radial-gradient(circle at 78% 72%, rgba(37,99,235,0.12), transparent 48%)', pointerEvents: 'none' }} />
+                                <div style={{ position: 'relative', zIndex: 1 }}>
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '18px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <div style={{ width: '40px', height: '40px', borderRadius: '12px', flexShrink: 0, background: 'linear-gradient(135deg, #ef4444, #2563eb)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 18px rgba(239,68,68,0.28), inset 0 1px 0 rgba(255,255,255,0.2)' }}>
+                                                <span style={{ fontSize: '16px', fontWeight: 900, color: '#ffffff' }}>A</span>
+                                            </div>
+                                            <div>
+                                                <div style={{ fontSize: '13.5px', fontWeight: 900, color: '#ffffff', letterSpacing: '0.03em' }}>Arsenal.world</div>
+                                                <div style={{ fontSize: '8.5px', fontWeight: 800, color: 'rgba(191,219,254,0.50)', letterSpacing: '0.26em', marginTop: '3px' }}>ZEN ECOSYSTEM</div>
+                                            </div>
+                                        </div>
+                                        <span className="eco-arrow" style={{ fontSize: '18px', color: 'rgba(255,255,255,0.5)', lineHeight: 1, marginTop: '2px' }}>↗</span>
+                                    </div>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#ffffff', letterSpacing: '-0.035em', lineHeight: 1.15, marginBottom: '10px' }}>
+                                        Arsenal — Agentic OS &<br />Smart Business Solutions
+                                    </div>
+                                    <p style={{ fontSize: '12px', color: 'rgba(203,213,225,0.60)', lineHeight: 1.75, margin: '0 0 18px' }}>
+                                        The agentic operating system for AI-powered organizations. Smart workflow automation, business intelligence, and deployment-ready systems built for the modern operator.
+                                    </p>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                        {['Agentic OS', 'Smart Biz', 'AI Workflow', 'Operator Tools', 'Deploy Ready'].map(tag => (
+                                            <span key={tag} style={{ fontSize: '9.5px', fontWeight: 700, padding: '3px 10px', borderRadius: '100px', border: '1px solid rgba(248,250,252,0.10)', color: 'rgba(255,255,255,0.52)', letterSpacing: '0.06em' }}>{tag}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </a>
+
+                            {/* ZEN AI Co. */}
+                            <a href="https://zenai.world" target="_blank" rel="noopener noreferrer" className="ecosystem-card" style={{
+                                display: 'block', padding: '28px 26px',
+                                borderRadius: '22px',
+                                border: '1px solid rgba(201,168,76,0.14)',
+                                background: 'linear-gradient(148deg, rgba(9,16,31,0.94) 0%, rgba(15,23,42,0.86) 100%)',
+                                textDecoration: 'none',
+                                position: 'relative', overflow: 'hidden',
+                                boxShadow: '0 8px 36px rgba(0,0,0,0.34), inset 0 1px 0 rgba(201,168,76,0.07)',
+                            }}>
+                                <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 35% 25%, rgba(201,168,76,0.12), transparent 50%), radial-gradient(circle at 75% 75%, rgba(201,168,76,0.07), transparent 50%)', pointerEvents: 'none' }} />
+                                <div style={{ position: 'relative', zIndex: 1 }}>
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '18px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <div style={{ width: '40px', height: '40px', borderRadius: '12px', flexShrink: 0, background: 'linear-gradient(135deg, #C9A84C, #DFC06A)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 18px rgba(201,168,76,0.32), inset 0 1px 0 rgba(255,255,255,0.25)' }}>
+                                                <span style={{ fontSize: '16px', fontWeight: 900, color: '#060B18' }}>Z</span>
+                                            </div>
+                                            <div>
+                                                <div style={{ fontSize: '13.5px', fontWeight: 900, color: '#ffffff', letterSpacing: '0.03em' }}>zenai.world</div>
+                                                <div style={{ fontSize: '8.5px', fontWeight: 800, color: 'rgba(223,192,106,0.50)', letterSpacing: '0.26em', marginTop: '3px' }}>ZEN AI CO.</div>
+                                            </div>
+                                        </div>
+                                        <span className="eco-arrow" style={{ fontSize: '18px', color: 'rgba(223,192,106,0.5)', lineHeight: 1, marginTop: '2px' }}>↗</span>
+                                    </div>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#ffffff', letterSpacing: '-0.035em', lineHeight: 1.15, marginBottom: '10px' }}>
+                                        ZEN AI Company —<br />Intelligent Systems & Literacy
+                                    </div>
+                                    <p style={{ fontSize: '12px', color: 'rgba(203,213,225,0.60)', lineHeight: 1.75, margin: '0 0 18px' }}>
+                                        The AI company behind ZEN Vanguard. Building the intelligence layer, literacy programs, and agentic platforms that power the next generation of American operators.
+                                    </p>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                        {['AI Native', 'ZEN Platform', 'Literacy', 'Agentic', 'Future-Ready'].map(tag => (
+                                            <span key={tag} style={{ fontSize: '9.5px', fontWeight: 700, padding: '3px 10px', borderRadius: '100px', border: '1px solid rgba(201,168,76,0.14)', color: 'rgba(223,192,106,0.58)', letterSpacing: '0.06em' }}>{tag}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </section>
+
+                {/* ── Premium Footer ────────────────────────────────────────── */}
+                <footer style={{ marginTop: '52px', paddingTop: '32px', borderTop: '1px solid rgba(255,255,255,0.055)', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '28px' }}>
+                    <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                            <div style={{ width: '26px', height: '26px', borderRadius: '8px', background: 'linear-gradient(135deg, #ef4444 0%, #f8fafc 50%, #2563eb 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 3px 10px rgba(239,68,68,0.22)' }}>
+                                <span style={{ fontSize: '9px', fontWeight: 900, color: '#020617' }}>ZV</span>
+                            </div>
+                            <span style={{ fontSize: '11px', fontWeight: 900, color: 'rgba(255,255,255,0.65)', letterSpacing: '0.09em' }}>ZEN VANGUARD</span>
+                        </div>
+                        <p style={{ fontSize: '11.5px', color: 'rgba(148,163,184,0.45)', maxWidth: '380px', lineHeight: 1.75 }}>
+                            U.S. AI Literacy Program — part of the ZEN Ecosystem. Building America's AI workforce, one operator at a time.
+                        </p>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                            <a href="https://zenai.world" target="_blank" rel="noopener noreferrer" className="suite-footer-link" style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(223,192,106,0.55)', textDecoration: 'none', letterSpacing: '0.07em' }}>zenai.world ↗</a>
+                            <span style={{ width: '1px', height: '14px', background: 'rgba(255,255,255,0.10)', display: 'inline-block' }} />
+                            <a href="https://arsenal.world" target="_blank" rel="noopener noreferrer" className="suite-footer-link" style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(191,219,254,0.55)', textDecoration: 'none', letterSpacing: '0.07em' }}>arsenal.world ↗</a>
+                        </div>
+                        <p style={{ fontSize: '9.5px', color: 'rgba(148,163,184,0.28)', letterSpacing: '0.14em', fontWeight: 600 }}>
+                            © {new Date().getFullYear()} ZEN AI Co. All rights reserved.
+                        </p>
+                    </div>
+                </footer>
             </main>
         </div>
     );
