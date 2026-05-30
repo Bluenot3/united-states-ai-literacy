@@ -5,6 +5,8 @@ import { useAuth } from './hooks/useAuth';
 import { useBilling } from './contexts/BillingContext';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
+import { ArsenalProvider, useArsenal } from './contexts/ArsenalContext';
+import EcoLaunchHandler from './components/EcoLaunchHandler';
 
 const LoginPage = React.lazy(() => import('./modules/module1/components/auth/LoginPage'));
 const CredentialForgePage = React.lazy(() => import('./pages/CredentialForgePage'));
@@ -31,6 +33,7 @@ const ProgramSuitePage = React.lazy(() => import('./zen-programs/pages/ProgramSu
 const ProgramDetailPage = React.lazy(() => import('./zen-programs/pages/ProgramDetailPage'));
 const ProgramRegisterPage = React.lazy(() => import('./zen-programs/pages/ProgramRegisterPage'));
 const ProgramAdminPanel = React.lazy(() => import('./zen-programs/admin/ProgramAdminPanel'));
+const CurriculumStudio = React.lazy(() => import('./zen-programs/admin/CurriculumStudio'));
 const PaywallPage = React.lazy(() => import('./pages/PaywallPage'));
 const BillingSuccessPage = React.lazy(() => import('./pages/BillingSuccessPage'));
 const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
@@ -287,6 +290,11 @@ const AdminProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children
 // Redirects unauthenticated users to /login; shows loader while session is resolving
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { isAuthenticated, loading } = useAuth();
+    const { isEmbedded } = useArsenal();
+
+    if (isEmbedded) {
+        return <>{children}</>;
+    }
 
     if (loading) {
         return <PageLoader />;
@@ -304,6 +312,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 const BillingProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { isAuthenticated, loading: authLoading } = useAuth();
     const { entitled, loading: billingLoading } = useBilling();
+    const { isEmbedded } = useArsenal();
+
+    if (isEmbedded) {
+        return <>{children}</>;
+    }
 
     if (authLoading || billingLoading) {
         return <PageLoader />;
@@ -322,10 +335,11 @@ const BillingProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
 
 const App: React.FC = () => {
     return (
-        <>
+        <ArsenalProvider>
             <AppDocumentController />
 
             <Routes>
+                <Route path="/eco" element={<EcoLaunchHandler />} />
                 <Route
                     path="/login"
                     element={
@@ -385,6 +399,7 @@ const App: React.FC = () => {
                     <Route path="analytics" element={<AdminAnalytics />} />
                     <Route path="settings" element={<AdminSettings />} />
                     <Route path="programs" element={<ProgramAdminPanel />} />
+                    <Route path="curriculum-studio" element={<CurriculumStudio />} />
                 </Route>
 
                 {/* ── Program routes — require active paid subscription ── */}
@@ -437,7 +452,7 @@ const App: React.FC = () => {
                         </ProtectedRoute>
                     }
                 >
-                    <Route index element={<Navigate to="/programs" replace />} />
+                    <Route index element={<EcoLaunchHandler />} />
                     <Route path="command-center" element={<Navigate to="/programs" replace />} />
                     <Route path="credential-forge" element={<Suspense fallback={<PageLoader />}><CredentialForgePage /></Suspense>} />
                     <Route path="hub" element={<Suspense fallback={<PageLoader />}><ProgramHubPage /></Suspense>} />
@@ -476,7 +491,7 @@ const App: React.FC = () => {
                     )}
                 />
             </Routes>
-        </>
+        </ArsenalProvider>
     );
 };
 

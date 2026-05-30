@@ -4,6 +4,7 @@ import { getCurriculumByProgramId } from '../curriculum';
 import { getAccentClasses, getProgramById } from '../programsRegistry';
 import { getProgramProgress, saveProgramProgress, type ProgramContentItem, type ProgramSection } from '../types';
 import { repairContent, repairText } from '../../utils/text';
+import { useArsenal } from '../../contexts/ArsenalContext';
 
 const flattenSections = (sections: ProgramSection[]): ProgramSection[] => (
     sections.reduce<ProgramSection[]>((allSections, section) => {
@@ -42,6 +43,7 @@ const ProgramDashboardPage: React.FC = () => {
     const colors = program ? getAccentClasses(program.accentColor) : null;
     const [activeSection, setActiveSection] = useState('');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const { emitProgress, emitCompletion } = useArsenal();
     const [progress, setProgress] = useState(() => (
         programId ? getProgramProgress(programId) : { completedSections: [], lastViewedSection: '', startedAt: null }
     ));
@@ -74,6 +76,9 @@ const ProgramDashboardPage: React.FC = () => {
             return;
         }
 
+        const currentSectionIndex = allSections.findIndex(s => s.id === activeSection);
+        emitProgress(programId, activeSection, activeSection, currentSectionIndex, 'started');
+
         const nextProgress = {
             ...progress,
             completedSections: [...progress.completedSections, activeSection],
@@ -83,7 +88,13 @@ const ProgramDashboardPage: React.FC = () => {
 
         setProgress(nextProgress);
         saveProgramProgress(programId, activeSection);
-    }, [activeSection, progress, programId]);
+
+        emitProgress(programId, activeSection, activeSection, currentSectionIndex, 'completed');
+
+        if (nextProgress.completedSections.length >= allSections.length) {
+            emitCompletion();
+        }
+    }, [activeSection, progress, programId, allSections, emitProgress, emitCompletion]);
 
     if (!programId || !program) {
         return <Navigate to="/hub" replace />;
