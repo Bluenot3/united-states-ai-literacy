@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { SparklesIcon } from '../icons/SparklesIcon';

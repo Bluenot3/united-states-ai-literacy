@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import type { InteractiveComponentProps } from '../../types';

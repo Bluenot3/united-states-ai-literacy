@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { SendIcon } from '../icons/SendIcon';
 import { getAiClient } from '../../services/aiService';

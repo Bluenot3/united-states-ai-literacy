@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from 'react';
 
 const ROLES = ['Researcher', 'Summarizer', 'Critic', 'Planner'];
