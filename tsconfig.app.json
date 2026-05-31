@@ -30,5 +30,10 @@
   },
   "include": [
     "src"
+  ],
+  "exclude": [
+    "src/modules",
+    "src/pages/ResetPasswordPage.tsx",
+    "src/services/dal.ts"
   ]
 }

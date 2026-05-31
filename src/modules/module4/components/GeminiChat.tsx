@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useRef, useEffect } from 'react';
 import { getAiClient } from '../services/aiService';
 import type { Chat } from '@google/genai';

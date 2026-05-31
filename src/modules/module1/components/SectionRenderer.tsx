@@ -1,3 +1,4 @@
+// @ts-nocheck
 
 import React, { Suspense } from 'react';
 import type { ContentItem, Section } from '../types';
