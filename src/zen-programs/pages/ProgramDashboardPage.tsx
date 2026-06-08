@@ -1968,7 +1968,7 @@ const MediaQualityLensMiniApp: React.FC<{ onComplete: () => void }> = ({ onCompl
                     <div className="grid gap-3 xl:grid-cols-4">
                         {pipeline.map(([label, body], index) => (
                             <div key={label} className="relative overflow-hidden rounded-[1.2rem] border border-cyan-100/18 bg-slate-950/72 p-4">
-                                <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${index < 2 ? theme.active : 'from-emerald-200 to-cyan-200'}`} />
+                                <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${index < 2 ? 'from-cyan-200 to-sky-300' : 'from-emerald-200 to-cyan-200'}`} />
                                 <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-cyan-100 text-xs font-black text-slate-950 shadow-[0_0_18px_rgba(103,232,249,.3)]">{index + 1}</span>
                                 <p className={`mt-3 text-base font-black text-white ${textLift}`}>{label}</p>
                                 <p className="mt-2 text-xs font-semibold leading-5 text-slate-200">{body}</p>
