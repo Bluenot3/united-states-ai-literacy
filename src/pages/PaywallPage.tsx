@@ -1,28 +1,100 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useBilling } from '../contexts/BillingContext';
+import { useAuth } from '../hooks/useAuth';
+import { isAdminEmail } from '../services/adminAccess';
+import { getProgramBySlug } from '../zen-programs/programIntegrationContract';
 
-const includedFeatures = [
-    { label: '4 structured AI learning modules', icon: '◈' },
-    { label: 'Interactive labs and simulations', icon: '◈' },
-    { label: 'Agent deployment and automation training', icon: '◈' },
-    { label: 'Certificates and progress tracking', icon: '◈' },
-    { label: 'Program Hub and guided learning paths', icon: '◈' },
-];
+const safeReturnPath = (value: string | null) => (
+    value && value.startsWith('/') && !value.startsWith('//') ? value : '/programs'
+);
+
+const inferProgramSlug = (searchProgram: string | null, returnPath: string) => {
+    if (searchProgram) return searchProgram;
+    const match = returnPath.match(/^\/programs\/([^/]+)/);
+    return match?.[1] ?? 'vanguard';
+};
+
+const programFeatures = {
+    vanguard: [
+        'Operator-grade AI systems training',
+        'Agent workflow and automation labs',
+        'Governance, evaluation, and deployment discipline',
+        'Vanguard credential and progress tracking',
+    ],
+    pioneer: [
+        'Beginner-first AI and LLM foundations',
+        'Guided build labs and creative challenges',
+        'Safe prompting, privacy, and deployment habits',
+        'AI Pioneer credential and launch path',
+    ],
+};
 
 const PaywallPage: React.FC = () => {
-    const { createCheckoutSession, adminBypass, error } = useBilling();
+    const location = useLocation();
+    const params = new URLSearchParams(location.search);
+    const returnTo = safeReturnPath(params.get('return_to'));
+    const programSlug = inferProgramSlug(params.get('program'), returnTo);
+    const program = getProgramBySlug(programSlug) ?? getProgramBySlug('vanguard');
+    const isPioneer = program?.programKey === 'ai-pioneer';
+    const programKind = isPioneer ? 'pioneer' : 'vanguard';
+    const features = programFeatures[programKind];
+    const { user } = useAuth();
+    const { createCheckoutSession, adminBypass, checkEntitlement, error } = useBilling();
     const [showAdminModal, setShowAdminModal] = useState(false);
     const [adminUsername, setAdminUsername] = useState('');
     const [adminPassword, setAdminPassword] = useState('');
     const [adminError, setAdminError] = useState('');
     const [loading, setLoading] = useState(false);
+    const signedInAdmin = isAdminEmail(user?.email);
+
+    const panelCopy = useMemo(() => {
+        if (isPioneer) {
+            return {
+                eyebrow: 'AI Pioneer program access',
+                headline: 'Your AI Pioneer seat is ready.',
+                body: 'Registration is recorded. Activate the program seat to enter the build path, labs, progress system, and credential track.',
+                price: '$45 program access',
+                product: 'AI Pioneer Program',
+                image: '/zen-brand-logo-light.png',
+                accent: 'from-cyan-300 via-blue-400 to-violet-400',
+            };
+        }
+
+        return {
+            eyebrow: 'ZEN Vanguard program access',
+            headline: 'Enter the Vanguard operator track.',
+            body: 'Registration is recorded. Activate full access to the Vanguard systems curriculum, operator labs, certificates, and progress layer.',
+            price: '$75 program access',
+            product: 'ZEN Vanguard Program',
+            image: '/zen-logo-alt.png',
+            accent: 'from-zen-gold via-cyan-300 to-emerald-300',
+        };
+    }, [isPioneer]);
+
+    const goToUrl = (url: string) => {
+        window.location.href = url;
+    };
 
     const handleSubscribe = async () => {
         setLoading(true);
-        const url = await createCheckoutSession();
+        const url = await createCheckoutSession(returnTo);
         if (url) {
-            window.location.href = url;
+            goToUrl(url);
+            return;
         }
+        setLoading(false);
+    };
+
+    const handleSignedInAdmin = async () => {
+        setLoading(true);
+        setAdminError('');
+        const allowed = await checkEntitlement();
+        if (allowed || signedInAdmin) {
+            goToUrl(returnTo);
+            return;
+        }
+        setAdminError('This signed-in email is not on the owner/admin allowlist.');
         setLoading(false);
     };
 
@@ -34,165 +106,130 @@ const PaywallPage: React.FC = () => {
         const success = await adminBypass(adminUsername, adminPassword);
 
         if (success) {
-            window.location.href = '/hub';
-        } else {
-            setAdminError('Admin access unavailable or credentials rejected.');
+            goToUrl(returnTo);
+            return;
         }
 
+        setAdminError('Admin access unavailable or credentials rejected.');
         setLoading(false);
     };
 
-    const closeAdminModal = () => {
-        setShowAdminModal(false);
-        setAdminError('');
-        setAdminUsername('');
-        setAdminPassword('');
-    };
-
     return (
-        <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(ellipse_80%_60%_at_15%_20%,_rgba(201,168,76,0.07),_transparent_50%),radial-gradient(ellipse_70%_50%_at_85%_80%,_rgba(34,211,238,0.05),_transparent_45%),linear-gradient(135deg,_#020617_0%,_#060B18_40%,_#0A1628_70%,_#060B18_100%)] text-white">
-            {/* Grid overlay */}
-            <div
-                className="pointer-events-none fixed inset-0 opacity-[0.02]"
-                style={{
-                    backgroundImage: `linear-gradient(rgba(201,168,76,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.4) 1px, transparent 1px)`,
-                    backgroundSize: '48px 48px',
-                }}
-            />
+        <main className="relative min-h-screen overflow-hidden bg-[#02040a] text-white">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(201,168,76,0.16),transparent_32%),radial-gradient(circle_at_82%_16%,rgba(34,211,238,0.14),transparent_30%),linear-gradient(135deg,#02040a_0%,#07111f_48%,#03101a_100%)]" />
+            <div className="absolute inset-0 opacity-[0.055]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.35) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.35) 1px, transparent 1px)', backgroundSize: '54px 54px' }} />
+            <img src="/zen-brand-logo-dark.png" alt="" className="pointer-events-none absolute -left-16 top-12 hidden w-[34rem] opacity-[0.035] blur-[1px] lg:block" />
+            <img src="/zen-brand-logo-light.png" alt="" className="pointer-events-none absolute -right-20 bottom-[-8rem] hidden w-[40rem] opacity-[0.045] lg:block" />
 
-            {/* Ambient blobs */}
-            <div className="pointer-events-none fixed inset-0 overflow-hidden">
-                <div className="absolute left-[-10%] top-[-20%] h-[600px] w-[600px] rounded-full bg-zen-gold/[0.04] blur-[120px] animate-blob" />
-                <div className="animation-delay-2000 absolute bottom-[-20%] right-[-10%] h-[500px] w-[500px] rounded-full bg-brand-cyan/[0.04] blur-[100px] animate-blob" />
-            </div>
-
-            <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-14">
-                {/* Logo */}
-                <div className="mb-10 flex flex-col items-center gap-3">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-zen-gold via-zen-gold-light to-zen-gold-dark text-xl font-black text-zen-navy shadow-[0_12px_32px_rgba(201,168,76,0.25)]">
-                        Z
-                    </div>
-                    <div>
-                        <p className="text-center text-[10px] font-bold uppercase tracking-[0.4em] text-zen-gold">ZEN Vanguard</p>
-                        <p className="text-center text-xs text-slate-500 mt-0.5">AI Professionals Program</p>
+            <section className="relative z-10 mx-auto grid min-h-screen w-full max-w-7xl items-center gap-8 px-5 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
+                <div className="hidden lg:block">
+                    <div className="relative aspect-square max-w-[34rem]">
+                        <div className={`absolute inset-10 rounded-[4rem] bg-gradient-to-br ${panelCopy.accent} opacity-20 blur-3xl`} />
+                        <div className="absolute inset-0 rounded-[4rem] border border-white/10 bg-white/[0.035] shadow-[0_40px_120px_rgba(0,0,0,0.45)] backdrop-blur-xl" />
+                        <img src={panelCopy.image} alt="ZEN brand mark" className="relative z-10 h-full w-full object-contain p-12 drop-shadow-[0_0_44px_rgba(34,211,238,0.22)]" />
                     </div>
                 </div>
 
-                {/* Main card */}
-                <div className="w-full max-w-md">
-                    <div className="rounded-[2rem] border border-zen-gold/12 bg-zen-surface/60 p-8 shadow-zen-card backdrop-blur-xl sm:p-10">
-                        {/* Lock icon */}
-                        <div className="mb-6 flex justify-center">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-zen-gold/15 to-zen-gold/5 ring-1 ring-zen-gold/20">
-                                <svg className="h-7 w-7 text-zen-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
+                <div className="mx-auto w-full max-w-xl">
+                    <div className="mb-7 flex items-center gap-4">
+                        <img src="/zen-logo-alt.png" alt="ZEN" className="h-14 w-14 rounded-2xl border border-white/10 object-cover shadow-[0_0_28px_rgba(34,211,238,0.16)]" />
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.34em] text-zen-gold">ZEN AI Co.</p>
+                            <p className="mt-1 text-sm text-slate-400">Program access control</p>
+                        </div>
+                    </div>
+
+                    <div className="relative overflow-hidden rounded-[2rem] border border-white/12 bg-slate-950/72 p-6 shadow-[0_36px_120px_rgba(0,0,0,0.42)] backdrop-blur-2xl sm:p-8">
+                        <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${panelCopy.accent}`} />
+                        <div className="absolute right-6 top-6 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-slate-300">
+                            {panelCopy.price}
+                        </div>
+
+                        <p className="pr-28 text-[10px] font-black uppercase tracking-[0.24em] text-cyan-100">{panelCopy.eyebrow}</p>
+                        <h1 className="mt-5 text-4xl font-black tracking-tight text-white sm:text-5xl">{panelCopy.headline}</h1>
+                        <p className="mt-4 max-w-lg text-sm leading-7 text-slate-300">{panelCopy.body}</p>
+
+                        {signedInAdmin && (
+                            <div className="mt-6 rounded-2xl border border-emerald-300/25 bg-emerald-300/[0.08] p-4">
+                                <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-100">Owner/admin recognized</p>
+                                <p className="mt-2 text-sm leading-6 text-emerald-50/85">
+                                    {user?.email} is on the ZEN admin allowlist. Continue without Stripe checkout.
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={handleSignedInAdmin}
+                                    disabled={loading}
+                                    className="mt-4 rounded-full bg-emerald-200 px-5 py-3 text-sm font-black text-emerald-950 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                    {loading ? 'Opening access...' : 'Continue as admin'}
+                                </button>
                             </div>
-                        </div>
+                        )}
 
-                        <div className="text-center">
-                            <h2 className="text-2xl font-black text-white sm:text-3xl">Subscription Required</h2>
-                            <p className="mt-3 text-sm leading-7 text-slate-400">
-                                Unlock the full ZEN Vanguard learning experience — from AI fundamentals to production systems.
-                            </p>
-                        </div>
-
-                        {/* Feature list */}
-                        <div className="mt-7 space-y-2">
-                            {includedFeatures.map(({ label }) => (
-                                <div key={label} className="flex items-center gap-3 rounded-xl border border-zen-gold/8 bg-zen-gold/[0.03] px-4 py-3">
-                                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-zen-emerald/15 text-[10px] font-bold text-zen-emerald ring-1 ring-zen-emerald/25">
-                                        ✓
-                                    </div>
-                                    <span className="text-sm text-slate-300">{label}</span>
+                        <div className="mt-7 grid gap-3">
+                            {features.map((feature) => (
+                                <div key={feature} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3">
+                                    <span className={`h-2.5 w-2.5 rounded-full bg-gradient-to-r ${panelCopy.accent} shadow-[0_0_18px_rgba(34,211,238,0.35)]`} />
+                                    <span className="text-sm font-semibold text-slate-200">{feature}</span>
                                 </div>
                             ))}
                         </div>
 
-                        {error && (
-                            <div className="mt-5 rounded-xl border border-rose-500/20 bg-rose-500/[0.06] px-4 py-3 text-center text-sm font-semibold text-rose-300">
-                                {error}
+                        {(error || adminError) && (
+                            <div className="mt-5 rounded-2xl border border-rose-400/25 bg-rose-400/[0.08] px-4 py-3 text-sm font-semibold text-rose-100">
+                                {adminError || error}
                             </div>
                         )}
 
-                        {/* Subscribe CTA */}
-                        <button
-                            onClick={handleSubscribe}
-                            disabled={loading}
-                            className="mt-7 w-full rounded-full bg-gradient-to-r from-zen-gold via-zen-gold-light to-zen-gold px-6 py-4 text-sm font-bold text-zen-navy shadow-glowing-gold transition hover:opacity-90 hover:shadow-[0_0_40px_rgba(201,168,76,0.35)] disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                            {loading ? (
-                                <span className="flex items-center justify-center gap-2">
-                                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                    </svg>
-                                    Processing…
-                                </span>
-                            ) : (
-                                'Subscribe Now'
-                            )}
-                        </button>
-
-                        {/* Stripe trust badge */}
-                        <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-600">
-                            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                            </svg>
-                            Secure payment via Stripe
-                        </div>
-
-                        <div className="mt-6 text-center">
+                        <div className="mt-7 grid gap-3 sm:grid-cols-[1fr_auto]">
                             <button
-                                onClick={() => setShowAdminModal(true)}
-                                className="text-xs text-slate-600 underline-offset-2 transition hover:text-slate-400 hover:underline"
+                                type="button"
+                                onClick={handleSubscribe}
+                                disabled={loading}
+                                className={`rounded-full bg-gradient-to-r ${panelCopy.accent} px-6 py-4 text-sm font-black text-slate-950 shadow-[0_0_42px_rgba(201,168,76,0.22)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50`}
                             >
-                                Internal admin access
+                                {loading ? 'Opening checkout...' : `Activate ${panelCopy.product}`}
                             </button>
+                            <Link to="/programs" className="rounded-full border border-white/12 bg-white/[0.04] px-6 py-4 text-center text-sm font-black text-white transition hover:bg-white/[0.08]">
+                                Programs
+                            </Link>
                         </div>
-                    </div>
 
-                    {/* Trust line */}
-                    <div className="mt-6 flex items-center justify-center gap-2 rounded-full border border-zen-gold/10 bg-zen-gold/[0.03] px-5 py-2.5">
-                        <div className="h-1.5 w-1.5 rounded-full bg-zen-emerald animate-pulse" />
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
-                            First verified AI literacy ecosystem in U.S. history
-                        </p>
+                        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
+                            <span>Secure checkout powered by Stripe</span>
+                            {!signedInAdmin && (
+                                <button type="button" onClick={() => setShowAdminModal(true)} className="font-semibold text-slate-400 underline-offset-4 hover:text-white hover:underline">
+                                    Internal admin access
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            {/* Admin modal */}
             {showAdminModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-                    <div className="relative w-full max-w-sm animate-scale-in rounded-[1.5rem] border border-zen-gold/12 bg-zen-surface/90 p-8 shadow-zen-card backdrop-blur-xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-md">
+                    <div className="relative w-full max-w-sm rounded-[1.5rem] border border-white/12 bg-slate-950/95 p-7 shadow-[0_30px_100px_rgba(0,0,0,0.55)]">
                         <button
-                            onClick={closeAdminModal}
-                            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-xl border border-slate-700 text-slate-500 transition hover:border-slate-600 hover:text-white"
+                            type="button"
+                            onClick={() => setShowAdminModal(false)}
+                            className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-slate-400 transition hover:text-white"
+                            aria-label="Close admin access"
                         >
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            x
                         </button>
+                        <img src="/zen-logo-alt.png" alt="ZEN" className="mx-auto h-14 w-14 rounded-2xl object-cover" />
+                        <h2 className="mt-5 text-center text-xl font-black text-white">Internal Admin Access</h2>
+                        <p className="mt-2 text-center text-xs leading-6 text-slate-500">Use only when the signed-in account is authorized for ZEN operations.</p>
 
-                        <div className="mb-6 text-center">
-                            <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-slate-800 ring-1 ring-slate-700">
-                                <svg className="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                </svg>
-                            </div>
-                            <h3 className="text-lg font-bold text-white">Internal Admin Access</h3>
-                            <p className="mt-1 text-xs text-slate-500">Restricted to authorized personnel.</p>
-                        </div>
-
-                        <form onSubmit={handleAdminLogin} className="space-y-4">
+                        <form onSubmit={handleAdminLogin} className="mt-6 space-y-4">
                             <input
                                 type="text"
                                 value={adminUsername}
                                 onChange={(event) => setAdminUsername(event.target.value)}
                                 placeholder="Username"
                                 disabled={loading}
-                                className="w-full rounded-2xl border border-zen-gold/10 bg-zen-navy/80 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-zen-gold/30 focus:ring-2 focus:ring-zen-gold/10"
+                                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-200/40"
                             />
                             <input
                                 type="password"
@@ -200,27 +237,20 @@ const PaywallPage: React.FC = () => {
                                 onChange={(event) => setAdminPassword(event.target.value)}
                                 placeholder="Password"
                                 disabled={loading}
-                                className="w-full rounded-2xl border border-zen-gold/10 bg-zen-navy/80 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-zen-gold/30 focus:ring-2 focus:ring-zen-gold/10"
+                                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-200/40"
                             />
-
-                            {adminError && (
-                                <div className="rounded-xl border border-rose-500/20 bg-rose-500/[0.06] px-4 py-3 text-center text-sm text-rose-300">
-                                    {adminError}
-                                </div>
-                            )}
-
                             <button
                                 type="submit"
                                 disabled={loading || !adminUsername || !adminPassword}
-                                className="w-full rounded-full border border-slate-700 bg-slate-800 px-6 py-3 text-sm font-bold text-slate-200 transition hover:border-slate-600 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="w-full rounded-full bg-white px-6 py-3 text-sm font-black text-slate-950 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                                {loading ? 'Verifying…' : 'Continue'}
+                                {loading ? 'Verifying...' : 'Continue'}
                             </button>
                         </form>
                     </div>
                 </div>
             )}
-        </div>
+        </main>
     );
 };
 

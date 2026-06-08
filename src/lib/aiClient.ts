@@ -1,9 +1,46 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+const RAW_API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE = import.meta.env.DEV
+    ? RAW_API_BASE || 'http://localhost:3001'
+    : /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(RAW_API_BASE)
+        ? ''
+        : RAW_API_BASE;
 
 type Message = {
     role: 'system' | 'user' | 'assistant';
     content: string;
 };
+
+export type AiProxyHealth = {
+    status: string;
+    version?: string;
+    features?: {
+        aiProxy?: boolean;
+        aiProvider?: string;
+        aiProviders?: {
+            text?: string;
+            image?: string;
+            video?: string;
+        };
+        aiModels?: {
+            text?: string | null;
+            image?: string | null;
+            video?: string | null;
+        };
+        videoProxy?: boolean;
+    };
+};
+
+export type AiVideoResult = {
+    id: string | null;
+    status: string;
+    state?: string;
+    url: string | null;
+    provider?: string;
+    model?: string;
+    raw?: unknown;
+};
+
+let aiHealthCache: AiProxyHealth | null = null;
 
 function buildMessages(config: any): Message[] {
     const messages: Message[] = [];
@@ -46,15 +83,65 @@ function buildMessages(config: any): Message[] {
     return messages;
 }
 
-async function proxyChatCompletion(messages: Message[], temperature = 0.7, maxTokens = 2048): Promise<string> {
+async function getAuthHeaders(): Promise<Record<string, string>> {
     const { data: { session } } = await import('./supabase').then(m => m.supabase.auth.getSession());
     const token = session?.access_token;
+
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+}
+
+async function readProxyError(response: Response, fallback: string): Promise<string> {
+    const errorBody = await response.text();
+
+    if (!errorBody) {
+        return fallback;
+    }
+
+    try {
+        const parsed = JSON.parse(errorBody);
+        return parsed.error || parsed.message || errorBody;
+    } catch {
+        return errorBody;
+    }
+}
+
+export async function getAiProxyHealth(force = false): Promise<AiProxyHealth> {
+    if (aiHealthCache && !force) {
+        return aiHealthCache;
+    }
+
+    if (!API_BASE) {
+        throw new Error('AI proxy backend is not configured.');
+    }
+
+    const response = await fetch(`${API_BASE}/api/health`);
+
+    if (!response.ok) {
+        throw new Error('Backend health check failed.');
+    }
+
+    const health = await response.json();
+
+    if (!health?.features?.aiProxy) {
+        throw new Error('AI proxy is not configured on the server.');
+    }
+
+    aiHealthCache = health;
+    return health;
+}
+
+async function proxyChatCompletion(messages: Message[], temperature = 0.7, maxTokens = 2048): Promise<string> {
+    if (!API_BASE) {
+        throw new Error('AI proxy backend is not configured.');
+    }
+
+    const authHeaders = await getAuthHeaders();
     
     const response = await fetch(`${API_BASE}/api/ai/generate`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            ...authHeaders,
         },
         body: JSON.stringify({
             messages,
@@ -64,8 +151,7 @@ async function proxyChatCompletion(messages: Message[], temperature = 0.7, maxTo
     });
 
     if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(errorBody || `AI proxy request failed with status ${response.status}`);
+        throw new Error(await readProxyError(response, `AI proxy request failed with status ${response.status}`));
     }
 
     const data = await response.json();
@@ -73,25 +159,55 @@ async function proxyChatCompletion(messages: Message[], temperature = 0.7, maxTo
 }
 
 async function proxyImageGeneration(prompt: string): Promise<string> {
-    const { data: { session } } = await import('./supabase').then(m => m.supabase.auth.getSession());
-    const token = session?.access_token;
+    if (!API_BASE) {
+        throw new Error('AI proxy backend is not configured.');
+    }
+
+    const authHeaders = await getAuthHeaders();
 
     const response = await fetch(`${API_BASE}/api/ai/image`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            ...authHeaders,
         },
         body: JSON.stringify({ prompt }),
     });
 
     if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(errorBody || `AI image proxy request failed with status ${response.status}`);
+        throw new Error(await readProxyError(response, `AI image proxy request failed with status ${response.status}`));
     }
 
     const data = await response.json();
     return data.url || '';
+}
+
+export async function proxyVideoGeneration(prompt: string, options: { aspectRatio?: string; duration?: number; resolution?: string } = {}): Promise<AiVideoResult> {
+    if (!API_BASE) {
+        throw new Error('AI proxy backend is not configured.');
+    }
+
+    const authHeaders = await getAuthHeaders();
+
+    const response = await fetch(`${API_BASE}/api/ai/video`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...authHeaders,
+        },
+        body: JSON.stringify({
+            prompt,
+            aspectRatio: options.aspectRatio,
+            duration: options.duration,
+            resolution: options.resolution,
+        }),
+    });
+
+    if (!response.ok) {
+        throw new Error(await readProxyError(response, `AI video proxy request failed with status ${response.status}`));
+    }
+
+    return response.json();
 }
 
 const IMAGE_MODELS = ['gemini-2.5-flash-image', 'gemini-2.0-flash-image', 'dall-e-2', 'dall-e-3'];
@@ -181,6 +297,10 @@ class ProxyAIClient {
         },
     };
 
+    media = {
+        generateVideo: proxyVideoGeneration,
+    };
+
     getGenerativeModel(config: { model: string }) {
         return {
             startChat: (chatConfig?: any) => this.chats.create(chatConfig),
@@ -204,12 +324,7 @@ export async function getAiClient(): Promise<any> {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/api/health`);
-
-        if (!response.ok) {
-            throw new Error('Backend health check failed.');
-        }
-
+        await getAiProxyHealth();
         aiClientInstance = new ProxyAIClient();
     } catch (error) {
         console.error('AI proxy unavailable. Ensure server is running and configured.', error);
@@ -221,6 +336,7 @@ export async function getAiClient(): Promise<any> {
 
 export function clearAiClient(): void {
     aiClientInstance = null;
+    aiHealthCache = null;
 }
 
 export function isImageSimulationMode(): boolean {
