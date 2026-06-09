@@ -156,28 +156,33 @@ export const dal = {
         onAuthStateChanged(callback: (user: User | null) => void): () => void {
             let initialResolved = false;
 
-            // Safety valve: if Supabase doesn't respond within 6 s (e.g. project still waking up),
-            // treat as unauthenticated so the login page renders immediately instead of hanging.
-            const safetyTimeout = setTimeout(() => {
-                if (!initialResolved) {
-                    initialResolved = true;
-                    callback(null);
-                }
-            }, 6000);
-
-            // @ts-expect-error - Type definition clash with local node_modules
-            const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-                // First event proves Supabase is responsive — clear the safety timeout
+            const deliverAuthState = (user: User | null) => {
                 if (!initialResolved) {
                     initialResolved = true;
                     clearTimeout(safetyTimeout);
                 }
 
+                callback(user);
+            };
+
+            // Safety valve: if Supabase doesn't respond within 6 s (e.g. project still waking up),
+            // treat as unauthenticated so the login page renders immediately instead of hanging.
+            const safetyTimeout = setTimeout(() => {
+                deliverAuthState(null);
+            }, 6000);
+
+            // @ts-expect-error - Type definition clash with local node_modules
+            const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
                 if (session?.user) {
-                    const user = await loadFullUser(session.user);
-                    callback(user);
+                    try {
+                        const user = await loadFullUser(session.user);
+                        deliverAuthState(user);
+                    } catch (error) {
+                        console.error('Failed to hydrate authenticated user:', error);
+                        deliverAuthState(null);
+                    }
                 } else {
-                    callback(null);
+                    deliverAuthState(null);
                 }
             });
 
