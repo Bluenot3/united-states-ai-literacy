@@ -65,6 +65,35 @@ const PaywallPage: React.FC = () => {
     const [adminError, setAdminError] = useState('');
     const [loading, setLoading] = useState(false);
     const signedInAdmin = isAdminEmail(user?.email);
+    const pendingPayment = params.get('pending') === '1' || params.get('status') === 'pending';
+
+    // Local profile state (Codex: wire to user_profiles table)
+    const existingProfile = useMemo(() => loadProfile(user?.id), [user?.id]);
+    const profileDone = isProfileComplete(existingProfile);
+    const [showProfileForm, setShowProfileForm] = useState(false);
+    const [profileDraft, setProfileDraft] = useState<ZenProfile>(() => existingProfile ?? {
+        displayName: user?.name ?? '',
+        username: '',
+        bio: '',
+        program: programKind,
+        track: 'explorer',
+        country: '',
+        organization: '',
+        experience: 'beginner',
+        goal: 'build-apps',
+        missionBadge: '',
+        updatedAt: '',
+    });
+    const [profileSaved, setProfileSaved] = useState(profileDone);
+
+    const handleSaveProfile = (event: React.FormEvent) => {
+        event.preventDefault();
+        if (!user?.id) return;
+        if (!isProfileComplete(profileDraft)) return;
+        saveProfile(user.id, { ...profileDraft, program: programKind });
+        setProfileSaved(true);
+        setShowProfileForm(false);
+    };
 
     const panelCopy = useMemo(() => {
         if (programKind === 'pioneer') {
