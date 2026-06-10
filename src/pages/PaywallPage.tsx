@@ -1,17 +1,22 @@
 import React, { useMemo, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useBilling } from '../contexts/BillingContext';
 import { useAuth } from '../hooks/useAuth';
 import { isAdminEmail } from '../services/adminAccess';
 import { getProgramBySlug } from '../zen-programs/programIntegrationContract';
 
-const safeReturnPath = (value: string | null) => (
-    value && value.startsWith('/') && !value.startsWith('//') ? value : '/programs'
+const PROGRAM_DESTINATIONS = {
+    pioneer: '/programs/pioneer',
+    vanguard: '/dashboard',
+} as const;
+
+const safeInternalPath = (value: string | null) => (
+    value && value.startsWith('/') && !value.startsWith('//') ? value : null
 );
 
-const inferProgramSlug = (searchProgram: string | null, returnPath: string) => {
+const inferProgramSlug = (searchProgram: string | null, returnPath: string | null) => {
     if (searchProgram) return searchProgram;
-    const match = returnPath.match(/^\/programs\/([^/]+)/);
+    const match = returnPath?.match(/^\/programs\/([^/]+)/);
     return match?.[1] ?? 'vanguard';
 };
 
@@ -32,15 +37,20 @@ const programFeatures = {
 
 const PaywallPage: React.FC = () => {
     const location = useLocation();
+    const navigate = useNavigate();
     const params = new URLSearchParams(location.search);
-    const returnTo = safeReturnPath(params.get('return_to'));
-    const programSlug = inferProgramSlug(params.get('program'), returnTo);
+    const explicitReturn = safeInternalPath(params.get('return_to'));
+    const programSlug = inferProgramSlug(params.get('program'), explicitReturn);
     const program = getProgramBySlug(programSlug) ?? getProgramBySlug('vanguard');
     const isPioneer = program?.programKey === 'ai-pioneer';
     const programKind = isPioneer ? 'pioneer' : 'vanguard';
     const features = programFeatures[programKind];
-    const { user } = useAuth();
-    const { createCheckoutSession, adminBypass, checkEntitlement, error } = useBilling();
+    // Always route admins / entitled users to the program-specific destination,
+    // not the generic /programs hub.
+    const programDestination = PROGRAM_DESTINATIONS[programKind];
+    const returnTo = explicitReturn ?? programDestination;
+    const { user, isAuthenticated } = useAuth();
+    const { createCheckoutSession, adminBypass, checkEntitlement, entitled, error } = useBilling();
     const [showAdminModal, setShowAdminModal] = useState(false);
     const [adminUsername, setAdminUsername] = useState('');
     const [adminPassword, setAdminPassword] = useState('');
@@ -72,15 +82,27 @@ const PaywallPage: React.FC = () => {
         };
     }, [isPioneer]);
 
-    const goToUrl = (url: string) => {
-        window.location.href = url;
+    const goTo = (target: string) => {
+        if (/^https?:\/\//i.test(target)) {
+            window.location.href = target;
+            return;
+        }
+        navigate(target);
+    };
+
+    const handleEnterProgram = () => {
+        goTo(returnTo);
     };
 
     const handleSubscribe = async () => {
+        if (!isAuthenticated) {
+            navigate(`/login?return_to=${encodeURIComponent(location.pathname + location.search)}`);
+            return;
+        }
         setLoading(true);
         const url = await createCheckoutSession(returnTo);
         if (url) {
-            goToUrl(url);
+            goTo(url);
             return;
         }
         setLoading(false);
@@ -89,9 +111,14 @@ const PaywallPage: React.FC = () => {
     const handleSignedInAdmin = async () => {
         setLoading(true);
         setAdminError('');
+        if (signedInAdmin) {
+            // Skip remote check; admin allowlist is authoritative client-side.
+            goTo(returnTo);
+            return;
+        }
         const allowed = await checkEntitlement();
-        if (allowed || signedInAdmin) {
-            goToUrl(returnTo);
+        if (allowed) {
+            goTo(returnTo);
             return;
         }
         setAdminError('This signed-in email is not on the owner/admin allowlist.');
@@ -106,13 +133,15 @@ const PaywallPage: React.FC = () => {
         const success = await adminBypass(adminUsername, adminPassword);
 
         if (success) {
-            goToUrl(returnTo);
+            goTo(returnTo);
             return;
         }
 
         setAdminError('Admin access unavailable or credentials rejected.');
         setLoading(false);
     };
+
+    const hasAccess = entitled || signedInAdmin;
 
     return (
         <main className="relative min-h-screen overflow-hidden bg-[#02040a] text-white">
