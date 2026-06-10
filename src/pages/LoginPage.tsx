@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 const valueProps = [
@@ -7,6 +8,12 @@ const valueProps = [
     'Ship at least one real project with secure API key handling.',
 ];
 
+const safeReturnTo = (raw: string | null): string => {
+    if (!raw) return '/programs';
+    if (!raw.startsWith('/') || raw.startsWith('//')) return '/programs';
+    return raw;
+};
+
 const LoginPage: React.FC = () => {
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
@@ -14,8 +21,18 @@ const LoginPage: React.FC = () => {
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [loading, setLoading] = useState(false);
-    const { login, signup } = useAuth();
+    const { login, signup, isAuthenticated } = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const returnTo = safeReturnTo(new URLSearchParams(location.search).get('return_to'));
     const showDemoHint = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true';
+
+    // If already signed in, bounce immediately to return_to.
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate(returnTo, { replace: true });
+        }
+    }, [isAuthenticated, navigate, returnTo]);
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
@@ -32,11 +49,16 @@ const LoginPage: React.FC = () => {
         try {
             if (isLogin) {
                 await login(email, password);
+                navigate(returnTo, { replace: true });
             } else {
-                await signup(email, password);
-                setSuccessMessage('Account created. Confirm your email, then sign in.');
-                setIsLogin(true);
-                setPassword('');
+                const result = await signup(email, password);
+                if (result?.requiresConfirmation) {
+                    setSuccessMessage('Account created. Confirm your email, then sign in.');
+                    setIsLogin(true);
+                    setPassword('');
+                } else {
+                    navigate(returnTo, { replace: true });
+                }
             }
         } catch (authError) {
             setError(authError instanceof Error ? authError.message : 'Authentication failed.');
