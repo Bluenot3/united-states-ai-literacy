@@ -21,7 +21,7 @@ export interface ProgramResourceContentItem {
     embed?: boolean;
     instructions?: string[];
     completionHint?: string;
-    interactive?: 'ai-signal-loop' | 'ai-or-not-check' | 'ai-coach-console' | 'ai-vocab-quest' | 'neural-network-lab' | 'computer-vision-lab' | 'model-behavior-mixer' | 'prompt-formula-builder' | 'prompt-upgrader' | 'prompt-power-meter' | 'prompt-library' | 'prompt-remix' | 'particle-lab' | 'api-orb' | 'mission-badges' | 'image-recipe-builder' | 'diffusion-lab' | 'media-quality-lens' | 'generative-media-lab' | 'prompt-architect' | 'pioneer-studio' | 'chatbot-anatomy' | 'deepfake-check';
+    interactive?: 'ai-signal-loop' | 'ai-or-not-check' | 'ai-coach-console' | 'ai-vocab-quest' | 'neural-network-lab' | 'computer-vision-lab' | 'model-behavior-mixer' | 'prompt-formula-builder' | 'prompt-upgrader' | 'prompt-power-meter' | 'prompt-library' | 'prompt-remix' | 'particle-lab' | 'api-orb' | 'mission-badges' | 'image-recipe-builder' | 'diffusion-lab' | 'media-quality-lens' | 'generative-media-lab' | 'prompt-architect' | 'pioneer-studio' | 'chatbot-anatomy' | 'deepfake-check' | 'prediction-engine' | 'token-budget' | 'persona-agent' | 'model-fit-router';
 }
 
 export interface ProgramLabContentItem {
