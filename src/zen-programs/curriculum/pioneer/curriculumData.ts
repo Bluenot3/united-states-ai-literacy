@@ -305,81 +305,325 @@ export const pioneerCurriculum: ProgramCurriculum = {
         },
         {
             id: 'module-2',
-            title: 'Module 2: Builder Studio and Platform Thinking',
+            title: 'Module 2: Models, Modalities & First Deployment',
             icon: 'M2',
             content: [
                 { type: 'heading', content: 'What you will do' },
                 {
                     type: 'list',
                     content: [
-                        'Review early work and turn it into a clearer project blueprint.',
-                        'Explore 3D, comics, teachable models, notebooks, games, and platform launch ideas.',
-                        'Prepare reusable copy, code direction, and a first learning-environment preview.',
+                        'Compare AI models across text, image, audio, video, 3D, and code.',
+                        'Pick the right model for the right job and back it up with evidence.',
+                        'Prepare or deploy your first public AI app: the ZEN Text Genie on Hugging Face Spaces.',
                     ],
+                },
+                {
+                    type: 'callout',
+                    title: 'Why this module matters',
+                    content: 'This is where you stop being only an AI user and start becoming an AI builder. By the end you will know which model to reach for, and you will have a real plan (or live URL) for a public AI app with your name on it.',
+                    tone: 'info',
                 },
             ],
             subSections: [
                 {
                     id: 'm2-s3',
-                    title: 'Section 3: Review, 3D, Comics, and Project CTA',
-                    icon: '03',
+                    title: 'Section 1: Models, Modalities & the Arena',
+                    icon: '01',
                     content: [
+                        { type: 'heading', content: 'Module 2 · Week 3 · Section 1' },
+                        {
+                            type: 'callout',
+                            title: 'Core question',
+                            content: 'Which AI should I use for which job?',
+                            tone: 'info',
+                        },
+                        {
+                            type: 'callout',
+                            title: 'Student outcome',
+                            content: 'You can compare AI models across text, image, audio, video, 3D, and code, name what each model is strong and weak at, and defend your pick for a real task with evidence.',
+                            tone: 'success',
+                        },
                         { type: 'heading', content: 'Learn' },
                         {
                             type: 'paragraph',
-                            content: 'Students review their first-half direction, explore richer media, and turn creative output into a project they can explain and share.',
+                            content: 'Not all AI models are good at the same job. A model that writes great essays may stumble at math. An image model may be amazing at portraits and useless at charts. A great AI builder picks the right model for the mission instead of using one model for everything.',
                         },
+                        {
+                            type: 'list',
+                            content: [
+                                'Modality is the kind of input or output a model handles: text, image, audio, video, 3D, or code.',
+                                'Capability is what the model is actually good at: reasoning, summarizing, drawing, coding, transcribing, translating.',
+                                'Cost and speed matter: bigger is not always better, especially for fast or cheap tasks.',
+                                'Safety and limits matter: every model has things it should refuse or warn about.',
+                            ],
+                        },
+                        {
+                            type: 'callout',
+                            title: 'Helper for younger Pioneers',
+                            content: 'Think of AI models like athletes. Some are sprinters, some are swimmers, some are climbers. They are all elite, but you would not send a swimmer up a mountain. Your job is to be the coach who picks the right athlete for the event.',
+                            tone: 'info',
+                        },
+                        { type: 'heading', content: 'Modality cards' },
+                        app('Text models', 'Models like GPT, Claude, Gemini, and Llama. They read and write language: essays, summaries, plans, ideas, conversations.', 'Best for writing, explaining, planning, tutoring, brainstorming, and structured reasoning.', undefined, 'Ready', {
+                            instructions: ['Pick a real text task you do every week.', 'Predict which text model would handle it best.', 'Note one weakness to watch out for.'],
+                            completionHint: 'Launch card — no interactive, used as a teaching card.',
+                        }),
+                        app('Image models', 'Models like Imagen, DALL·E, Midjourney, Flux, and Stable Diffusion. They turn prompts into pictures.', 'Best for art direction, mockups, illustrations, mood boards, and visual storytelling. Weak at exact text inside images and precise diagrams.', undefined, 'Ready', {
+                            instructions: ['Describe one visual you wish you had.', 'Pick a model you would try first.', 'Note one thing the model probably cannot do well.'],
+                        }),
+                        app('Audio models', 'Speech-to-text (Whisper), text-to-speech (ElevenLabs, PlayHT), and music tools (Suno, Udio).', 'Best for transcription, narration, podcasts, voiceovers, and music sketches. Weak at copying real people without permission — that is a safety line, not a feature.', undefined, 'Ready', {
+                            instructions: ['Choose a real audio job: notes, voiceover, song.', 'Pick one model.', 'Write one rule about consent before cloning a voice.'],
+                        }),
+                        app('Video models', 'Models like Veo, Sora, Runway, Kling, and Pika. They generate short clips from text or images.', 'Best for short scenes, social clips, and storyboards. Weak at long, consistent characters and high-stakes realism.', undefined, 'Ready', {
+                            instructions: ['Write one short clip idea.', 'Pick a model.', 'Note one limit (length, characters, motion).'],
+                        }),
+                        app('3D models', 'Tools like Trellis, Hunyuan 3D, Meshy, and Luma. They generate 3D meshes or scenes.', 'Best for game assets, prototypes, AR, and product mockups. Still early — expect to clean up the output.', undefined, 'Ready', {
+                            instructions: ['Pick a 3D object you would want.', 'Choose a tool to try.', 'Note one cleanup step you would expect.'],
+                        }),
+                        app('Code models', 'Models like GPT-Codex, Claude Code, Gemini Code, and open models from Hugging Face. They write, explain, and debug code.', 'Best for boilerplate, refactors, explanations, and pair-programming. Weak when the task is vague or when no tests exist.', undefined, 'Ready', {
+                            instructions: ['Pick a small coding task.', 'Choose a code model.', 'Write one test you would run before trusting the output.'],
+                        }),
                         { type: 'heading', content: 'Explore' },
-                        app('AI to 3D Environment Demo', 'A Trellis/Hunyuan-style 3D generation experience.', 'Shows that AI can build spatial assets, not only text and images.', undefined, 'Demo'),
-                        app('Dynamic Image Generator', 'A creative image generation workspace.', 'Use it as another fast path to visual output.', undefined, 'Demo'),
-                        app('ZEN AI Learning Environment', 'A preview of a guided AI learning space.', 'Shows how tools can become structured learning products.', undefined, 'Demo'),
-                        app('AI Comic Factory', 'A comic/story generation activity.', 'Connects narrative, images, and prompt sequencing.', undefined, 'External'),
+                        app('AI Arena — model comparison', 'Open a live model arena (Chatbot Arena or LMSYS) and put two models head-to-head on the same prompt.', 'You will see that the same prompt produces different answers. The Arena is how the AI community decides which model wins, blind.', 'https://lmarena.ai/', 'External', {
+                            embed: true,
+                            instructions: ['Open the Arena.', 'Send the same prompt to two anonymous models.', 'Vote for the better answer and note why.'],
+                        }),
+                        app('Model strengths & weaknesses card', 'A printable/scrollable map of what top models do well and where they fall short.', 'Helps you stop guessing and start choosing models like a pro.', undefined, 'Ready', {
+                            instructions: ['Scroll the strengths column.', 'Find one model that fits your project.', 'Write down its biggest known weakness.'],
+                            completionHint: 'Launch card — pair this with the Arena activity above.',
+                        }),
+                        app('Choose the best model for the mission', 'A short scenario sorter: given a real task, pick the modality and a model family that fits it.', 'This is the core skill of Module 2: matching the model to the mission.', undefined, 'Ready', {
+                            instructions: ['Read each scenario card.', 'Pick a modality (text, image, audio, video, 3D, code).', 'Pick one model family and defend the choice in one sentence.'],
+                        }),
+                        app('Token & cost simulator', 'A lightweight calculator: estimate how many tokens a prompt + response uses and what it might cost.', 'AI is not free. Builders who understand cost ship apps that actually survive.', undefined, 'Demo', {
+                            instructions: ['Paste a typical prompt.', 'Estimate input and output tokens.', 'Multiply by a published price to see daily cost at 100 users.'],
+                            completionHint: 'Launch card — coming next as a built-in interactive. For now, use OpenAI / Anthropic / Google pricing pages as references.',
+                        }),
+                        app('3-Provider Comparison Report template', 'A simple report shape: same prompt, three providers, side-by-side answers, your pick, and your reason.', 'This is the artifact you will turn in for this section. It proves you can compare models like an analyst.', undefined, 'Ready', {
+                            instructions: ['Pick one real prompt.', 'Run it on three providers (any combination of GPT, Claude, Gemini, Llama, Mistral, etc.).', 'Fill the report: winner, why, and one risk.'],
+                            completionHint: 'You will submit this as the artifact for Section 1.',
+                        }),
+                        {
+                            type: 'callout',
+                            title: 'Advanced challenge (older Pioneers)',
+                            content: 'Run the same prompt on an open-weights model (Llama 3, Mistral, Qwen) via Hugging Face and on a frontier closed model. Defend whether the open model is "good enough" for your use case — and explain when you would still pay for the frontier model.',
+                            tone: 'warning',
+                        },
+                        { type: 'heading', content: 'Artifact checkpoint' },
                         {
                             type: 'lab',
-                            id: 'm2-s3-project-cta',
-                            title: 'Build checkpoint: project code/copy CTA',
-                            objective: 'Write a project CTA and collect the copy/code direction needed for the next build.',
+                            id: 'm2-s3-model-comparison-report',
+                            title: 'Artifact: Model Comparison Report',
+                            objective: 'Produce a 3-provider comparison report and defend your model pick for one real task.',
                             steps: [
-                                'Choose one creative output from the section.',
-                                'Write a one-sentence project purpose.',
-                                'Draft a launch CTA for a user.',
-                                'List the code or app pieces you need next.',
+                                'Choose one real task you actually care about.',
+                                'Run the same prompt on three different AI models.',
+                                'Capture each response (paste, screenshot, or link).',
+                                'Pick a winner and write one paragraph: why it won, what it lost on, and one risk.',
+                                'Save the report — link, doc, PDF, or screenshot — as your Section 1 artifact.',
                             ],
-                            expectedOutput: 'Project purpose, CTA copy, and next-build checklist.',
-                            reflectionPrompt: 'What would make someone want to open or try your project?',
+                            expectedOutput: 'A Model Comparison Report (link, doc, or image) showing 3 providers, your pick, and your reason.',
+                            reflectionPrompt: 'The best model for my task was ___ because…',
+                        },
+                        {
+                            type: 'callout',
+                            title: 'Completion CTA',
+                            content: 'Save your Model Comparison Report and reflection, then mark this section complete. Section 2 is where you ship your first real AI app.',
+                            tone: 'success',
                         },
                     ],
                 },
                 {
                     id: 'm2-s4',
-                    title: 'Section 4: Prompt Platform, Teachable Models, and Games',
-                    icon: '04',
+                    title: 'Section 2: Ship 1 — ZEN Text Genie',
+                    icon: '02',
                     content: [
+                        { type: 'heading', content: 'Module 2 · Week 4 · Section 2' },
+                        {
+                            type: 'callout',
+                            title: 'Core question',
+                            content: 'Can I put a working AI app on the internet?',
+                            tone: 'info',
+                        },
+                        {
+                            type: 'callout',
+                            title: 'Student outcome',
+                            content: 'You prepare or deploy your first public AI app — the ZEN Text Genie — on a Hugging Face Space, using a safe API-key pattern and a real deployment checklist.',
+                            tone: 'success',
+                        },
                         { type: 'heading', content: 'Learn' },
                         {
                             type: 'paragraph',
-                            content: 'This section introduces platform thinking: prompts, model training, research notebooks, games, and launch-ready learning environments.',
+                            content: 'Until now you have used other people\'s AI apps. In Ship 1 you build and publish your own. The ZEN Text Genie is a tiny text-generation app: a user types a prompt, your app calls an AI model, your app returns the response — live on the internet, with your name on it.',
                         },
-                        { type: 'heading', content: 'Explore' },
-                        app('Prompt Advancement Platform', 'A structured prompt improvement workspace.', 'Turns prompt writing into a repeatable skill loop.', undefined, 'Demo'),
-                        app('ZEN-X Creative Forge', 'A creative build environment for turning ideas into outputs.', 'Use it to connect imagination with execution.', undefined, 'Demo'),
-                        app('Teachable Machine', 'Train a small model with examples.', 'Makes machine learning visible without advanced code.', 'https://teachablemachine.withgoogle.com/', 'External'),
-                        app('NotebookLM', 'A research and source-understanding workspace.', 'Shows how references and files can guide better AI work.', 'https://notebooklm.google.com/', 'External'),
-                        app('AI Game Generator', 'A generator for playable mini-game ideas or code.', 'Move from media creation into interactive products.', undefined, 'Demo'),
-                        app('Learning Environment Code Preview', 'A preview of how a launchable platform is assembled.', 'Connect design, copy, code, and your evidence into one project direction.', undefined, 'Optional'),
+                        {
+                            type: 'list',
+                            content: [
+                                'Hugging Face Spaces is a free hosting platform for AI apps.',
+                                'Gradio is a Python library that turns a function into a web UI in about 15 lines.',
+                                'Every Space needs at minimum: app.py, requirements.txt, and a README.md.',
+                                'Your API key is a secret. It goes in Space Secrets — never in your code, never in a screenshot.',
+                            ],
+                        },
+                        {
+                            type: 'callout',
+                            title: 'Helper for younger Pioneers',
+                            content: 'Think of a Hugging Face Space like a tiny website that runs a tiny AI app. You give it the recipe (app.py), the ingredients list (requirements.txt), and the menu (README.md). Hugging Face does the cooking and serving.',
+                            tone: 'info',
+                        },
+                        { type: 'heading', content: 'Hugging Face Spaces explainer' },
+                        app('What is a Hugging Face Space?', 'Free hosting for AI apps. You push code, Hugging Face runs it, you get a public URL.', 'This is the cleanest path from "I have an idea" to "anyone in the world can try it."', 'https://huggingface.co/spaces', 'External', {
+                            instructions: ['Open the Spaces homepage.', 'Browse two Gradio Spaces you like.', 'Note one feature you would copy.'],
+                        }),
+                        app('Gradio app template', 'A starter Gradio app you can copy: input box, button, output box.', 'You will adapt this exact template for the ZEN Text Genie.', 'https://www.gradio.app/guides/quickstart', 'External', {
+                            instructions: ['Read the quickstart.', 'Find the "Interface" pattern.', 'Decide what your input and output will be.'],
+                        }),
+                        {
+                            type: 'heading',
+                            content: 'What files does my Space need?',
+                        },
+                        app('app.py', 'The Python file that defines your AI app. This is the heart of the Space.', 'Everything the user clicks, types, and sees comes from here.', undefined, 'Ready', {
+                            instructions: ['Open the code sample below.', 'Find the function the user actually triggers.', 'Find where the API key is read from environment variables.'],
+                        }),
+                        app('requirements.txt', 'A plain-text list of Python packages your Space needs (gradio, openai, etc.).', 'Without this file, Hugging Face does not know what to install — your Space will not boot.', undefined, 'Ready', {
+                            instructions: ['List every package your app imports.', 'Pin versions for stability if you can.', 'Keep it short — only what you actually use.'],
+                        }),
+                        app('README.md', 'A markdown file describing your Space + a YAML header Hugging Face reads for the title, emoji, color, and SDK.', 'This is what users see first. Make it clear, honest, and proud.', undefined, 'Ready', {
+                            instructions: ['Write a one-sentence purpose.', 'List one thing the app does well.', 'List one thing it cannot do (be honest).'],
+                        }),
+                        { type: 'heading', content: 'Starter code: ZEN Text Genie (app.py)' },
+                        {
+                            type: 'code',
+                            language: 'python',
+                            content: `import os
+import gradio as gr
+from openai import OpenAI
+
+# Read the key from Hugging Face Space Secrets.
+# NEVER hardcode a real key. The demo placeholder below
+# is intentionally fake and safe to share.
+API_KEY = os.environ.get("OPENAI_API_KEY", "sk-demo-REPLACE_WITH_YOUR_OWN_KEY")
+client = OpenAI(api_key=API_KEY)
+
+SYSTEM_PROMPT = (
+    "You are the ZEN Text Genie. You write clear, useful, "
+    "age-appropriate responses for students 11-18. "
+    "If the user asks for something unsafe, refuse politely."
+)
+
+def genie(user_prompt: str) -> str:
+    if not user_prompt.strip():
+        return "Type a prompt to wake the Genie."
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ],
+    )
+    return response.choices[0].message.content
+
+demo = gr.Interface(
+    fn=genie,
+    inputs=gr.Textbox(label="Your prompt", lines=4),
+    outputs=gr.Textbox(label="Genie response", lines=10),
+    title="ZEN Text Genie",
+    description="Built by a ZEN AI Pioneer.",
+)
+
+if __name__ == "__main__":
+    demo.launch()
+`,
+                        },
+                        {
+                            type: 'code',
+                            language: 'text',
+                            content: `gradio>=4.0.0
+openai>=1.0.0
+`,
+                        },
+                        { type: 'heading', content: 'Safe API key pattern' },
+                        {
+                            type: 'callout',
+                            title: 'Key safety — non-negotiable',
+                            content: 'Real keys never go into app.py, never into git, never into screenshots, never into chat with strangers. Use Hugging Face Space Secrets. If a key ever leaks, rotate it immediately.',
+                            tone: 'warning',
+                        },
+                        app('Demo key field (safe)', 'A masked input you can use to practice the pattern with a fake placeholder key. Your key is never saved.', 'Builds the muscle memory of masking, not logging, and not committing keys.', undefined, 'Demo', {
+                            interactive: 'api-orb',
+                            instructions: ['Open the demo field.', 'Paste the placeholder key sk-demo-REPLACE_WITH_YOUR_OWN_KEY.', 'Confirm the field is masked and never persisted.'],
+                            completionHint: 'Demo only. Backend handled by Codex — no real key is sent anywhere.',
+                        }),
+                        { type: 'heading', content: 'Deployment checklist' },
+                        {
+                            type: 'list',
+                            content: [
+                                'Create a free Hugging Face account.',
+                                'Click "New Space" and choose the Gradio SDK.',
+                                'Upload (or paste) app.py, requirements.txt, and README.md.',
+                                'Go to Settings → Variables and Secrets and add OPENAI_API_KEY.',
+                                'Wait for the Space to build (1–3 minutes).',
+                                'Open the public URL and test one prompt.',
+                                'Copy the URL — this is your artifact.',
+                            ],
+                        },
+                        { type: 'heading', content: 'Error interpreter' },
+                        app('Common deploy errors', 'A quick reference for the 5 errors most first-time Spaces hit.', 'When something breaks, you want a checklist — not panic.', undefined, 'Ready', {
+                            instructions: [
+                                'ModuleNotFoundError → add the package to requirements.txt.',
+                                'AuthenticationError → your key is missing or wrong; check Space Secrets.',
+                                'Space build failed → open the build log; usually requirements.txt typo.',
+                                'App is stuck on "loading" → demo.launch() probably missing or indented wrong.',
+                                'Rate limit → switch to a smaller model or add a usage note in README.md.',
+                            ],
+                        }),
+                        { type: 'heading', content: 'Launch readiness checklist' },
+                        {
+                            type: 'list',
+                            content: [
+                                'My Space has a clear title and a one-sentence description.',
+                                'My README explains what the app does and what it cannot do.',
+                                'My API key is in Secrets, not in app.py.',
+                                'I tested at least three prompts and the responses are reasonable.',
+                                'I have the public URL ready to submit.',
+                            ],
+                        },
+                        { type: 'heading', content: 'Submit your Space' },
+                        app('Submit Hugging Face Space URL or Deployment Plan', 'Drop your live Space URL — or, if you have not deployed yet, paste your written deployment plan.', 'Either path counts as the Ship 1 artifact. Backend submission is handled by Codex; for now, paste it in your Pioneer notes or share it with your facilitator.', undefined, 'Ready', {
+                            instructions: [
+                                'If deployed: copy the huggingface.co/spaces/your-name/zen-text-genie URL.',
+                                'If not deployed yet: write a 5-line plan (files, model, key location, test prompt, launch date).',
+                                'Save it in your Pioneer notebook for facilitator review.',
+                            ],
+                            completionHint: 'Backend handled by Codex — real submission endpoint coming next.',
+                        }),
+                        {
+                            type: 'callout',
+                            title: 'Advanced challenge (older Pioneers)',
+                            content: 'Upgrade the ZEN Text Genie: add gr.Examples for one-click demos, restyle with a custom theme, add a temperature slider, and replace the system prompt with a persona of your own. Document each upgrade in the README.',
+                            tone: 'warning',
+                        },
+                        { type: 'heading', content: 'Artifact checkpoint' },
                         {
                             type: 'lab',
-                            id: 'm2-s4-platform-blueprint',
-                            title: 'Build checkpoint: platform blueprint',
-                            objective: 'Turn one idea into a simple platform or game blueprint.',
+                            id: 'm2-s4-text-genie-ship',
+                            title: 'Artifact: ZEN Text Genie URL or Deployment Plan',
+                            objective: 'Ship the ZEN Text Genie or produce a deployment plan strong enough to ship from.',
                             steps: [
-                                'Name the tool, game, or learning environment.',
-                                'Define the user and the task it helps with.',
-                                'Choose one model/tool source.',
-                                'Write the first three user actions.',
+                                'Adapt the starter app.py to your own purpose and system prompt.',
+                                'Prepare requirements.txt and a README.md with title, purpose, and limits.',
+                                'Either deploy to Hugging Face Spaces with your key in Secrets, or write a complete deployment plan.',
+                                'Test three prompts (if deployed) and capture the public URL.',
+                                'Submit the URL or the plan as your Ship 1 artifact.',
                             ],
-                            expectedOutput: 'A one-page blueprint for a launchable AI tool or game.',
-                            reflectionPrompt: 'What is the smallest useful version you could build first?',
+                            expectedOutput: 'A live ZEN Text Genie URL on Hugging Face, or a written deployment plan with files, key strategy, and launch steps.',
+                            reflectionPrompt: 'The hardest part of deploying was…',
+                        },
+                        {
+                            type: 'callout',
+                            title: 'Completion CTA',
+                            content: 'Save your Space URL (or your plan) and your reflection, then mark this section complete. Module 3 takes the Genie pattern and pushes it into code-generation and grounded knowledge apps.',
+                            tone: 'success',
                         },
                     ],
                 },
