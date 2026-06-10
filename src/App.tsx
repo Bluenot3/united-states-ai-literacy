@@ -75,8 +75,9 @@ const documentMetaMatchers: Array<{
     {
         match: (pathname) => pathname === '/paywall',
         meta: {
-            title: 'Membership Access | ZEN Vanguard',
-            description: 'Unlock the ZEN Vanguard curriculum, certifications, and advanced AI literacy program features.',
+            title: 'Program Access | ZEN AI Co.',
+            description: 'Activate access to your selected ZEN program: AI Pioneer, Vanguard, and more.',
+
             robots: 'noindex,nofollow',
         },
     },
