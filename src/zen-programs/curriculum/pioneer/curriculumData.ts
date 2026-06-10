@@ -112,6 +112,15 @@ export const pioneerCurriculum: ProgramCurriculum = {
                             tone: 'success',
                         },
                         { type: 'heading', content: 'Explore' },
+                        app('Prediction Engine Simulator', 'A live demo of next-token prediction with confidence bars. Pick a starter and see the model\'s top guesses.', 'This is the core lesson of Section 1: LLMs predict patterns. They do not think. That is why the same prompt can produce different answers.', undefined, 'Demo', {
+                            interactive: 'prediction-engine',
+                            instructions: ['Pick a sentence starter.', 'Read the top 4 candidate tokens and their confidence.', 'Explain why the order can flip between runs.'],
+                            completionHint: 'Start here — this single demo unlocks every other concept in Section 1.',
+                        }),
+                        app('Token Budget Visualizer', 'Paste text and watch it split into tokens. A context-window meter shows how much of the model\'s budget you used.', 'Tokens are the unit AI tools count, charge, and forget. Builders who think in tokens ship apps that stay fast and cheap.', undefined, 'Demo', {
+                            interactive: 'token-budget',
+                            instructions: ['Paste a paragraph.', 'Read the token count and meter.', 'Try shortening the text — watch the meter drop.'],
+                        }),
                         app('AI Signal Loop', 'A visual map that shows how your input moves through a model, becomes an output, and comes back to you for a human check.', 'Use this first so AI feels like a system you can control, not a mystery box.', undefined, 'Ready', {
                             interactive: 'ai-signal-loop',
                             instructions: ['Choose a scenario.', 'Follow input, model, output, and human check.', 'Explain why the human check matters.'],
