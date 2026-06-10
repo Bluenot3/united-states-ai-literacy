@@ -302,20 +302,139 @@ const PaywallPage: React.FC = () => {
                         <h1 className="mt-5 text-4xl font-black tracking-tight text-white sm:text-5xl">{panelCopy.headline}</h1>
                         <p className="mt-4 max-w-lg text-sm leading-7 text-slate-300">{panelCopy.body}</p>
 
+                        {/* Step strip — Account → Profile → Activate → Enter */}
+                        <ol className="mt-6 grid grid-cols-4 gap-2 text-[10px] font-black uppercase tracking-[0.16em]">
+                            {[
+                                { n: 1, label: 'Account' },
+                                { n: 2, label: 'Profile' },
+                                { n: 3, label: 'Activate' },
+                                { n: 4, label: 'Enter' },
+                            ].map((s) => {
+                                const done = s.n < currentStep;
+                                const active = s.n === currentStep;
+                                return (
+                                    <li key={s.n} className={`flex items-center gap-2 rounded-xl border px-2.5 py-2 ${active ? 'border-cyan-300/40 bg-cyan-300/10 text-cyan-100' : done ? 'border-emerald-300/30 bg-emerald-300/[0.06] text-emerald-100' : 'border-white/8 bg-white/[0.02] text-slate-500'}`}>
+                                        <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${active ? 'bg-cyan-300 text-slate-950' : done ? 'bg-emerald-300 text-emerald-950' : 'bg-white/10 text-slate-400'}`}>{done ? '✓' : s.n}</span>
+                                        <span className="truncate">{s.label}</span>
+                                    </li>
+                                );
+                            })}
+                        </ol>
+
+                        {/* Signed-out CTA */}
+                        {!isAuthenticated && (
+                            <div className="mt-6 rounded-2xl border border-cyan-300/25 bg-cyan-300/[0.06] p-4">
+                                <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-100">Step 1 — Account</p>
+                                <p className="mt-2 text-sm leading-6 text-slate-200">Create an account or sign in to attach {panelCopy.product} access to your profile.</p>
+                                <button
+                                    type="button"
+                                    onClick={handleSignIn}
+                                    className="mt-4 rounded-full bg-white px-5 py-3 text-sm font-black text-slate-950 transition hover:-translate-y-0.5"
+                                >
+                                    Create account or sign in
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Admin recognition */}
                         {signedInAdmin && (
                             <div className="mt-6 rounded-2xl border border-emerald-300/25 bg-emerald-300/[0.08] p-4">
                                 <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-100">Owner/admin recognized</p>
                                 <p className="mt-2 text-sm leading-6 text-emerald-50/85">
                                     {user?.email} is on the ZEN admin allowlist. Continue without Stripe checkout.
                                 </p>
-                                <button
-                                    type="button"
-                                    onClick={handleSignedInAdmin}
-                                    disabled={loading}
-                                    className="mt-4 rounded-full bg-emerald-200 px-5 py-3 text-sm font-black text-emerald-950 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
-                                >
-                                    {loading ? 'Opening access...' : 'Continue as admin'}
-                                </button>
+                                <div className="mt-4 flex flex-wrap gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={handleSignedInAdmin}
+                                        disabled={loading}
+                                        className="rounded-full bg-emerald-200 px-5 py-3 text-sm font-black text-emerald-950 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                                    >
+                                        {loading ? 'Opening access...' : `Enter ${panelCopy.product} as admin`}
+                                    </button>
+                                    <Link to="/admin" className="rounded-full border border-emerald-300/30 bg-emerald-300/[0.05] px-5 py-3 text-sm font-black text-emerald-100 transition hover:bg-emerald-300/[0.12]">
+                                        Open Admin Dashboard
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Profile setup (signed-in non-admin without complete profile) */}
+                        {isAuthenticated && !signedInAdmin && !profileSaved && (
+                            <div className="mt-6 rounded-2xl border border-white/12 bg-white/[0.03] p-4">
+                                <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-100">Step 2 — Builder profile</p>
+                                <p className="mt-2 text-sm leading-6 text-slate-300">Quick setup so {panelCopy.product} can personalize your build path. Saved to this device; full sync is coming via Cloud.</p>
+                                {!showProfileForm ? (
+                                    <button type="button" onClick={() => setShowProfileForm(true)} className="mt-4 rounded-full bg-white px-5 py-3 text-sm font-black text-slate-950 transition hover:-translate-y-0.5">
+                                        Set up builder profile
+                                    </button>
+                                ) : (
+                                    <form onSubmit={handleSaveProfile} className="mt-4 grid gap-3 sm:grid-cols-2">
+                                        <label className="grid gap-1 sm:col-span-1 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
+                                            Display name
+                                            <input required value={profileDraft.displayName} onChange={(e) => setProfileDraft({ ...profileDraft, displayName: e.target.value })} className="rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm font-semibold text-white outline-none focus:border-cyan-300/50" />
+                                        </label>
+                                        <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
+                                            Username
+                                            <input required value={profileDraft.username} onChange={(e) => setProfileDraft({ ...profileDraft, username: e.target.value.replace(/\s+/g, '').toLowerCase() })} className="rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm font-semibold text-white outline-none focus:border-cyan-300/50" />
+                                        </label>
+                                        <label className="grid gap-1 sm:col-span-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
+                                            What do you want to build?
+                                            <textarea rows={2} value={profileDraft.bio} onChange={(e) => setProfileDraft({ ...profileDraft, bio: e.target.value })} className="rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-cyan-300/50" />
+                                        </label>
+                                        <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
+                                            Country
+                                            <input required value={profileDraft.country} onChange={(e) => setProfileDraft({ ...profileDraft, country: e.target.value })} className="rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm font-semibold text-white outline-none focus:border-cyan-300/50" />
+                                        </label>
+                                        <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
+                                            Organization (optional)
+                                            <input value={profileDraft.organization ?? ''} onChange={(e) => setProfileDraft({ ...profileDraft, organization: e.target.value })} className="rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm font-semibold text-white outline-none focus:border-cyan-300/50" />
+                                        </label>
+                                        <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
+                                            Track
+                                            <select value={profileDraft.track} onChange={(e) => setProfileDraft({ ...profileDraft, track: e.target.value as ZenProfile['track'] })} className="rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm font-semibold text-white outline-none focus:border-cyan-300/50">
+                                                <option value="explorer">Explorer</option>
+                                                <option value="builder">Builder</option>
+                                                <option value="founder">Founder</option>
+                                            </select>
+                                        </label>
+                                        <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
+                                            Experience
+                                            <select value={profileDraft.experience} onChange={(e) => setProfileDraft({ ...profileDraft, experience: e.target.value as ZenProfile['experience'] })} className="rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm font-semibold text-white outline-none focus:border-cyan-300/50">
+                                                <option value="beginner">Beginner</option>
+                                                <option value="some-ai">Some AI use</option>
+                                                <option value="builder">Builder</option>
+                                            </select>
+                                        </label>
+                                        <label className="grid gap-1 sm:col-span-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
+                                            Main goal
+                                            <select value={profileDraft.goal} onChange={(e) => setProfileDraft({ ...profileDraft, goal: e.target.value as ZenProfile['goal'] })} className="rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm font-semibold text-white outline-none focus:border-cyan-300/50">
+                                                <option value="build-apps">Build apps</option>
+                                                <option value="learn-prompting">Learn prompting</option>
+                                                <option value="launch-agent">Launch an agent</option>
+                                                <option value="portfolio">Portfolio / certificate</option>
+                                                <option value="other">Other</option>
+                                            </select>
+                                        </label>
+                                        <div className="sm:col-span-2 flex gap-2">
+                                            <button type="submit" className="rounded-full bg-white px-5 py-3 text-sm font-black text-slate-950 transition hover:-translate-y-0.5">Save profile & continue</button>
+                                            <button type="button" onClick={() => setShowProfileForm(false)} className="rounded-full border border-white/12 px-5 py-3 text-sm font-bold text-slate-300">Cancel</button>
+                                        </div>
+                                    </form>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Payment-pending state */}
+                        {pendingPayment && !entitled && !signedInAdmin && (
+                            <div className="mt-6 rounded-2xl border border-amber-300/25 bg-amber-300/[0.08] p-4">
+                                <p className="text-xs font-black uppercase tracking-[0.22em] text-amber-100">Payment submitted — verifying access</p>
+                                <p className="mt-2 text-sm leading-6 text-amber-50/90">It can take a moment for Stripe to confirm and unlock {panelCopy.product}. If this persists, contact support.</p>
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                    <button type="button" onClick={() => { setLoading(true); checkEntitlement().finally(() => setLoading(false)); }} className="rounded-full bg-amber-200 px-4 py-2 text-xs font-black text-amber-950">Refresh access</button>
+                                    <a href="mailto:support@zenai.world" className="rounded-full border border-amber-300/30 px-4 py-2 text-xs font-black text-amber-100">Contact support</a>
+                                    <Link to="/programs" className="rounded-full border border-white/12 px-4 py-2 text-xs font-black text-white">View programs</Link>
+                                </div>
                             </div>
                         )}
 
@@ -344,6 +463,22 @@ const PaywallPage: React.FC = () => {
                                 >
                                     {`Enter ${panelCopy.product}`}
                                 </button>
+                            ) : !isAuthenticated ? (
+                                <button
+                                    type="button"
+                                    onClick={handleSignIn}
+                                    className={`rounded-full bg-gradient-to-r ${panelCopy.accent} px-6 py-4 text-sm font-black text-slate-950 shadow-[0_0_42px_rgba(201,168,76,0.22)] transition hover:-translate-y-0.5`}
+                                >
+                                    {`Sign in to activate ${panelCopy.product}`}
+                                </button>
+                            ) : !profileSaved ? (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowProfileForm(true)}
+                                    className={`rounded-full bg-gradient-to-r ${panelCopy.accent} px-6 py-4 text-sm font-black text-slate-950 shadow-[0_0_42px_rgba(201,168,76,0.22)] transition hover:-translate-y-0.5`}
+                                >
+                                    Complete builder profile
+                                </button>
                             ) : (
                                 <button
                                     type="button"
@@ -351,7 +486,7 @@ const PaywallPage: React.FC = () => {
                                     disabled={loading}
                                     className={`rounded-full bg-gradient-to-r ${panelCopy.accent} px-6 py-4 text-sm font-black text-slate-950 shadow-[0_0_42px_rgba(201,168,76,0.22)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50`}
                                 >
-                                    {loading ? 'Opening checkout...' : isAuthenticated ? `Activate ${panelCopy.product}` : `Sign in to activate ${panelCopy.product}`}
+                                    {loading ? 'Opening checkout...' : `Activate ${panelCopy.product}`}
                                 </button>
                             )}
                             <Link to="/programs" className="rounded-full border border-white/12 bg-white/[0.04] px-6 py-4 text-center text-sm font-black text-white transition hover:bg-white/[0.08]">
