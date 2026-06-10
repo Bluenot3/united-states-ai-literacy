@@ -269,6 +269,11 @@ export const pioneerCurriculum: ProgramCurriculum = {
                             embed: true,
                             instructions: ['Type a simple idea.', 'Remix it.', 'Copy the best version for your image prompt.'],
                         }),
+                        app('Persona Agent Builder', 'Design an AI agent identity — role, audience, tone, hard limit, goal. The tool generates a ready-to-paste system prompt.', 'This is the strongest single move in prompt engineering: stop asking the model questions; tell it who to be.', undefined, 'Demo', {
+                            interactive: 'persona-agent',
+                            instructions: ['Fill role, audience, limit, and goal.', 'Pick a tone.', 'Copy the system prompt and try it in any chat tool.'],
+                            completionHint: 'Save the system prompt as part of your Persona artifact for this section.',
+                        }),
                         app('Advanced Prompt Architect', 'A structured image-prompt builder with style, lighting, composition, aspect ratio, and negative prompt thinking.', 'Think like a prompt architect: choose the ingredients instead of hoping the tool guesses correctly.', undefined, 'Demo', {
                             interactive: 'prompt-architect',
                             instructions: ['Define a subject.', 'Choose style and lighting.', 'Generate a refined prompt you could use in an image tool.'],
