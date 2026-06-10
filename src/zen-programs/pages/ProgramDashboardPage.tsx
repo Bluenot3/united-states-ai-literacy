@@ -2298,7 +2298,176 @@ const DeepfakeCheckMiniApp: React.FC<{ onComplete: () => void }> = ({ onComplete
     );
 };
 
-type HighlightTone = 'cyan' | 'emerald' | 'amber' | 'rose' | 'violet';
+// ────────────────────────────────────────────────────────────────────
+// Pioneer Pass mini-apps (deterministic, no AI calls)
+// ────────────────────────────────────────────────────────────────────
+
+const PredictionEngineMiniApp: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
+    const seeds: Array<{ id: string; starter: string; next: Array<{ token: string; p: number }> }> = [
+        { id: 'mars', starter: 'The first city on Mars will need…', next: [
+            { token: 'oxygen', p: 0.42 }, { token: 'water', p: 0.27 }, { token: 'shelter', p: 0.18 }, { token: 'people', p: 0.13 },
+        ]},
+        { id: 'ai', starter: 'A good AI tutor should always…', next: [
+            { token: 'listen', p: 0.36 }, { token: 'explain', p: 0.31 }, { token: 'check', p: 0.21 }, { token: 'guess', p: 0.12 },
+        ]},
+        { id: 'storm', starter: 'Before the storm arrived, the…', next: [
+            { token: 'sky', p: 0.45 }, { token: 'birds', p: 0.24 }, { token: 'wind', p: 0.20 }, { token: 'kids', p: 0.11 },
+        ]},
+    ];
+    const [seed, setSeed] = useState(seeds[0]);
+    const [picked, setPicked] = useState<string | null>(null);
+    return (
+        <MiniAppShell title="Prediction Engine · Demo" onComplete={onComplete} completeLabel="I can explain prediction">
+            <p className="text-sm font-semibold leading-6 text-slate-100">LLMs do not "think." They predict the next likely token from patterns. Pick a starter and see the model's top guesses, with confidence.</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+                {seeds.map(s => (
+                    <button key={s.id} type="button" onClick={() => { setSeed(s); setPicked(null); }} className={`rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.14em] ${seed.id === s.id ? 'bg-cyan-100 text-slate-950' : 'border border-white/15 bg-white/[0.06] text-slate-100 hover:bg-white/[0.12]'}`}>{s.id}</button>
+                ))}
+            </div>
+            <div className="pioneer-pass pioneer-glint mt-4 p-4">
+                <p className="font-mono text-sm text-cyan-100">{seed.starter} <span className="text-white/40">▍</span></p>
+                <div className="pioneer-thread my-3" />
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-100/80">Top next-token candidates</p>
+                <div className="mt-2 space-y-2">
+                    {seed.next.map(({ token, p }) => (
+                        <button key={token} type="button" onClick={() => setPicked(token)} className={`group flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left transition ${picked === token ? 'border-cyan-200/60 bg-cyan-300/[0.15]' : 'border-white/10 bg-black/30 hover:bg-white/[0.06]'}`}>
+                            <span className="w-20 font-mono text-sm font-black text-white">{token}</span>
+                            <span className="relative h-2 flex-1 overflow-hidden rounded-full bg-white/10">
+                                <span className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-300 to-emerald-300" style={{ width: `${p * 100}%` }} />
+                            </span>
+                            <span className="w-14 text-right font-mono text-xs font-bold text-cyan-100">{Math.round(p * 100)}%</span>
+                        </button>
+                    ))}
+                </div>
+                {picked && <p className="mt-3 text-xs font-semibold text-emerald-100">You picked <span className="font-mono text-white">{picked}</span>. Run the same prompt twice in a real chat — different sampling can flip the order. That is why "the same AI" can give different answers.</p>}
+            </div>
+        </MiniAppShell>
+    );
+};
+
+const TokenBudgetMiniApp: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
+    const CONTEXT_BUDGET = 4096; // demo budget
+    const [text, setText] = useState('Write a 200-word story about a kid in Johannesburg who builds an AI that protects local water sources.');
+    // ~4 chars per token rough heuristic
+    const tokenCount = Math.max(1, Math.ceil(text.trim().length / 4));
+    const chunks: string[] = [];
+    const words = text.split(/\s+/).filter(Boolean);
+    for (let i = 0; i < words.length; i++) {
+        const w = words[i];
+        // split long words into ~4-char "subword" tokens
+        for (let j = 0; j < w.length; j += 4) chunks.push(w.slice(j, j + 4));
+    }
+    const pct = Math.min(100, (tokenCount / CONTEXT_BUDGET) * 100);
+    const palette = ['bg-cyan-300/70', 'bg-emerald-300/70', 'bg-violet-300/70', 'bg-rose-300/70', 'bg-amber-300/70'];
+    return (
+        <MiniAppShell title="Token Budget Visualizer · Demo" onComplete={onComplete} completeLabel="I understand tokens">
+            <p className="text-sm font-semibold leading-6 text-slate-100">Models read text as <em>tokens</em>, not letters. Every model has a <em>context window</em> — a budget. Paste text and watch the meter fill.</p>
+            <textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} className="mt-3 w-full rounded-xl border border-white/12 bg-black/50 p-3 font-mono text-xs text-cyan-50 focus:border-cyan-300/60 focus:outline-none" />
+            <div className="pioneer-pass mt-3 p-4">
+                <div className="flex items-center justify-between">
+                    <span className="pioneer-pill pioneer-pill-demo">{tokenCount} tokens</span>
+                    <span className="font-mono text-xs text-cyan-100">{pct.toFixed(1)}% of {CONTEXT_BUDGET}-token demo window</span>
+                </div>
+                <div className="mt-3 h-3 w-full overflow-hidden rounded-full border border-white/10 bg-black/60">
+                    <div className="h-full bg-gradient-to-r from-cyan-400 via-emerald-300 to-amber-300" style={{ width: `${pct}%` }} />
+                </div>
+                <div className="pioneer-thread my-3" />
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-100/80">Token chunks (first 80)</p>
+                <div className="mt-2 flex flex-wrap gap-1">
+                    {chunks.slice(0, 80).map((c, i) => (
+                        <span key={i} className={`rounded-md px-1.5 py-0.5 font-mono text-[11px] text-slate-900 ${palette[i % palette.length]}`}>{c}</span>
+                    ))}
+                </div>
+                <p className="mt-3 text-xs font-semibold text-emerald-100">Rule of thumb: ≈ 1 token per 4 English characters. Longer chat history = more tokens = more cost and slower replies.</p>
+            </div>
+        </MiniAppShell>
+    );
+};
+
+const PersonaAgentMiniApp: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
+    const [role, setRole] = useState('a calm coding mentor');
+    const [audience, setAudience] = useState('a beginner aged 13');
+    const [tone, setTone] = useState<'kind' | 'direct' | 'playful'>('kind');
+    const [limit, setLimit] = useState('Never invent libraries that do not exist.');
+    const [goal, setGoal] = useState('Help me debug Python without doing the work for me.');
+    const prompt = `You are ${role}.\nYour audience: ${audience}.\nTone: ${tone}.\nHard limit: ${limit}\nGoal: ${goal}\nAlways ask one clarifying question before giving a long answer.`;
+    const [copied, setCopied] = useState(false);
+    return (
+        <MiniAppShell title="Persona Agent Builder · Demo" onComplete={onComplete} completeLabel="Save system prompt">
+            <p className="text-sm font-semibold leading-6 text-slate-100">Design an AI agent identity. Strong personas + clear limits = predictable behavior.</p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                {([
+                    ['Role', role, setRole],
+                    ['Audience', audience, setAudience],
+                    ['Hard limit', limit, setLimit],
+                    ['Goal', goal, setGoal],
+                ] as const).map(([label, val, set]) => (
+                    <label key={label} className="block">
+                        <span className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/80">{label}</span>
+                        <input value={val} onChange={(e) => set(e.target.value)} className="mt-1 w-full rounded-lg border border-white/12 bg-black/45 px-3 py-2 text-sm text-white focus:border-cyan-300/60 focus:outline-none" />
+                    </label>
+                ))}
+                <div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/80">Tone</span>
+                    <div className="mt-1 flex gap-2">
+                        {(['kind', 'direct', 'playful'] as const).map(t => (
+                            <button key={t} type="button" onClick={() => setTone(t)} className={`rounded-full px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] ${tone === t ? 'bg-cyan-100 text-slate-950' : 'border border-white/15 bg-white/[0.06] text-slate-100 hover:bg-white/[0.12]'}`}>{t}</button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+            <div className="pioneer-pass pioneer-glint mt-4 p-4">
+                <div className="flex items-center justify-between">
+                    <span className="pioneer-pill pioneer-pill-artifact">System prompt draft</span>
+                    <button type="button" onClick={() => { navigator.clipboard?.writeText(prompt); setCopied(true); setTimeout(() => setCopied(false), 1500); }} className="rounded-full border border-cyan-200/40 bg-cyan-200/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-cyan-100 hover:bg-cyan-200/20">{copied ? 'Copied' : 'Copy'}</button>
+                </div>
+                <pre className="mt-3 whitespace-pre-wrap font-mono text-xs leading-6 text-emerald-100">{prompt}</pre>
+            </div>
+        </MiniAppShell>
+    );
+};
+
+const ModelFitRouterMiniApp: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
+    type Task = { id: string; label: string; modality: string; pick: string; why: string };
+    const tasks: Task[] = [
+        { id: 'essay', label: 'Help me edit a 500-word essay', modality: 'text', pick: 'GPT-4o / Claude Sonnet', why: 'Strong long-form editing, follows tone, cheap per essay.' },
+        { id: 'mockup', label: 'Generate a product mockup', modality: 'image', pick: 'Flux / Imagen / SDXL', why: 'Image models render scenes; pick Flux for photoreal, SDXL for control.' },
+        { id: 'transcribe', label: 'Transcribe a 30-min interview', modality: 'audio', pick: 'Whisper-large', why: 'Best free, accurate transcription; no voice cloning needed.' },
+        { id: 'unit', label: 'Write Python unit tests', modality: 'code', pick: 'Claude Code / GPT-Codex', why: 'Strong at structured code + tests; cheap models miss edge cases.' },
+        { id: 'clip', label: 'Make a 4-second product clip', modality: 'video', pick: 'Veo / Runway / Kling', why: 'Short clips, consistent subject; expect a few retries.' },
+        { id: 'tutor', label: 'Tutor a 12-year-old on fractions', modality: 'text', pick: 'GPT-4o-mini / Gemini Flash', why: 'Fast, cheap, very capable for K–12 explanations.' },
+    ];
+    const [picked, setPicked] = useState<Task | null>(null);
+    return (
+        <MiniAppShell title="Model Fit Router · Demo" onComplete={onComplete} completeLabel="I can route a task">
+            <p className="text-sm font-semibold leading-6 text-slate-100">Pick the job. The router shows the modality and a model family that usually fits — and one reason why.</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {tasks.map(t => (
+                    <button key={t.id} type="button" onClick={() => setPicked(t)} className={`rounded-xl border p-3 text-left transition ${picked?.id === t.id ? 'border-cyan-200/60 bg-cyan-300/[0.12]' : 'border-white/12 bg-black/35 hover:bg-white/[0.06]'}`}>
+                        <span className="block text-sm font-black text-white">{t.label}</span>
+                        <span className="mt-1 inline-block rounded-full bg-white/[0.08] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-200">{t.modality}</span>
+                    </button>
+                ))}
+            </div>
+            {picked && (
+                <div className="pioneer-pass pioneer-glint mt-4 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-100/80">Routed to</p>
+                            <p className="mt-1 font-mono text-lg font-black text-white">{picked.pick}</p>
+                        </div>
+                        <span className="pioneer-pill pioneer-pill-ready">{picked.modality}</span>
+                    </div>
+                    <div className="pioneer-thread my-3" />
+                    <p className="text-sm font-semibold leading-6 text-emerald-100"><span className="text-cyan-100">Why:</span> {picked.why}</p>
+                    <p className="mt-2 text-[11px] font-semibold text-slate-300">Always run your own comparison in the Arena before committing. These are starting points, not the only right answer.</p>
+                </div>
+            )}
+        </MiniAppShell>
+    );
+};
+
+
 
 const highlightLexicon: Array<{ term: string; tone: HighlightTone }> = ([
     { term: 'artificial intelligence', tone: 'cyan' },
