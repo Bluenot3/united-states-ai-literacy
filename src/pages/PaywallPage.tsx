@@ -14,10 +14,14 @@ const safeInternalPath = (value: string | null) => (
     value && value.startsWith('/') && !value.startsWith('//') ? value : null
 );
 
-const inferProgramSlug = (searchProgram: string | null, returnPath: string | null) => {
-    if (searchProgram) return searchProgram;
-    const match = returnPath?.match(/^\/programs\/([^/]+)/);
-    return match?.[1] ?? 'vanguard';
+const inferProgramSlug = (searchProgram: string | null, returnPath: string | null): 'pioneer' | 'vanguard' | null => {
+    const candidate = (searchProgram ?? '').toLowerCase();
+    if (candidate === 'pioneer' || candidate === 'ai-pioneer') return 'pioneer';
+    if (candidate === 'vanguard') return 'vanguard';
+    const path = (returnPath ?? '').toLowerCase();
+    if (path.includes('/pioneer') || path.includes('/ai-pioneer')) return 'pioneer';
+    if (path.includes('/vanguard') || path.startsWith('/dashboard') || path.startsWith('/module')) return 'vanguard';
+    return null;
 };
 
 const programFeatures = {
@@ -28,12 +32,13 @@ const programFeatures = {
         'Vanguard credential and progress tracking',
     ],
     pioneer: [
-        'Beginner-first AI and LLM foundations',
-        'Guided build labs and creative challenges',
-        'Safe prompting, privacy, and deployment habits',
-        'AI Pioneer credential and launch path',
+        'Hands-on AI literacy labs for ages 11-18',
+        'Prompt, model, and agent-building skills',
+        'Hugging Face Space deployment path',
+        'Portfolio artifacts and certificate readiness',
     ],
 };
+
 
 const PaywallPage: React.FC = () => {
     const location = useLocation();
