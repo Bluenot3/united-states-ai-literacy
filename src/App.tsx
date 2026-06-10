@@ -1,5 +1,5 @@
-import React, { Suspense, useEffect } from 'react';
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import React, { Suspense, useEffect, useState } from 'react';
+import { Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { useAdmin } from './contexts/AdminContext';
 import { useAuth } from './hooks/useAuth';
 import { useBilling } from './contexts/BillingContext';
@@ -7,6 +7,7 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import { ArsenalProvider, useArsenal } from './contexts/ArsenalContext';
 import EcoLaunchHandler from './components/EcoLaunchHandler';
+import { hasProgramAccess, normalizeProgramKey, type ProgramKey } from './services/programAccess';
 
 const LoginPage = React.lazy(() => import('./modules/module1/components/auth/LoginPage'));
 const CredentialForgePage = React.lazy(() => import('./pages/CredentialForgePage'));
