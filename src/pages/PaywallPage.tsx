@@ -46,10 +46,12 @@ const PaywallPage: React.FC = () => {
     const params = new URLSearchParams(location.search);
     const explicitReturn = safeInternalPath(params.get('return_to'));
     const programSlug = inferProgramSlug(params.get('program'), explicitReturn);
-    const program = getProgramBySlug(programSlug) ?? getProgramBySlug('vanguard');
+    const mustSelectProgram = programSlug === null;
+    const program = programSlug ? getProgramBySlug(programSlug) : null;
     const isPioneer = program?.programKey === 'ai-pioneer';
-    const programKind = isPioneer ? 'pioneer' : 'vanguard';
+    const programKind: 'pioneer' | 'vanguard' = programSlug === 'pioneer' || isPioneer ? 'pioneer' : 'vanguard';
     const features = programFeatures[programKind];
+
     // Always route admins / entitled users to the program-specific destination,
     // not the generic /programs hub.
     const programDestination = PROGRAM_DESTINATIONS[programKind];
