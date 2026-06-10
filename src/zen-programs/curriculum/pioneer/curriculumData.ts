@@ -406,6 +406,11 @@ export const pioneerCurriculum: ProgramCurriculum = {
                             instructions: ['Scroll the strengths column.', 'Find one model that fits your project.', 'Write down its biggest known weakness.'],
                             completionHint: 'Launch card — pair this with the Arena activity above.',
                         }),
+                        app('Model Fit Router', 'A fast routing tool: pick a real task and the router shows the modality and a model family that usually fits — with one reason why.', 'Trains the routing instinct every AI builder needs: match the model to the mission instead of using one model for everything.', undefined, 'Demo', {
+                            interactive: 'model-fit-router',
+                            instructions: ['Pick a task card.', 'Read the routed model and the reason.', 'Verify the recommendation in the AI Arena.'],
+                            completionHint: 'Pair this with the Arena and the 3-Provider Comparison Report.',
+                        }),
                         app('Choose the best model for the mission', 'A short scenario sorter: given a real task, pick the modality and a model family that fits it.', 'This is the core skill of Module 2: matching the model to the mission.', undefined, 'Ready', {
                             instructions: ['Read each scenario card.', 'Pick a modality (text, image, audio, video, 3D, code).', 'Pick one model family and defend the choice in one sentence.'],
                         }),
