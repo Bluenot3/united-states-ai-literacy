@@ -447,6 +447,7 @@ const App: React.FC = () => {
                     <Route path="settings" element={<AdminSettings />} />
                     <Route path="programs" element={<ProgramAdminPanel />} />
                     <Route path="curriculum-studio" element={<CurriculumStudio />} />
+                    <Route path="entitlements" element={<AdminEntitlements />} />
                 </Route>
 
                 {/* ── Program routes — require active paid subscription ── */}
