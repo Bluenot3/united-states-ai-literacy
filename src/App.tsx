@@ -313,6 +313,7 @@ const BillingProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
     const { isAuthenticated, loading: authLoading } = useAuth();
     const { entitled, loading: billingLoading } = useBilling();
     const { isEmbedded } = useArsenal();
+    const location = useLocation();
 
     if (isEmbedded) {
         return <>{children}</>;
@@ -323,15 +324,18 @@ const BillingProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
     }
 
     if (!isAuthenticated) {
-        return <Navigate to="/login" replace />;
+        const returnTo = `${location.pathname}${location.search}`;
+        return <Navigate to={`/login?return_to=${encodeURIComponent(returnTo)}`} replace />;
     }
 
     if (!entitled) {
-        return <Navigate to="/paywall" replace />;
+        const returnTo = `${location.pathname}${location.search}`;
+        return <Navigate to={`/paywall?return_to=${encodeURIComponent(returnTo)}`} replace />;
     }
 
     return <>{children}</>;
 };
+
 
 const App: React.FC = () => {
     return (
