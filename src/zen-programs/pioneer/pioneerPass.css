@@ -1,0 +1,189 @@
+/* Pioneer Pass — Ticket.html-inspired holographic credential aesthetic.
+   Reusable utility classes that can be added incrementally to existing JSX
+   without restructuring the dashboard renderer.
+
+   Palette: slate/black base + electric cyan, emerald, soft magenta accents.
+   Mobile-safe. Reduced-motion friendly. */
+
+:root {
+  --pp-base: #04060c;
+  --pp-ink: #e6f3ff;
+  --pp-cyan: 103, 232, 249;
+  --pp-emerald: 110, 231, 183;
+  --pp-magenta: 232, 121, 249;
+  --pp-foil: rgba(255, 255, 255, 0.92);
+}
+
+/* --- Holographic pass panel ----------------------------------------- */
+.pioneer-pass {
+  position: relative;
+  isolation: isolate;
+  border-radius: 1.5rem;
+  background:
+    linear-gradient(155deg,
+      rgba(2, 6, 23, 0.96) 0%,
+      rgba(6, 26, 50, 0.92) 45%,
+      rgba(8, 47, 73, 0.88) 100%);
+  border: 1px solid rgba(var(--pp-cyan), 0.22);
+  box-shadow:
+    0 32px 92px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+}
+
+.pioneer-pass::before {
+  /* Spectral foil sheen */
+  content: '';
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 60% at 0% 0%, rgba(var(--pp-cyan), 0.18), transparent 60%),
+    radial-gradient(120% 60% at 100% 0%, rgba(var(--pp-magenta), 0.12), transparent 55%),
+    radial-gradient(140% 80% at 50% 120%, rgba(var(--pp-emerald), 0.14), transparent 60%);
+  mix-blend-mode: screen;
+  opacity: 0.85;
+  z-index: 0;
+}
+
+.pioneer-pass::after {
+  /* Security thread lines */
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(115deg,
+      rgba(255, 255, 255, 0.045) 0 1px,
+      transparent 1px 14px);
+  z-index: 0;
+}
+
+.pioneer-pass > * { position: relative; z-index: 1; }
+
+/* --- Perforated edge (top + bottom) -------------------------------- */
+.pioneer-pass-perforated::before {
+  background:
+    radial-gradient(circle at center, rgba(0,0,0,1) 4px, transparent 5px) repeat-x;
+}
+
+/* --- Foil glint sweep --------------------------------------------- */
+.pioneer-glint { position: relative; overflow: hidden; }
+.pioneer-glint::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0; left: -40%;
+  width: 35%;
+  background: linear-gradient(115deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.18) 40%,
+    rgba(var(--pp-cyan), 0.32) 50%,
+    rgba(255, 255, 255, 0.18) 60%,
+    transparent 100%);
+  transform: skewX(-18deg);
+  transition: left 0.9s ease;
+  pointer-events: none;
+}
+.pioneer-glint:hover::after { left: 120%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pioneer-glint::after { transition: none; display: none; }
+}
+
+/* --- Security thread divider --------------------------------------- */
+.pioneer-thread {
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(var(--pp-cyan), 0.7) 18%,
+    rgba(255, 255, 255, 0.55) 50%,
+    rgba(var(--pp-emerald), 0.7) 82%,
+    transparent);
+  box-shadow: 0 0 14px rgba(var(--pp-cyan), 0.35);
+}
+
+/* --- Barcode strip (pure CSS proof-of-work) ----------------------- */
+.pioneer-barcode {
+  display: block;
+  height: 28px;
+  width: 100%;
+  background-image: repeating-linear-gradient(90deg,
+    rgba(230, 243, 255, 0.92) 0 2px,
+    transparent 2px 4px,
+    rgba(230, 243, 255, 0.92) 4px 5px,
+    transparent 5px 8px,
+    rgba(230, 243, 255, 0.92) 8px 11px,
+    transparent 11px 13px,
+    rgba(230, 243, 255, 0.92) 13px 14px,
+    transparent 14px 18px);
+  border-radius: 4px;
+  opacity: 0.85;
+}
+
+/* --- Mini QR mosaic ------------------------------------------------ */
+.pioneer-qr {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(7, 1fr);
+  gap: 1px;
+  padding: 3px;
+  background: rgba(230, 243, 255, 0.06);
+  border: 1px solid rgba(var(--pp-cyan), 0.35);
+  border-radius: 6px;
+}
+.pioneer-qr i {
+  background: rgba(230, 243, 255, 0.9);
+  display: block;
+}
+.pioneer-qr i.off { background: transparent; }
+
+/* --- Status pills -------------------------------------------------- */
+.pioneer-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e6f3ff;
+}
+.pioneer-pill::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 9999px;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+}
+.pioneer-pill-active   { color: rgb(var(--pp-cyan)); border-color: rgba(var(--pp-cyan), 0.45); background: rgba(var(--pp-cyan), 0.10); }
+.pioneer-pill-ready    { color: rgb(var(--pp-emerald)); border-color: rgba(var(--pp-emerald), 0.45); background: rgba(var(--pp-emerald), 0.10); }
+.pioneer-pill-demo     { color: rgb(var(--pp-magenta)); border-color: rgba(var(--pp-magenta), 0.45); background: rgba(var(--pp-magenta), 0.10); }
+.pioneer-pill-external { color: #fcd34d; border-color: rgba(252, 211, 77, 0.45); background: rgba(252, 211, 77, 0.10); }
+.pioneer-pill-coming   { color: #cbd5e1; border-color: rgba(203, 213, 225, 0.35); background: rgba(203, 213, 225, 0.08); }
+.pioneer-pill-artifact { color: rgb(var(--pp-cyan)); border-color: rgba(var(--pp-cyan), 0.55); background: rgba(var(--pp-cyan), 0.16); }
+
+/* --- Reflection terminal ------------------------------------------- */
+.pioneer-reflection-term {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  background: #02050b;
+  border: 1px solid rgba(var(--pp-emerald), 0.32);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: rgb(var(--pp-emerald));
+  box-shadow: inset 0 0 32px rgba(var(--pp-emerald), 0.10);
+}
+.pioneer-reflection-term::before {
+  content: '> reflection.log';
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: rgba(110, 231, 183, 0.7);
+  margin-bottom: 6px;
+}

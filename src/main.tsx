@@ -11,6 +11,7 @@ import { SidebarProvider } from './contexts/SidebarContext';
 const SettingsPanel = React.lazy(() => import('./components/SettingsPanel'));
 import './index.css';
 import './styles/zen-ops.css';
+import './zen-programs/pioneer/pioneerPass.css';
 
 import { FriendlyErrorBoundary } from './components/FriendlyErrorBoundary';
 

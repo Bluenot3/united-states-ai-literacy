@@ -112,6 +112,15 @@ export const pioneerCurriculum: ProgramCurriculum = {
                             tone: 'success',
                         },
                         { type: 'heading', content: 'Explore' },
+                        app('Prediction Engine Simulator', 'A live demo of next-token prediction with confidence bars. Pick a starter and see the model\'s top guesses.', 'This is the core lesson of Section 1: LLMs predict patterns. They do not think. That is why the same prompt can produce different answers.', undefined, 'Demo', {
+                            interactive: 'prediction-engine',
+                            instructions: ['Pick a sentence starter.', 'Read the top 4 candidate tokens and their confidence.', 'Explain why the order can flip between runs.'],
+                            completionHint: 'Start here — this single demo unlocks every other concept in Section 1.',
+                        }),
+                        app('Token Budget Visualizer', 'Paste text and watch it split into tokens. A context-window meter shows how much of the model\'s budget you used.', 'Tokens are the unit AI tools count, charge, and forget. Builders who think in tokens ship apps that stay fast and cheap.', undefined, 'Demo', {
+                            interactive: 'token-budget',
+                            instructions: ['Paste a paragraph.', 'Read the token count and meter.', 'Try shortening the text — watch the meter drop.'],
+                        }),
                         app('AI Signal Loop', 'A visual map that shows how your input moves through a model, becomes an output, and comes back to you for a human check.', 'Use this first so AI feels like a system you can control, not a mystery box.', undefined, 'Ready', {
                             interactive: 'ai-signal-loop',
                             instructions: ['Choose a scenario.', 'Follow input, model, output, and human check.', 'Explain why the human check matters.'],
@@ -260,6 +269,11 @@ export const pioneerCurriculum: ProgramCurriculum = {
                             embed: true,
                             instructions: ['Type a simple idea.', 'Remix it.', 'Copy the best version for your image prompt.'],
                         }),
+                        app('Persona Agent Builder', 'Design an AI agent identity — role, audience, tone, hard limit, goal. The tool generates a ready-to-paste system prompt.', 'This is the strongest single move in prompt engineering: stop asking the model questions; tell it who to be.', undefined, 'Demo', {
+                            interactive: 'persona-agent',
+                            instructions: ['Fill role, audience, limit, and goal.', 'Pick a tone.', 'Copy the system prompt and try it in any chat tool.'],
+                            completionHint: 'Save the system prompt as part of your Persona artifact for this section.',
+                        }),
                         app('Advanced Prompt Architect', 'A structured image-prompt builder with style, lighting, composition, aspect ratio, and negative prompt thinking.', 'Think like a prompt architect: choose the ingredients instead of hoping the tool guesses correctly.', undefined, 'Demo', {
                             interactive: 'prompt-architect',
                             instructions: ['Define a subject.', 'Choose style and lighting.', 'Generate a refined prompt you could use in an image tool.'],
@@ -391,6 +405,11 @@ export const pioneerCurriculum: ProgramCurriculum = {
                         app('Model strengths & weaknesses card', 'A printable/scrollable map of what top models do well and where they fall short.', 'Helps you stop guessing and start choosing models like a pro.', undefined, 'Ready', {
                             instructions: ['Scroll the strengths column.', 'Find one model that fits your project.', 'Write down its biggest known weakness.'],
                             completionHint: 'Launch card — pair this with the Arena activity above.',
+                        }),
+                        app('Model Fit Router', 'A fast routing tool: pick a real task and the router shows the modality and a model family that usually fits — with one reason why.', 'Trains the routing instinct every AI builder needs: match the model to the mission instead of using one model for everything.', undefined, 'Demo', {
+                            interactive: 'model-fit-router',
+                            instructions: ['Pick a task card.', 'Read the routed model and the reason.', 'Verify the recommendation in the AI Arena.'],
+                            completionHint: 'Pair this with the Arena and the 3-Provider Comparison Report.',
                         }),
                         app('Choose the best model for the mission', 'A short scenario sorter: given a real task, pick the modality and a model family that fits it.', 'This is the core skill of Module 2: matching the model to the mission.', undefined, 'Ready', {
                             instructions: ['Read each scenario card.', 'Pick a modality (text, image, audio, video, 3D, code).', 'Pick one model family and defend the choice in one sentence.'],
