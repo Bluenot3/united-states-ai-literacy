@@ -230,7 +230,6 @@ const PaywallPage: React.FC = () => {
                                     {loading ? 'Opening checkout...' : isAuthenticated ? `Activate ${panelCopy.product}` : `Sign in to activate ${panelCopy.product}`}
                                 </button>
                             )}
-                            </button>
                             <Link to="/programs" className="rounded-full border border-white/12 bg-white/[0.04] px-6 py-4 text-center text-sm font-black text-white transition hover:bg-white/[0.08]">
                                 Programs
                             </Link>
