@@ -308,15 +308,26 @@ app.post('/api/stripe/create-checkout-session', async (req, res) => {
         return;
     }
 
-    const { userEmail } = req.body;
+    const { userEmail, userId, programKey: rawProgramKey, returnPath } = req.body;
 
     if (!isValidEmail(userEmail)) {
         res.status(400).json({ error: 'A valid email is required.' });
         return;
     }
 
-    if (!process.env.STRIPE_PRICE_ID) {
-        res.status(503).json({ error: 'STRIPE_PRICE_ID is not configured.' });
+    // Per-program price lookup, with global STRIPE_PRICE_ID as backward-compat fallback.
+    const normalizedKey = (rawProgramKey || '').toLowerCase();
+    const programKey = normalizedKey === 'pioneer' || normalizedKey === 'ai-pioneer'
+        ? 'pioneer'
+        : normalizedKey === 'vanguard'
+            ? 'vanguard'
+            : null;
+    const priceId = (programKey === 'pioneer' && process.env.STRIPE_PIONEER_PRICE_ID)
+        || (programKey === 'vanguard' && process.env.STRIPE_VANGUARD_PRICE_ID)
+        || process.env.STRIPE_PRICE_ID;
+
+    if (!priceId) {
+        res.status(503).json({ error: 'No Stripe price configured for this program.' });
         return;
     }
 
@@ -326,18 +337,25 @@ app.post('/api/stripe/create-checkout-session', async (req, res) => {
             mode: 'subscription',
             payment_method_types: ['card'],
             customer_email: userEmail,
-            line_items: [
-                {
-                    price: process.env.STRIPE_PRICE_ID,
-                    quantity: 1,
+            line_items: [{ price: priceId, quantity: 1 }],
+            success_url: `${trustedOrigin}/billing/success?session_id={CHECKOUT_SESSION_ID}&program=${programKey ?? ''}`,
+            cancel_url: `${trustedOrigin}/paywall?canceled=true${programKey ? `&program=${programKey}` : ''}`,
+            metadata: {
+                userEmail,
+                user_id: userId || '',
+                program_key: programKey || '',
+                return_to: returnPath || '',
+            },
+            subscription_data: {
+                metadata: {
+                    userEmail,
+                    user_id: userId || '',
+                    program_key: programKey || '',
                 },
-            ],
-            success_url: `${trustedOrigin}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${trustedOrigin}/paywall?canceled=true`,
-            metadata: { userEmail },
+            },
         });
 
-        console.log(`Checkout session created for ${userEmail}`);
+        console.log(`Checkout session created for ${userEmail} (program=${programKey || 'unspecified'})`);
         res.json({ url: session.url, sessionId: session.id });
     } catch (error) {
         console.error('Stripe checkout error:', error);
