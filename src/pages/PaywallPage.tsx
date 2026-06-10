@@ -66,11 +66,11 @@ const PaywallPage: React.FC = () => {
     const signedInAdmin = isAdminEmail(user?.email);
 
     const panelCopy = useMemo(() => {
-        if (isPioneer) {
+        if (programKind === 'pioneer') {
             return {
                 eyebrow: 'AI Pioneer program access',
-                headline: 'Your AI Pioneer seat is ready.',
-                body: 'Registration is recorded. Activate the program seat to enter the build path, labs, progress system, and credential track.',
+                headline: 'Enter the AI Pioneer Program.',
+                body: 'Build, launch, and showcase real AI tools. Activate your seat to unlock the build path, labs, Hugging Face deployment, portfolio artifacts, and certificate track.',
                 price: '$45 program access',
                 product: 'AI Pioneer Program',
                 image: '/zen-brand-logo-light.png',
@@ -81,13 +81,14 @@ const PaywallPage: React.FC = () => {
         return {
             eyebrow: 'ZEN Vanguard program access',
             headline: 'Enter the Vanguard operator track.',
-            body: 'Registration is recorded. Activate full access to the Vanguard systems curriculum, operator labs, certificates, and progress layer.',
+            body: 'Operator-grade AI systems training. Activate full access to the Vanguard systems curriculum, operator labs, certificates, and progress layer.',
             price: '$75 program access',
             product: 'ZEN Vanguard Program',
             image: '/zen-logo-alt.png',
             accent: 'from-zen-gold via-cyan-300 to-emerald-300',
         };
-    }, [isPioneer]);
+    }, [programKind]);
+
 
     const goTo = (target: string) => {
         if (/^https?:\/\//i.test(target)) {
