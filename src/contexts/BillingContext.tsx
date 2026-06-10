@@ -219,10 +219,21 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
         try {
             setError(null);
+            const programKey = (() => {
+                const p = (returnPath || '').toLowerCase();
+                if (p.includes('/pioneer') || p.includes('/ai-pioneer')) return 'pioneer';
+                if (p.includes('/vanguard') || p.startsWith('/dashboard') || p.startsWith('/module')) return 'vanguard';
+                return null;
+            })();
             const response = await fetch(`${API_BASE}/api/stripe/create-checkout-session`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userEmail: user.email, returnPath }),
+                body: JSON.stringify({
+                    userEmail: user.email,
+                    userId: user.id,
+                    programKey,
+                    returnPath,
+                }),
             });
 
             const data = await response.json();
