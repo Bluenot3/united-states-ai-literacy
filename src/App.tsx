@@ -75,8 +75,9 @@ const documentMetaMatchers: Array<{
     {
         match: (pathname) => pathname === '/paywall',
         meta: {
-            title: 'Membership Access | ZEN Vanguard',
-            description: 'Unlock the ZEN Vanguard curriculum, certifications, and advanced AI literacy program features.',
+            title: 'Program Access | ZEN AI Co.',
+            description: 'Activate access to your selected ZEN program: AI Pioneer, Vanguard, and more.',
+
             robots: 'noindex,nofollow',
         },
     },
@@ -313,6 +314,7 @@ const BillingProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
     const { isAuthenticated, loading: authLoading } = useAuth();
     const { entitled, loading: billingLoading } = useBilling();
     const { isEmbedded } = useArsenal();
+    const location = useLocation();
 
     if (isEmbedded) {
         return <>{children}</>;
@@ -323,15 +325,18 @@ const BillingProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
     }
 
     if (!isAuthenticated) {
-        return <Navigate to="/login" replace />;
+        const returnTo = `${location.pathname}${location.search}`;
+        return <Navigate to={`/login?return_to=${encodeURIComponent(returnTo)}`} replace />;
     }
 
     if (!entitled) {
-        return <Navigate to="/paywall" replace />;
+        const returnTo = `${location.pathname}${location.search}`;
+        return <Navigate to={`/paywall?return_to=${encodeURIComponent(returnTo)}`} replace />;
     }
 
     return <>{children}</>;
 };
+
 
 const App: React.FC = () => {
     return (

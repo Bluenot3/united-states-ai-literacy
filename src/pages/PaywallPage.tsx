@@ -14,10 +14,14 @@ const safeInternalPath = (value: string | null) => (
     value && value.startsWith('/') && !value.startsWith('//') ? value : null
 );
 
-const inferProgramSlug = (searchProgram: string | null, returnPath: string | null) => {
-    if (searchProgram) return searchProgram;
-    const match = returnPath?.match(/^\/programs\/([^/]+)/);
-    return match?.[1] ?? 'vanguard';
+const inferProgramSlug = (searchProgram: string | null, returnPath: string | null): 'pioneer' | 'vanguard' | null => {
+    const candidate = (searchProgram ?? '').toLowerCase();
+    if (candidate === 'pioneer' || candidate === 'ai-pioneer') return 'pioneer';
+    if (candidate === 'vanguard') return 'vanguard';
+    const path = (returnPath ?? '').toLowerCase();
+    if (path.includes('/pioneer') || path.includes('/ai-pioneer')) return 'pioneer';
+    if (path.includes('/vanguard') || path.startsWith('/dashboard') || path.startsWith('/module')) return 'vanguard';
+    return null;
 };
 
 const programFeatures = {
@@ -28,12 +32,13 @@ const programFeatures = {
         'Vanguard credential and progress tracking',
     ],
     pioneer: [
-        'Beginner-first AI and LLM foundations',
-        'Guided build labs and creative challenges',
-        'Safe prompting, privacy, and deployment habits',
-        'AI Pioneer credential and launch path',
+        'Hands-on AI literacy labs for ages 11-18',
+        'Prompt, model, and agent-building skills',
+        'Hugging Face Space deployment path',
+        'Portfolio artifacts and certificate readiness',
     ],
 };
+
 
 const PaywallPage: React.FC = () => {
     const location = useLocation();
@@ -41,10 +46,12 @@ const PaywallPage: React.FC = () => {
     const params = new URLSearchParams(location.search);
     const explicitReturn = safeInternalPath(params.get('return_to'));
     const programSlug = inferProgramSlug(params.get('program'), explicitReturn);
-    const program = getProgramBySlug(programSlug) ?? getProgramBySlug('vanguard');
+    const mustSelectProgram = programSlug === null;
+    const program = programSlug ? getProgramBySlug(programSlug) : null;
     const isPioneer = program?.programKey === 'ai-pioneer';
-    const programKind = isPioneer ? 'pioneer' : 'vanguard';
+    const programKind: 'pioneer' | 'vanguard' = programSlug === 'pioneer' || isPioneer ? 'pioneer' : 'vanguard';
     const features = programFeatures[programKind];
+
     // Always route admins / entitled users to the program-specific destination,
     // not the generic /programs hub.
     const programDestination = PROGRAM_DESTINATIONS[programKind];
@@ -59,11 +66,11 @@ const PaywallPage: React.FC = () => {
     const signedInAdmin = isAdminEmail(user?.email);
 
     const panelCopy = useMemo(() => {
-        if (isPioneer) {
+        if (programKind === 'pioneer') {
             return {
                 eyebrow: 'AI Pioneer program access',
-                headline: 'Your AI Pioneer seat is ready.',
-                body: 'Registration is recorded. Activate the program seat to enter the build path, labs, progress system, and credential track.',
+                headline: 'Enter the AI Pioneer Program.',
+                body: 'Build, launch, and showcase real AI tools. Activate your seat to unlock the build path, labs, Hugging Face deployment, portfolio artifacts, and certificate track.',
                 price: '$45 program access',
                 product: 'AI Pioneer Program',
                 image: '/zen-brand-logo-light.png',
@@ -74,13 +81,14 @@ const PaywallPage: React.FC = () => {
         return {
             eyebrow: 'ZEN Vanguard program access',
             headline: 'Enter the Vanguard operator track.',
-            body: 'Registration is recorded. Activate full access to the Vanguard systems curriculum, operator labs, certificates, and progress layer.',
+            body: 'Operator-grade AI systems training. Activate full access to the Vanguard systems curriculum, operator labs, certificates, and progress layer.',
             price: '$75 program access',
             product: 'ZEN Vanguard Program',
             image: '/zen-logo-alt.png',
             accent: 'from-zen-gold via-cyan-300 to-emerald-300',
         };
-    }, [isPioneer]);
+    }, [programKind]);
+
 
     const goTo = (target: string) => {
         if (/^https?:\/\//i.test(target)) {
@@ -143,7 +151,76 @@ const PaywallPage: React.FC = () => {
 
     const hasAccess = entitled || signedInAdmin;
 
+    if (mustSelectProgram) {
+        const choices: Array<{ slug: 'pioneer' | 'vanguard'; title: string; subtitle: string; price: string; accent: string; bullets: string[] }> = [
+            {
+                slug: 'pioneer',
+                title: 'AI Pioneer Program',
+                subtitle: 'Build, launch, and showcase real AI tools. Ages 11-18.',
+                price: '$45 program access',
+                accent: 'from-cyan-300 via-blue-400 to-violet-400',
+                bullets: programFeatures.pioneer,
+            },
+            {
+                slug: 'vanguard',
+                title: 'ZEN Vanguard',
+                subtitle: 'Operator-grade AI systems training. Adults & professionals.',
+                price: '$75 program access',
+                accent: 'from-zen-gold via-cyan-300 to-emerald-300',
+                bullets: programFeatures.vanguard,
+            },
+        ];
+        return (
+            <main className="relative min-h-screen overflow-hidden bg-[#02040a] text-white">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(201,168,76,0.16),transparent_32%),radial-gradient(circle_at_82%_16%,rgba(34,211,238,0.14),transparent_30%),linear-gradient(135deg,#02040a_0%,#07111f_48%,#03101a_100%)]" />
+                <section className="relative z-10 mx-auto w-full max-w-6xl px-5 py-14 lg:px-8">
+                    <div className="mb-10 flex items-center gap-4">
+                        <img src="/zen-logo-alt.png" alt="ZEN" className="h-14 w-14 rounded-2xl border border-white/10 object-cover shadow-[0_0_28px_rgba(34,211,238,0.16)]" />
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.34em] text-zen-gold">ZEN AI Co.</p>
+                            <p className="mt-1 text-sm text-slate-400">Choose a program to activate</p>
+                        </div>
+                    </div>
+                    <h1 className="max-w-3xl text-4xl font-black tracking-tight sm:text-5xl">Pick the ZEN program you want to access.</h1>
+                    <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">Each program has its own access pass, curriculum, and credential track. Select one to continue to its activation page.</p>
+                    <div className="mt-10 grid gap-6 md:grid-cols-2">
+                        {choices.map((choice) => (
+                            <Link
+                                key={choice.slug}
+                                to={`/paywall?program=${choice.slug}`}
+                                className="group relative overflow-hidden rounded-[2rem] border border-white/12 bg-slate-950/72 p-7 shadow-[0_36px_120px_rgba(0,0,0,0.42)] backdrop-blur-2xl transition hover:-translate-y-1 hover:border-white/30"
+                            >
+                                <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${choice.accent}`} />
+                                <div className="flex items-center justify-between">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-cyan-100">Program access pass</p>
+                                    <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-slate-300">{choice.price}</span>
+                                </div>
+                                <h2 className="mt-5 text-3xl font-black tracking-tight">{choice.title}</h2>
+                                <p className="mt-3 text-sm leading-6 text-slate-300">{choice.subtitle}</p>
+                                <div className="mt-6 grid gap-2">
+                                    {choice.bullets.map((b) => (
+                                        <div key={b} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-2.5">
+                                            <span className={`h-2.5 w-2.5 rounded-full bg-gradient-to-r ${choice.accent}`} />
+                                            <span className="text-sm font-semibold text-slate-200">{b}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className={`mt-6 inline-flex rounded-full bg-gradient-to-r ${choice.accent} px-5 py-3 text-sm font-black text-slate-950 shadow-[0_0_42px_rgba(201,168,76,0.18)] transition group-hover:-translate-y-0.5`}>
+                                    Continue to {choice.title}
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                    <div className="mt-10">
+                        <Link to="/programs" className="text-sm font-semibold text-slate-400 underline-offset-4 hover:text-white hover:underline">View all programs</Link>
+                    </div>
+                </section>
+            </main>
+        );
+    }
+
     return (
+
         <main className="relative min-h-screen overflow-hidden bg-[#02040a] text-white">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(201,168,76,0.16),transparent_32%),radial-gradient(circle_at_82%_16%,rgba(34,211,238,0.14),transparent_30%),linear-gradient(135deg,#02040a_0%,#07111f_48%,#03101a_100%)]" />
             <div className="absolute inset-0 opacity-[0.055]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.35) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.35) 1px, transparent 1px)', backgroundSize: '54px 54px' }} />
