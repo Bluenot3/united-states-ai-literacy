@@ -631,84 +631,347 @@ openai>=1.0.0
         },
         {
             id: 'module-3',
-            title: 'Module 3: Working AI Apps and Launch Prep',
+            title: 'Module 3: AI App Building, Code & Knowledge',
             icon: 'M3',
             content: [
                 { type: 'heading', content: 'What you will do' },
                 {
                     type: 'list',
                     content: [
-                        'Review the first half and compare stronger AI systems.',
-                        'Use dashboards, science simulations, model labs, and agent frameworks.',
-                        'Prepare a public Hugging Face launch direction.',
+                        'Ship 2 — build (or plan) ZEN Code Forge, a code-generation app you can read, test, and trust.',
+                        'Ship 3 — build (or plan) ZEN Knowledge Brain, a grounded notes-based Q&A app that cites its sources.',
+                        'Practice reading AI-written code, spotting bugs, and refusing to answer when you do not know.',
                     ],
+                },
+                {
+                    type: 'callout',
+                    title: 'Why this module matters',
+                    content: 'Module 2 proved you can deploy an AI app. Module 3 levels you up into the two hardest, most useful kinds of AI apps in the world: apps that write code, and apps that answer questions from a real knowledge base. After this, you stop being a prompter and start being a builder of systems.',
+                    tone: 'info',
                 },
             ],
             subSections: [
                 {
                     id: 'm3-s5',
-                    title: 'Section 5: Review, Dashboards, Science, and Agents',
-                    icon: '05',
+                    title: 'Section 1: Ship 2 — ZEN Code Forge',
+                    icon: '01',
                     content: [
+                        { type: 'heading', content: 'Module 3 · Week 5 · Section 1' },
+                        {
+                            type: 'callout',
+                            title: 'Core question',
+                            content: 'Can my app write working code?',
+                            tone: 'info',
+                        },
+                        {
+                            type: 'callout',
+                            title: 'Student outcome',
+                            content: 'You understand how AI code-generation apps work, you can read AI-written code before trusting it, and you can prepare a simple Code Forge-style app artifact — either a live URL or a polished Code Reading Log.',
+                            tone: 'success',
+                        },
                         { type: 'heading', content: 'Learn' },
                         {
                             type: 'paragraph',
-                            content: 'Students consolidate the first half, inspect stronger tools, and connect AI literacy to science, dashboards, agents, and model experimentation.',
+                            content: 'AI can write code in seconds. That does not mean the code works, is safe, or does what you actually asked. In Ship 2 you build the mindset of a real engineer: AI writes a draft, you are the operator who reads, tests, and decides whether it ships.',
                         },
-                        { type: 'heading', content: 'Explore' },
-                        app('Interactive Stats Dashboard', 'A dashboard for reviewing AI stats and patterns.', 'Builds the habit of comparing evidence instead of guessing.', undefined, 'Demo'),
-                        app('AI Review App', 'A structured review tool for checking project quality.', 'Supports better iteration before launch.', undefined, 'Demo'),
-                        app('NASA / Science Simulation', 'A science-focused AI simulation activity.', 'Shows AI as a tool for discovery and explanation.', undefined, 'External'),
-                        app('NVIDIA Build', 'NVIDIA learning/build resources.', 'Connect your project ideas to industry-grade AI tooling.', 'https://build.nvidia.com/', 'External'),
-                        app('Google Labs', 'Experimental Google AI tools.', 'Observe where AI products are heading and what new interfaces make possible.', 'https://labs.google/', 'External'),
-                        app('AI Test Kitchen / Data Science Agent', 'Experimental AI and data science workflows.', 'Introduces testing, analysis, and agent-assisted work.', undefined, 'External'),
-                        app('TensorFlow Playground', 'A visual neural-network playground.', 'Makes model training and decision boundaries visible.', 'https://playground.tensorflow.org/', 'External'),
-                        app('Enhanced AI Agent Framework', 'A structured view of observe, think, act, and repeat.', 'Prepare for tool-using AI systems by seeing the agent loop clearly.', undefined, 'Demo'),
+                        {
+                            type: 'list',
+                            content: [
+                                'AI code is a draft, not a guarantee.',
+                                'Read before running — always.',
+                                'Never paste secrets, real API keys, or passwords into code you got from an AI.',
+                                'Test small before scaling: one input, one function, one outcome at a time.',
+                                'Explain what the code should do, in your own words, before you trust it.',
+                            ],
+                        },
+                        {
+                            type: 'callout',
+                            title: 'Helper for younger Pioneers',
+                            content: 'Think of AI-written code like a homework answer from a smart friend. It might be right. It might be totally wrong with great confidence. You still have to read it, understand it, and put your name on it before you turn it in.',
+                            tone: 'info',
+                        },
+                        { type: 'heading', content: 'Concept cards' },
+                        app('Code-generation app concept', 'A Code Forge-style app takes a request like "write a Python function that reverses a string" and returns working code plus an explanation.', 'This is the pattern behind GitHub Copilot, Cursor, Claude Code, and the code panel of every major AI chat product.', undefined, 'Ready', {
+                            instructions: ['Imagine one small coding task you would actually want help with.', 'Write the request in one clear sentence.', 'Note what language you want back.'],
+                            completionHint: 'Launch card — used as a teaching concept for the Code Forge ship.',
+                        }),
+                        app('Language picker card', 'A simple dropdown: Python, JavaScript, HTML, SQL, Bash. The model is told which language to write.', 'Telling the model the target language up front cuts errors massively. Vague prompts produce vague code.', undefined, 'Ready', {
+                            instructions: ['Pick your default language.', 'Note one task that is easier in that language.', 'Note one task you would switch languages for.'],
+                        }),
+                        app('Copy button card', 'A one-click copy button on every code block so students move code into a real editor to test it.', 'Reading code in a chat window is not enough. Real engineers run code in real environments.', undefined, 'Ready', {
+                            instructions: ['Decide where you will run the copied code (Replit, VS Code, browser console, terminal).', 'Confirm you have that environment open before generating code.', 'Plan one tiny test you will run first.'],
+                        }),
+                        {
+                            type: 'callout',
+                            title: 'Explain-before-run rule',
+                            content: 'Before you run any AI-written code, say out loud (or write down) what it should do, line by line, in plain English. If you cannot explain it, do not run it. This single rule separates safe AI builders from the people who break production.',
+                            tone: 'warning',
+                        },
+                        { type: 'heading', content: 'Safety' },
+                        app('Safe code checklist', 'A five-point check before running any AI-generated code: do I understand it, does it touch the network, does it touch the filesystem, does it ask for secrets, can I roll it back?', 'This is the same checklist senior engineers run in their head every day.', undefined, 'Ready', {
+                            instructions: ['Save the five points somewhere visible.', 'Apply them to the next snippet you generate.', 'Refuse to run anything that fails the check.'],
+                        }),
+                        app('What makes code dangerous?', 'Code is dangerous when it deletes files, sends data to unknown servers, executes shell commands you did not approve, or hardcodes secrets.', 'Knowing the danger signs lets you spot bad AI suggestions instantly — before they cost you.', undefined, 'Ready', {
+                            instructions: ['List the four danger signs from memory.', 'Find one example of each in real-world code online.', 'Decide what you would change before running it.'],
+                        }),
+                        {
+                            type: 'callout',
+                            title: 'Never paste real secrets',
+                            content: 'Never paste real API keys, passwords, database URLs, or tokens into an AI prompt or AI-generated code you share. Use only fake placeholders like sk-demo-REPLACE_WITH_YOUR_OWN_KEY. If a real secret ever lands in chat, rotate it immediately.',
+                            tone: 'warning',
+                        },
+                        { type: 'heading', content: 'Activities' },
+                        app('Code Reading Log', 'A short log: paste a snippet of AI-generated code, then write what each block does in your own words, then mark it Safe to Run / Needs Edits / Refuse.', 'This is the single fastest way to build engineering intuition. It turns passive copy-paste into active understanding.', undefined, 'Ready', {
+                            instructions: ['Generate one small snippet from any AI tool.', 'Walk through it line by line in plain English.', 'Mark it Safe / Needs Edits / Refuse and explain why.'],
+                            completionHint: 'You can submit this log as your Section 1 artifact instead of a live app.',
+                        }),
+                        app('Bug Hunt', 'You will be given (or you generate) a snippet with at least one bug. Your job is to find it without running it first.', 'Real engineers can read code and predict failures. This activity trains that exact muscle.', undefined, 'Ready', {
+                            instructions: ['Read the snippet twice without running it.', 'Mark the suspicious line.', 'Write what should happen vs what will happen.', 'Then run it to confirm.'],
+                        }),
+                        { type: 'heading', content: 'Ship 2 plan — ZEN Code Forge' },
+                        app('ZEN Code Forge — launch plan', 'A Gradio app with a prompt box, a language picker, and a code output box. The user describes a task, picks a language, and gets a code draft with an explanation.', 'This is your second public AI app. Even if you only ship the plan this week, the plan itself is real engineering work.', undefined, 'Ready', {
+                            instructions: ['Sketch the UI: prompt box, language dropdown, output area, copy button.', 'Write the system instruction: "You are ZEN Code Forge. Generate readable, commented, safe code in the chosen language. Refuse dangerous requests."', 'List the files you would need: app.py, requirements.txt, README.md.', 'Decide your artifact: live Hugging Face Space URL or detailed launch plan.'],
+                            completionHint: 'Launch card — pair this plan with the starter code below.',
+                        }),
+                        { type: 'heading', content: 'Starter code: ZEN Code Forge (app.py)' },
+                        {
+                            type: 'code',
+                            language: 'python',
+                            content: `import os
+import gradio as gr
+from openai import OpenAI
+
+# Read the key from Hugging Face Space Secrets.
+# NEVER hardcode a real key. The placeholder below is fake and safe.
+API_KEY = os.environ.get("OPENAI_API_KEY", "sk-demo-REPLACE_WITH_YOUR_OWN_KEY")
+client = OpenAI(api_key=API_KEY)
+
+SYSTEM_PROMPT = (
+    "You are ZEN Code Forge. Generate clear, well-commented code "
+    "in the language the user picks. Explain what the code does in "
+    "plain English at the top. Refuse dangerous requests like "
+    "deleting files, scraping private data, or hardcoding secrets."
+)
+
+LANGUAGES = ["Python", "JavaScript", "HTML", "SQL", "Bash"]
+
+def forge(task: str, language: str) -> str:
+    if not task.strip():
+        return "Describe the coding task you want."
+    user_prompt = f"Language: {language}\\nTask: {task}"
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ],
+    )
+    return response.choices[0].message.content
+
+demo = gr.Interface(
+    fn=forge,
+    inputs=[
+        gr.Textbox(label="What should the code do?", lines=4),
+        gr.Dropdown(LANGUAGES, label="Language", value="Python"),
+    ],
+    outputs=gr.Code(label="Code draft (read before running)"),
+    title="ZEN Code Forge",
+    description="Built by a ZEN AI Pioneer. AI writes the draft. You are the operator.",
+)
+
+if __name__ == "__main__":
+    demo.launch()
+`,
+                        },
+                        {
+                            type: 'callout',
+                            title: 'Advanced challenge (older Pioneers)',
+                            content: 'Extend Code Forge: add a second dropdown for difficulty (Beginner / Intermediate / Expert), add three one-click example prompts, add a copy button using gr.Code, and improve the system instruction so the model always returns a plain-English explanation BEFORE the code block.',
+                            tone: 'warning',
+                        },
+                        { type: 'heading', content: 'Artifact checkpoint' },
                         {
                             type: 'lab',
-                            id: 'm3-s5-agent-review',
-                            title: 'Build checkpoint: agent review card',
-                            objective: 'Review your project through the lens of an AI agent.',
+                            id: 'm3-s5-code-forge-ship',
+                            title: 'Artifact: Code Forge URL or Code Reading Log',
+                            objective: 'Ship a working ZEN Code Forge Space, OR turn in a polished Code Reading Log that proves you can read AI-generated code.',
                             steps: [
-                                'List what the app observes from the user.',
-                                'List what it decides or generates.',
-                                'List any tool, model, or data source it uses.',
-                                'Write one test you should run before sharing.',
+                                'Pick your path: deploy Code Forge on Hugging Face Spaces, or complete a 3-snippet Code Reading Log.',
+                                'If shipping: create the Space, add the secret OPENAI_API_KEY (your real key, never in code), paste the starter app.py, and confirm it boots.',
+                                'If logging: generate 3 code snippets, walk through each line by line, mark each Safe / Needs Edits / Refuse, and explain why.',
+                                'Save your artifact link (Space URL) or your log (doc, PDF, or screenshot).',
+                                'Submit it as your Section 1 artifact.',
                             ],
-                            expectedOutput: 'An agent review card with one launch-readiness test.',
-                            reflectionPrompt: 'What could your app get wrong, and how will you warn users?',
+                            expectedOutput: 'A live Hugging Face Space URL for ZEN Code Forge, OR a 3-snippet Code Reading Log with safety verdicts.',
+                            reflectionPrompt: 'One thing I checked before running AI-written code was…',
+                        },
+                        {
+                            type: 'callout',
+                            title: 'Completion CTA',
+                            content: 'Save your artifact and reflection, then mark this section complete. Section 2 levels you up again: you will build an app that answers questions from a real knowledge base, not just from the model\'s memory.',
+                            tone: 'success',
                         },
                     ],
                 },
                 {
                     id: 'm3-s6',
-                    title: 'Section 6: Create, Launch Direction, and HF Space',
-                    icon: '06',
+                    title: 'Section 2: Ship 3 — ZEN Knowledge Brain',
+                    icon: '02',
                     content: [
+                        { type: 'heading', content: 'Module 3 · Week 6 · Section 2' },
+                        {
+                            type: 'callout',
+                            title: 'Core question',
+                            content: 'Can my app know what I know?',
+                            tone: 'info',
+                        },
+                        {
+                            type: 'callout',
+                            title: 'Student outcome',
+                            content: 'You understand grounded AI, notes-based Q&A, RAG-style behavior, citations, source quality, and honest refusal. You ship (or fully plan) ZEN Knowledge Brain — an app that answers from YOUR notes, not just the model\'s guess.',
+                            tone: 'success',
+                        },
                         { type: 'heading', content: 'Learn' },
                         {
                             type: 'paragraph',
-                            content: 'Students move from exploring into launching: image generation, trends, API/tool access, and a Hugging Face Space direction.',
+                            content: 'Most AI apps guess. They have memorized a huge chunk of the internet, but they have no idea what is true for YOU — your school, your team, your project, your country. A grounded AI app fixes this: you give it your real notes, and it only answers from those notes. If the answer is not in the notes, the app says so honestly.',
                         },
-                        { type: 'heading', content: 'Explore' },
-                        app('Image Generation Studio', 'A focused image-generation workflow.', 'Improve your project visuals and prompts with a repeatable quality loop.', undefined, 'Demo'),
-                        app('ZEN Trends Board', 'A board for tracking AI trends and project ideas.', 'Connect your builds to real-world changes you can explain.', undefined, 'Demo'),
-                        app('API Orb / Tool Access', 'A reminder flow for using keys and tool access safely.', 'Keeps deployment habits secure before public launch.', undefined, 'Requires key'),
-                        app('Hugging Face Spaces', 'A place to publish a live AI app.', 'Create a public demo URL and real deployment proof when your project is ready.', 'https://huggingface.co/spaces', 'External'),
-                        app('AI-Powered Game Generator', 'Optional game generation if time allows.', 'Adds a playful stretch path without making the core course longer.', undefined, 'Optional'),
+                        {
+                            type: 'list',
+                            content: [
+                                'Grounding means the AI answers from a specific source you give it — not from its general training.',
+                                'RAG (Retrieval-Augmented Generation) is the pattern: retrieve the right notes, then generate the answer using only those notes.',
+                                'Citations show which note the answer came from, so a human can verify it.',
+                                'Honest refusal means the app says "I do not know" when the answer is not in the notes — that is a feature, not a bug.',
+                                'Garbage in, garbage out: weak notes produce weak answers, no matter how good the model is.',
+                            ],
+                        },
+                        {
+                            type: 'callout',
+                            title: 'Helper for younger Pioneers',
+                            content: 'Think of grounded AI like an open-book test. A regular AI is taking the test from memory and sometimes makes things up. A grounded AI has the actual book open, points at the page, and only answers what the book actually says.',
+                            tone: 'info',
+                        },
+                        { type: 'heading', content: 'Concept cards' },
+                        app('What is RAG?', 'RAG = Retrieval-Augmented Generation. The app first searches your notes for the most relevant pieces, then asks the model to answer using only those pieces.', 'This is how serious AI apps stay accurate: customer-support bots, legal assistants, study buddies, internal company tools.', undefined, 'Ready', {
+                            instructions: ['Say the two steps out loud: 1) retrieve, 2) generate.', 'Pick one knowledge base you would build (school notes, sports stats, family recipes).', 'Note one question the app should be able to answer.'],
+                            completionHint: 'Launch card — teaching concept for the Knowledge Brain ship.',
+                        }),
+                        app('Embeddings — fingerprints for ideas', 'Embeddings turn each note into a list of numbers that represents its meaning. Similar ideas get similar fingerprints, so the app can find the right note even when the question uses different words.', 'This is the magic that makes RAG work. You do not need to memorize the math — you need to know the idea.', undefined, 'Ready', {
+                            instructions: ['Picture each note as a unique fingerprint.', 'Picture a question also getting a fingerprint.', 'The app finds the notes whose fingerprints are closest to the question.'],
+                        }),
+                        app('Paste-your-notes knowledge app', 'A simple Knowledge Brain UI: one big text box where you paste your notes, one question box, one answer box that cites which note was used.', 'This is the smallest possible RAG app — and it is enough to feel the difference between grounded and guessing.', undefined, 'Ready', {
+                            instructions: ['Decide what notes you will paste (study guide, project doc, sports stats, recipes).', 'Write 3 questions the app should answer correctly from those notes.', 'Write 1 question it should refuse because the answer is NOT in the notes.'],
+                        }),
+                        app('Citation chips / source card', 'Every answer comes with a chip like [Note 2] or a short source card showing the exact text the answer came from.', 'Citations are how a human verifies an AI answer. No citation = no trust.', undefined, 'Ready', {
+                            instructions: ['Design the chip: number, short label, or first 8 words of the source.', 'Decide what happens when a user clicks it (expand the full note).', 'Confirm every answer in your app will have at least one chip.'],
+                        }),
+                        {
+                            type: 'callout',
+                            title: 'Honest refusal',
+                            content: 'When the answer is not in the notes, the app should say "I do not know from the notes you gave me." That is the most trustworthy thing an AI app can say. A confident wrong answer is worse than an honest "I do not know."',
+                            tone: 'warning',
+                        },
+                        { type: 'heading', content: 'Activities' },
+                        app('Before/after grounding test', 'Ask the same question two ways: once to a plain chat model with no notes, once to your Knowledge Brain with the notes attached. Compare the two answers.', 'You will see the grounded answer is more accurate, more specific, and citable. This is the proof that grounding matters.', undefined, 'Ready', {
+                            instructions: ['Pick one question only you (or your school/team) can answer correctly.', 'Ask a plain AI chat (no notes) — record the answer.', 'Ask your Knowledge Brain with your notes — record the answer.', 'Write a 3-sentence comparison.'],
+                            completionHint: 'You can submit this comparison as your Section 2 artifact instead of a live URL.',
+                        }),
+                        app('Garbage in, garbage out lab', 'Test what happens when you feed the app bad notes: typos, contradictions, outdated info, or random unrelated text.', 'You will see that grounding does not save bad sources. The quality of your notes IS the quality of your app.', undefined, 'Ready', {
+                            instructions: ['Take your good notes and intentionally break them (typos, wrong dates, contradictions).', 'Ask the same questions again.', 'Note exactly how the app fails.', 'Write one rule about source quality.'],
+                        }),
+                        { type: 'heading', content: 'Safety' },
+                        app('Hugging Face Secrets lesson card', 'Secrets in a Hugging Face Space are environment variables (like OPENAI_API_KEY) that your code can read but the public cannot see.', 'This is how grown-up AI apps protect keys. Never hardcode a key in app.py — always read it from a secret.', 'https://huggingface.co/docs/hub/spaces-overview#managing-secrets', 'External', {
+                            instructions: ['Open Settings → Variables and secrets on your Space.', 'Add OPENAI_API_KEY (or your provider key) as a secret, not a public variable.', 'Confirm your code uses os.environ.get(...) to read it.', 'Confirm the fake placeholder sk-demo-REPLACE_WITH_YOUR_OWN_KEY is the only key string in your committed code.'],
+                        }),
+                        {
+                            type: 'callout',
+                            title: 'Never paste real secrets — still true',
+                            content: 'Same rule as Ship 2. Real keys live in Space Secrets only. Use sk-demo-REPLACE_WITH_YOUR_OWN_KEY as the placeholder in any code you share, screenshot, or commit.',
+                            tone: 'warning',
+                        },
+                        { type: 'heading', content: 'Ship 3 plan — ZEN Knowledge Brain' },
+                        app('ZEN Knowledge Brain — launch plan', 'A Gradio app with a notes textarea, a question box, and an answer box that quotes the note it used. If no note matches, the app refuses honestly.', 'This is your third public AI app. Plan it carefully — citations and refusal are what make it trustworthy.', undefined, 'Ready', {
+                            instructions: ['Sketch the UI: notes textarea, question box, answer box, citation chip.', 'Write the system instruction: "Answer ONLY from the notes below. Quote the exact sentence you used. If the answer is not in the notes, say I do not know from the notes you gave me."', 'Decide what counts as "good notes" for your domain.', 'Decide your artifact: live Hugging Face Space URL or Grounding Test Report.'],
+                            completionHint: 'Launch card — pair this plan with the starter code below.',
+                        }),
+                        { type: 'heading', content: 'Starter code: ZEN Knowledge Brain (app.py)' },
+                        {
+                            type: 'code',
+                            language: 'python',
+                            content: `import os
+import gradio as gr
+from openai import OpenAI
+
+# Read the key from Hugging Face Space Secrets.
+# NEVER hardcode a real key. The placeholder below is fake and safe.
+API_KEY = os.environ.get("OPENAI_API_KEY", "sk-demo-REPLACE_WITH_YOUR_OWN_KEY")
+client = OpenAI(api_key=API_KEY)
+
+SYSTEM_PROMPT = (
+    "You are ZEN Knowledge Brain. Answer ONLY using the notes the "
+    "user provides below. Quote the exact sentence you used as a "
+    "citation. If the answer is not in the notes, say: "
+    "'I do not know from the notes you gave me.' Do not guess."
+)
+
+def brain(notes: str, question: str) -> str:
+    if not notes.strip():
+        return "Paste your notes first."
+    if not question.strip():
+        return "Ask a question about the notes."
+    user_prompt = f"NOTES:\\n{notes}\\n\\nQUESTION:\\n{question}"
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ],
+    )
+    return response.choices[0].message.content
+
+demo = gr.Interface(
+    fn=brain,
+    inputs=[
+        gr.Textbox(label="Your notes (paste here)", lines=12),
+        gr.Textbox(label="Your question", lines=2),
+    ],
+    outputs=gr.Textbox(label="Grounded answer (with citation)", lines=10),
+    title="ZEN Knowledge Brain",
+    description="Built by a ZEN AI Pioneer. Grounded answers only. Honest refusal when the notes do not know.",
+)
+
+if __name__ == "__main__":
+    demo.launch()
+`,
+                        },
+                        {
+                            type: 'callout',
+                            title: 'Advanced challenge (older Pioneers)',
+                            content: 'Level up your Knowledge Brain: add a file upload so users can attach .txt or .md notes, return a numbered citation list ([1], [2], [3]) tied to the exact note chunks used, and add a confidence label (High / Medium / Low / Refuse) to every answer.',
+                            tone: 'warning',
+                        },
+                        { type: 'heading', content: 'Artifact checkpoint' },
                         {
                             type: 'lab',
-                            id: 'm3-s6-space-plan',
-                            title: 'Build checkpoint: Hugging Face launch plan',
-                            objective: 'Prepare a safe public launch direction.',
+                            id: 'm3-s6-knowledge-brain-ship',
+                            title: 'Artifact: Knowledge Brain URL or Grounding Test Report',
+                            objective: 'Ship a working ZEN Knowledge Brain Space, OR turn in a Grounding Test Report that proves you understand grounded vs guessing.',
                             steps: [
-                                'Choose Image Generator, Game Generator, or another approved tool.',
-                                'Name the Space and write a short description.',
-                                'List required files and secrets.',
-                                'Write one responsible AI note for the README.',
+                                'Pick your path: deploy Knowledge Brain on Hugging Face Spaces, or write a Grounding Test Report.',
+                                'If shipping: create the Space, add OPENAI_API_KEY as a Space Secret (never in code), paste the starter app.py, and confirm it answers from your notes and refuses honestly.',
+                                'If reporting: pick one question only your notes can answer, ask it of a plain AI and of a grounded AI, and write the side-by-side comparison.',
+                                'Save your artifact link (Space URL) or your report (doc, PDF, or screenshot).',
+                                'Submit it as your Section 2 artifact.',
                             ],
-                            expectedOutput: 'Hugging Face Space launch plan with files, secrets, and README note.',
-                            reflectionPrompt: 'What should never be pasted into code, screenshots, or public notes?',
+                            expectedOutput: 'A live Hugging Face Space URL for ZEN Knowledge Brain, OR a Grounding Test Report comparing grounded vs ungrounded answers.',
+                            reflectionPrompt: 'One thing only my app can answer correctly is…',
+                        },
+                        {
+                            type: 'callout',
+                            title: 'Completion CTA',
+                            content: 'Save your artifact and reflection, then mark this section complete. Module 4 is where you red-team everything you have built, lock the scope of your capstone, and prepare for the Week 8 showcase and certificate.',
+                            tone: 'success',
                         },
                     ],
                 },
