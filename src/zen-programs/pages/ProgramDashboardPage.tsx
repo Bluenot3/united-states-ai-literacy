@@ -2300,7 +2300,7 @@ const DeepfakeCheckMiniApp: React.FC<{ onComplete: () => void }> = ({ onComplete
 
 type HighlightTone = 'cyan' | 'emerald' | 'amber' | 'rose' | 'violet';
 
-const highlightLexicon: Array<{ term: string; tone: HighlightTone }> = [
+const highlightLexicon: Array<{ term: string; tone: HighlightTone }> = ([
     { term: 'artificial intelligence', tone: 'cyan' },
     { term: 'machine learning', tone: 'emerald' },
     { term: 'neural network', tone: 'violet' },
@@ -2356,7 +2356,7 @@ const highlightLexicon: Array<{ term: string; tone: HighlightTone }> = [
     { term: 'simulation', tone: 'violet' },
     { term: 'ZEN-X', tone: 'violet' },
     { term: 'AI', tone: 'cyan' },
-].sort((a, b) => b.term.length - a.term.length);
+] as Array<{ term: string; tone: HighlightTone }>).sort((a, b) => b.term.length - a.term.length);
 
 const highlightToneClass: Record<HighlightTone, string> = {
     cyan: 'border-cyan-100/35 bg-cyan-300/[0.17] text-cyan-50 decoration-cyan-200/90 shadow-cyan-950/30',
