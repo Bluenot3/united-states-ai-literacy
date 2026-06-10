@@ -2467,7 +2467,7 @@ const ModelFitRouterMiniApp: React.FC<{ onComplete: () => void }> = ({ onComplet
     );
 };
 
-
+type HighlightTone = 'cyan' | 'emerald' | 'amber' | 'rose' | 'violet';
 
 const highlightLexicon: Array<{ term: string; tone: HighlightTone }> = ([
     { term: 'artificial intelligence', tone: 'cyan' },
