@@ -389,30 +389,67 @@ app.post(
             return;
         }
 
+        // Helper: upsert program_entitlements when we know the program key.
+        const upsertProgramEntitlement = async ({
+            userId, programKey, status, session, subscription,
+        }) => {
+            if (!supabase || !userId || !programKey) return;
+            const payload = {
+                user_id: userId,
+                program_key: programKey,
+                status,
+                source: 'stripe',
+                stripe_customer_id: session?.customer ?? subscription?.customer ?? null,
+                stripe_checkout_session_id: session?.id ?? null,
+                stripe_subscription_id: session?.subscription ?? subscription?.id ?? null,
+                stripe_payment_intent_id: session?.payment_intent ?? null,
+                stripe_price_id: subscription?.items?.data?.[0]?.price?.id ?? null,
+                amount_total: session?.amount_total ?? null,
+                currency: session?.currency ?? subscription?.currency ?? null,
+                access_starts_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+            };
+            const { error } = await supabase
+                .from('program_entitlements')
+                .upsert(payload, { onConflict: 'user_id,program_key' });
+            if (error) console.error('program_entitlements upsert failed:', error.message);
+            else console.log(`Entitlement ${status} for user=${userId} program=${programKey}`);
+        };
+
         switch (event.type) {
             case 'checkout.session.completed': {
                 const session = event.data.object;
                 const userEmail = session.customer_email || session.metadata?.userEmail;
+                const programKey = (session.metadata?.program_key || '').toLowerCase() || null;
+                let userId = session.metadata?.user_id || null;
 
                 if (userEmail && supabase) {
-                    // Fetch user profile so we can personalise the email
                     const { data: profile } = await supabase
                         .from('user_profiles')
-                        .select('name')
+                        .select('id, name')
                         .eq('email', userEmail)
-                        .single();
+                        .maybeSingle();
+                    if (!userId && profile?.id) userId = profile.id;
 
+                    // Legacy global flag — kept for backward compatibility.
                     await supabase.from('user_profiles').update({
                         is_entitled: true,
                         stripe_customer_id: session.customer,
-                        stripe_subscription_id: session.subscription
+                        stripe_subscription_id: session.subscription,
                     }).eq('email', userEmail);
-                    console.log(`Entitlement granted for ${userEmail} via Supabase`);
 
-                    // Send subscription welcome email
+                    // Per-program entitlement (the canonical record).
+                    if (programKey === 'pioneer' || programKey === 'vanguard') {
+                        await upsertProgramEntitlement({
+                            userId, programKey, status: 'active', session,
+                        });
+                    } else {
+                        console.warn(`checkout.session.completed without program_key metadata for ${userEmail}`);
+                    }
+
                     await sendEmail(
                         userEmail,
-                        buildSubscriptionWelcomeEmail({ name: profile?.name, email: userEmail })
+                        buildSubscriptionWelcomeEmail({ name: profile?.name, email: userEmail }),
                     );
                 }
                 break;
@@ -421,14 +458,30 @@ app.post(
             case 'customer.subscription.deleted':
             case 'customer.subscription.updated': {
                 const subscription = event.data.object;
+                if (!supabase) break;
 
-                if (supabase) {
-                    const isEntitled = ['active', 'trialing'].includes(subscription.status);
-                    await supabase.from('user_profiles').update({
-                        is_entitled: isEntitled
-                    }).eq('stripe_subscription_id', subscription.id);
-                    console.log(`Subscription ${subscription.status} for sub ${subscription.id} via Supabase`);
+                const nextStatus = subscription.status === 'active' ? 'active'
+                    : subscription.status === 'trialing' ? 'trialing'
+                    : subscription.status === 'past_due' ? 'past_due'
+                    : 'canceled';
+                const isEntitled = ['active', 'trialing'].includes(subscription.status);
+
+                await supabase.from('user_profiles').update({ is_entitled: isEntitled })
+                    .eq('stripe_subscription_id', subscription.id);
+
+                const programKey = (subscription.metadata?.program_key || '').toLowerCase();
+                const userId = subscription.metadata?.user_id || null;
+                if ((programKey === 'pioneer' || programKey === 'vanguard') && userId) {
+                    await upsertProgramEntitlement({
+                        userId, programKey, status: nextStatus, subscription,
+                    });
+                } else {
+                    // Best-effort: update existing row by subscription id.
+                    await supabase.from('program_entitlements')
+                        .update({ status: nextStatus, updated_at: new Date().toISOString() })
+                        .eq('stripe_subscription_id', subscription.id);
                 }
+                console.log(`Subscription ${subscription.status} for sub ${subscription.id}`);
                 break;
             }
 
