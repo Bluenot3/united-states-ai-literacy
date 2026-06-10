@@ -310,26 +310,66 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 // Requires both authentication AND an active paid subscription.
-// Unauthenticated → /login   |   Authenticated but unpaid → /paywall
-const BillingProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { isAuthenticated, loading: authLoading } = useAuth();
+// When `programKey` is provided, requires per-program entitlement
+// (program_entitlements row with active/trialing status) — admins bypass.
+// Unauthenticated → /login   |   Authenticated but no access → /paywall
+const BillingProtectedRoute: React.FC<{
+    children: React.ReactNode;
+    programKey?: ProgramKey;
+}> = ({ children, programKey }) => {
+    const { isAuthenticated, loading: authLoading, user } = useAuth();
     const { entitled, loading: billingLoading } = useBilling();
     const { isEmbedded } = useArsenal();
     const location = useLocation();
+    const params = useParams();
 
-    if (isEmbedded) {
-        return <>{children}</>;
-    }
+    // Resolve program key from prop or :slug / :programId route param.
+    const slugFromRoute = (params as Record<string, string | undefined>).slug
+        ?? (params as Record<string, string | undefined>).programId
+        ?? null;
+    const resolvedProgramKey: ProgramKey | null = programKey
+        ?? normalizeProgramKey(slugFromRoute);
 
-    if (authLoading || billingLoading) {
-        return <PageLoader />;
-    }
+    const [programAccess, setProgramAccess] = useState<'unknown' | 'allowed' | 'denied'>(
+        resolvedProgramKey ? 'unknown' : 'allowed',
+    );
+
+    useEffect(() => {
+        if (!resolvedProgramKey) { setProgramAccess('allowed'); return; }
+        if (!isAuthenticated || !user?.id) return;
+        let cancelled = false;
+        setProgramAccess('unknown');
+        hasProgramAccess(user.id, user.email, resolvedProgramKey).then((ok) => {
+            if (!cancelled) setProgramAccess(ok ? 'allowed' : 'denied');
+        });
+        return () => { cancelled = true; };
+    }, [resolvedProgramKey, isAuthenticated, user?.id, user?.email]);
+
+    if (isEmbedded) return <>{children}</>;
+
+    if (authLoading || billingLoading) return <PageLoader />;
 
     if (!isAuthenticated) {
         const returnTo = `${location.pathname}${location.search}`;
         return <Navigate to={`/login?return_to=${encodeURIComponent(returnTo)}`} replace />;
     }
 
+    // Per-program gating takes precedence when a program key is resolvable.
+    if (resolvedProgramKey) {
+        if (programAccess === 'unknown') return <PageLoader />;
+        if (programAccess === 'denied') {
+            const returnTo = `${location.pathname}${location.search}`;
+            return (
+                <Navigate
+                    to={`/paywall?program=${resolvedProgramKey}&return_to=${encodeURIComponent(returnTo)}`}
+                    replace
+                />
+            );
+        }
+        return <>{children}</>;
+    }
+
+    // Generic fallback for non-program-scoped routes.
     if (!entitled) {
         const returnTo = `${location.pathname}${location.search}`;
         return <Navigate to={`/paywall?return_to=${encodeURIComponent(returnTo)}`} replace />;
