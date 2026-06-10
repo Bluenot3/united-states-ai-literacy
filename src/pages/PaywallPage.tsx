@@ -132,9 +132,17 @@ const PaywallPage: React.FC = () => {
         goTo(returnTo);
     };
 
+    const handleSignIn = () => {
+        navigate(`/login?return_to=${encodeURIComponent(location.pathname + location.search)}`);
+    };
+
     const handleSubscribe = async () => {
         if (!isAuthenticated) {
-            navigate(`/login?return_to=${encodeURIComponent(location.pathname + location.search)}`);
+            handleSignIn();
+            return;
+        }
+        if (!signedInAdmin && !profileSaved) {
+            setShowProfileForm(true);
             return;
         }
         setLoading(true);
@@ -145,6 +153,15 @@ const PaywallPage: React.FC = () => {
         }
         setLoading(false);
     };
+
+    // Active step in the access journey strip.
+    const currentStep: 1 | 2 | 3 | 4 = !isAuthenticated
+        ? 1
+        : !signedInAdmin && !profileSaved
+            ? 2
+            : !(entitled || signedInAdmin)
+                ? 3
+                : 4;
 
     const handleSignedInAdmin = async () => {
         setLoading(true);
