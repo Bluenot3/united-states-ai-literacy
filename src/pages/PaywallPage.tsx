@@ -211,13 +211,25 @@ const PaywallPage: React.FC = () => {
                         )}
 
                         <div className="mt-7 grid gap-3 sm:grid-cols-[1fr_auto]">
-                            <button
-                                type="button"
-                                onClick={handleSubscribe}
-                                disabled={loading}
-                                className={`rounded-full bg-gradient-to-r ${panelCopy.accent} px-6 py-4 text-sm font-black text-slate-950 shadow-[0_0_42px_rgba(201,168,76,0.22)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50`}
-                            >
-                                {loading ? 'Opening checkout...' : `Activate ${panelCopy.product}`}
+                            {hasAccess ? (
+                                <button
+                                    type="button"
+                                    onClick={handleEnterProgram}
+                                    disabled={loading}
+                                    className={`rounded-full bg-gradient-to-r ${panelCopy.accent} px-6 py-4 text-sm font-black text-slate-950 shadow-[0_0_42px_rgba(201,168,76,0.22)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50`}
+                                >
+                                    {`Enter ${panelCopy.product}`}
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={handleSubscribe}
+                                    disabled={loading}
+                                    className={`rounded-full bg-gradient-to-r ${panelCopy.accent} px-6 py-4 text-sm font-black text-slate-950 shadow-[0_0_42px_rgba(201,168,76,0.22)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50`}
+                                >
+                                    {loading ? 'Opening checkout...' : isAuthenticated ? `Activate ${panelCopy.product}` : `Sign in to activate ${panelCopy.product}`}
+                                </button>
+                            )}
                             </button>
                             <Link to="/programs" className="rounded-full border border-white/12 bg-white/[0.04] px-6 py-4 text-center text-sm font-black text-white transition hover:bg-white/[0.08]">
                                 Programs
