@@ -3329,6 +3329,14 @@ const ProgramDashboardPage: React.FC = () => {
                 return <ChatbotAnatomyMiniApp onComplete={onComplete} />;
             case 'deepfake-check':
                 return <DeepfakeCheckMiniApp onComplete={onComplete} />;
+            case 'prediction-engine':
+                return <PredictionEngineMiniApp onComplete={onComplete} />;
+            case 'token-budget':
+                return <TokenBudgetMiniApp onComplete={onComplete} />;
+            case 'persona-agent':
+                return <PersonaAgentMiniApp onComplete={onComplete} />;
+            case 'model-fit-router':
+                return <ModelFitRouterMiniApp onComplete={onComplete} />;
             default:
                 return null;
         }
