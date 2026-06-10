@@ -4,6 +4,7 @@ import { useBilling } from '../contexts/BillingContext';
 import { useAuth } from '../hooks/useAuth';
 import { isAdminEmail } from '../services/adminAccess';
 import { getProgramBySlug } from '../zen-programs/programIntegrationContract';
+import { isProfileComplete, loadProfile, saveProfile, type ZenProfile } from '../services/profileSetup';
 
 const PROGRAM_DESTINATIONS = {
     pioneer: '/programs/pioneer',
