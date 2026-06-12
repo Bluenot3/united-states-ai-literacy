@@ -313,11 +313,14 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 // Requires both authentication AND an active paid subscription.
 // When `programKey` is provided, requires per-program entitlement
 // (program_entitlements row with active/trialing status) — admins bypass.
-// Unauthenticated → /login   |   Authenticated but no access → /paywall
+// `allowUnpaid` keeps the route auth-only (used by the unified /programs
+// hub, which hosts the access/activation panels itself).
+// Unauthenticated → /login   |   Authenticated but no access → /programs#program-access
 const BillingProtectedRoute: React.FC<{
     children: React.ReactNode;
     programKey?: ProgramKey;
-}> = ({ children, programKey }) => {
+    allowUnpaid?: boolean;
+}> = ({ children, programKey, allowUnpaid = false }) => {
     const { isAuthenticated, loading: authLoading, user } = useAuth();
     const { entitled, loading: billingLoading } = useBilling();
     const { isEmbedded } = useArsenal();
