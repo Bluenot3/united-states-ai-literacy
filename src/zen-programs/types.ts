@@ -3,7 +3,11 @@ export type ProgramContentItem =
     | ProgramResourceContentItem
     | ProgramLabContentItem
     | ProgramCalloutContentItem
-    | ProgramCodeContentItem;
+    | ProgramCodeContentItem
+    | ProgramMediaContentItem
+    | ProgramEmbedContentItem
+    | ProgramHtmlContentItem
+    | ProgramDividerContentItem;
 
 export interface ProgramTextContentItem {
     type: 'paragraph' | 'heading' | 'list' | 'quote';
@@ -46,6 +50,31 @@ export interface ProgramCodeContentItem {
     content: string;
     title?: string;
     language?: string;
+}
+
+export interface ProgramMediaContentItem {
+    type: 'image' | 'video';
+    src: string;
+    alt?: string;
+    caption?: string;
+}
+
+export interface ProgramEmbedContentItem {
+    type: 'embed';
+    url: string;
+    title?: string;
+    height?: number;
+}
+
+export interface ProgramHtmlContentItem {
+    type: 'html';
+    content: string;
+    title?: string;
+    height?: number;
+}
+
+export interface ProgramDividerContentItem {
+    type: 'divider';
 }
 
 export interface ProgramSection {

@@ -4,6 +4,7 @@ import { useArsenal } from '../../contexts/ArsenalContext';
 import { getAiClient } from '../../lib/aiClient';
 import { repairContent, repairText } from '../../utils/text';
 import { getCurriculumByProgramId } from '../curriculum';
+import StudioMediaBlock from '../components/StudioMediaBlocks';
 import { getRegistryProgramIdForProgramKey, toProgramKey } from '../programIntegrationContract';
 import { getProgramById } from '../programsRegistry';
 import {
@@ -3159,7 +3160,7 @@ const ProgramDashboardPage: React.FC = () => {
     const exploredResources = allResources.filter((resource) => progress.exploredResources?.includes(resource.title));
     const progressPercent = leafSections.length ? Math.round((completedLeafSections.length / leafSections.length) * 100) : 0;
     const isModuleView = Boolean(currentSection.subSections?.length);
-    const learnItems = currentSection.content.filter((item) => ['heading', 'paragraph', 'quote', 'list', 'callout'].includes(item.type));
+    const learnItems = currentSection.content.filter((item) => ['heading', 'paragraph', 'quote', 'list', 'callout', 'image', 'video', 'embed', 'html', 'divider'].includes(item.type));
     const resourceItems = currentSection.content.filter((item): item is ProgramResourceContentItem => item.type === 'resource');
     const conceptMissionPods = getConceptMissionPods(currentSection.id, resourceItems);
     const podResourceTitles = new Set(conceptMissionPods.flatMap((pod) => pod.resources.map((resource) => resource.title)));
@@ -3274,6 +3275,10 @@ const ProgramDashboardPage: React.FC = () => {
                     </div>
                 </div>
             );
+        }
+
+        if (item.type === 'image' || item.type === 'video' || item.type === 'embed' || item.type === 'html' || item.type === 'divider') {
+            return <StudioMediaBlock key={`${item.type}-${index}`} item={item} variant="dark" />;
         }
 
         return null;

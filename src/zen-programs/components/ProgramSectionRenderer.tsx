@@ -1,5 +1,6 @@
 import React from 'react';
 import type { ProgramContentItem } from '../types';
+import StudioMediaBlock from './StudioMediaBlocks';
 
 interface ProgramSectionRendererProps {
     content: ProgramContentItem[];
@@ -42,6 +43,46 @@ const ProgramSectionRenderer: React.FC<ProgramSectionRendererProps> = ({ content
                                 {item.content as string}
                             </blockquote>
                         );
+
+                    case 'callout': {
+                        const tone = item.tone === 'warning'
+                            ? 'border-amber-300/60 bg-amber-50 text-amber-900'
+                            : item.tone === 'success'
+                                ? 'border-emerald-300/60 bg-emerald-50 text-emerald-900'
+                                : 'border-sky-300/60 bg-sky-50 text-sky-900';
+                        const lines = Array.isArray(item.content) ? item.content : [item.content];
+                        return (
+                            <div key={index} className={`rounded-xl border p-4 ${tone}`}>
+                                {item.title && (
+                                    <p className="text-xs font-bold uppercase tracking-wider mb-2">{item.title}</p>
+                                )}
+                                <div className="space-y-1.5 text-sm leading-relaxed">
+                                    {lines.filter(Boolean).map((line, lineIndex) => <p key={lineIndex}>{line}</p>)}
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    case 'code':
+                        return (
+                            <div key={index} className="overflow-hidden rounded-xl border border-slate-700/40 bg-slate-900">
+                                {(item.title || item.language) && (
+                                    <p className="px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-700/40">
+                                        {item.title || item.language}
+                                    </p>
+                                )}
+                                <pre className="max-h-96 overflow-auto p-4 text-xs leading-6 text-slate-100">
+                                    <code>{item.content}</code>
+                                </pre>
+                            </div>
+                        );
+
+                    case 'image':
+                    case 'video':
+                    case 'embed':
+                    case 'html':
+                    case 'divider':
+                        return <StudioMediaBlock key={index} item={item} variant="light" />;
 
                     default:
                         return null;

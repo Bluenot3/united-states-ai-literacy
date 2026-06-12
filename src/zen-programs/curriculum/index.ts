@@ -6,6 +6,7 @@ import { web3Curriculum } from './web3/curriculumData';
 import { arenaCurriculum } from './arena/curriculumData';
 import { hermesCurriculum } from './hermes/curriculumData';
 import type { ProgramCurriculum } from '../types';
+import { applyStudioOverrides } from '../curriculumStudioStore';
 
 export const curriculumRegistry: Record<string, ProgramCurriculum> = {
     pioneer: pioneerCurriculum,
@@ -17,7 +18,11 @@ export const curriculumRegistry: Record<string, ProgramCurriculum> = {
 };
 
 export const getCurriculumByProgramId = (programId: string): ProgramCurriculum | undefined => {
-    return curriculumRegistry[programId];
+    const base = curriculumRegistry[programId];
+    if (!base) return undefined;
+    // Layer any admin-authored Curriculum Studio blocks/sections on top of the
+    // shipped curriculum so admin edits go live without code changes.
+    return applyStudioOverrides(programId, base);
 };
 
 export {
