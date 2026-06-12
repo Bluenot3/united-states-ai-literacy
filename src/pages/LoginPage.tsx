@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { dal } from '../services/dal';
+import { isAdminEmail } from '../services/adminAccess';
 
 const valueProps = [
     'Learn what AI, LLMs, and automation actually mean.',
@@ -21,18 +23,25 @@ const LoginPage: React.FC = () => {
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [loading, setLoading] = useState(false);
-    const { login, signup, isAuthenticated } = useAuth();
+    const { login, signup, isAuthenticated, user } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-    const returnTo = safeReturnTo(new URLSearchParams(location.search).get('return_to'));
+    const rawReturnTo = new URLSearchParams(location.search).get('return_to');
+    const returnTo = safeReturnTo(rawReturnTo);
     const showDemoHint = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true';
 
-    // If already signed in, bounce immediately to return_to.
+    // Admins land in the Admin Command Center unless an explicit return_to
+    // was requested; everyone else follows return_to (default /programs).
+    const destinationFor = (signedInEmail?: string | null) =>
+        !rawReturnTo && isAdminEmail(signedInEmail) ? '/admin' : returnTo;
+
+    // If already signed in, bounce immediately.
     useEffect(() => {
         if (isAuthenticated) {
-            navigate(returnTo, { replace: true });
+            navigate(destinationFor(user?.email), { replace: true });
         }
-    }, [isAuthenticated, navigate, returnTo]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isAuthenticated, navigate, returnTo, user?.email]);
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
@@ -49,7 +58,7 @@ const LoginPage: React.FC = () => {
         try {
             if (isLogin) {
                 await login(email, password);
-                navigate(returnTo, { replace: true });
+                navigate(destinationFor(email), { replace: true });
             } else {
                 const result = await signup(email, password);
                 if (result?.requiresConfirmation) {
@@ -57,11 +66,29 @@ const LoginPage: React.FC = () => {
                     setIsLogin(true);
                     setPassword('');
                 } else {
-                    navigate(returnTo, { replace: true });
+                    navigate(destinationFor(email), { replace: true });
                 }
             }
         } catch (authError) {
             setError(authError instanceof Error ? authError.message : 'Authentication failed.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleForgotPassword = async () => {
+        setError('');
+        setSuccessMessage('');
+        if (!email) {
+            setError('Enter your email above first, then tap "Forgot password?".');
+            return;
+        }
+        setLoading(true);
+        try {
+            await dal.auth.resetPassword(email);
+            setSuccessMessage('Password reset email sent. Check your inbox.');
+        } catch (resetError) {
+            setError(resetError instanceof Error ? resetError.message : 'Could not send reset email.');
         } finally {
             setLoading(false);
         }
@@ -180,6 +207,30 @@ const LoginPage: React.FC = () => {
                                 placeholder="Enter a strong password"
                             />
                         </label>
+
+                        {isLogin && (
+                            <div className="-mt-1 flex justify-end">
+                                <button
+                                    type="button"
+                                    onClick={handleForgotPassword}
+                                    disabled={loading}
+                                    className="text-[11px] font-medium text-zen-gold/70 transition hover:text-zen-gold disabled:opacity-50"
+                                >
+                                    Forgot password?
+                                </button>
+                            </div>
+                        )}
+
+                        {isAdminEmail(email) && (
+                            <div className="flex items-start gap-2 rounded-[0.85rem] border border-zen-gold/30 bg-zen-gold/[0.08] px-3.5 py-2.5 text-[12px] leading-[1.6] text-zen-gold">
+                                <span className="mt-[3px] h-[6px] w-[6px] flex-shrink-0 rounded-full bg-zen-gold shadow-[0_0_8px_rgba(201,168,76,0.7)]" />
+                                <span>
+                                    <span className="font-semibold">Admin account detected.</span>{' '}
+                                    Sign in for full free access to every program plus the Admin Command Center.
+                                </span>
+                            </div>
+                        )}
+
 
                         {successMessage && (
                             <div className="rounded-[0.85rem] border border-zen-emerald/25 bg-zen-emerald/[0.08] px-3.5 py-2.5 text-[12px] text-emerald-200">
