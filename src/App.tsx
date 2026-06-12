@@ -358,14 +358,16 @@ const BillingProtectedRoute: React.FC<{
         return <Navigate to={`/login?return_to=${encodeURIComponent(returnTo)}`} replace />;
     }
 
+    // Auth-only routes (the unified /programs hub renders its own access panels).
+    if (allowUnpaid) return <>{children}</>;
+
     // Per-program gating takes precedence when a program key is resolvable.
     if (resolvedProgramKey) {
         if (programAccess === 'unknown') return <PageLoader />;
         if (programAccess === 'denied') {
-            const returnTo = `${location.pathname}${location.search}`;
             return (
                 <Navigate
-                    to={`/paywall?program=${resolvedProgramKey}&return_to=${encodeURIComponent(returnTo)}`}
+                    to={`/programs?program=${resolvedProgramKey}#program-access`}
                     replace
                 />
             );
@@ -375,8 +377,7 @@ const BillingProtectedRoute: React.FC<{
 
     // Generic fallback for non-program-scoped routes.
     if (!entitled) {
-        const returnTo = `${location.pathname}${location.search}`;
-        return <Navigate to={`/paywall?return_to=${encodeURIComponent(returnTo)}`} replace />;
+        return <Navigate to="/programs#program-access" replace />;
     }
 
     return <>{children}</>;
