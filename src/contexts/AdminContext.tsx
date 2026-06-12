@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import type { Student, Message, ActivityEvent, AdminStats } from '../types';
+import type { Student, Message, ActivityEvent, AdminStats, User } from '../types';
 import { dal } from '../services/dal';
+import { isAdminEmail } from '../services/adminAccess';
 
 interface AdminContextType {
     isAdminAuthenticated: boolean;
+    adminLoading: boolean;
     adminLogin: (username: string, password: string) => Promise<boolean>;
     adminLogout: () => void;
     students: Student[];
@@ -103,9 +105,25 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Dev bypass: sessionStorage.__admin_bypass__ lets local preview skip Supabase auth
     const devBypass = import.meta.env.DEV && sessionStorage.getItem('__admin_bypass__') === '1';
     const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(devBypass);
+    const [adminLoading, setAdminLoading] = useState(!devBypass);
     const [students, setStudents] = useState<Student[]>([]);
     const [messages, _setMessages] = useState<Message[]>([]);
     const [activityFeed, setActivityFeed] = useState<ActivityEvent[]>([]);
+
+    // Single sign-on: any signed-in account whose email is on the central
+    // admin allowlist (services/adminAccess.ts) is automatically an admin —
+    // no separate admin login required. royaltokens@gmail.com and the rest of
+    // the allowlist sign in once at /login and get everything.
+    useEffect(() => {
+        if (devBypass) {
+            return;
+        }
+        const unsubscribe = dal.auth.onAuthStateChanged((sessionUser: User | null) => {
+            setIsAdminAuthenticated(Boolean(sessionUser?.email && isAdminEmail(sessionUser.email)));
+            setAdminLoading(false);
+        });
+        return unsubscribe;
+    }, [devBypass]);
 
     // Build activity feed from student data
     const buildActivityFeed = useCallback((loadedStudents: Student[]): ActivityEvent[] => {
@@ -194,16 +212,8 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         try {
             await dal.auth.login(email, password);
 
-            // All admin-authorized emails — include real Supabase accounts
-            const adminEmails = [
-                'admin@zenvanguard.com',
-                'alexleschik@bgcgw.org',
-                'testadmin@zenai.co',
-                'alex1leschik@gmail.com',
-                'huxley@zenai.biz',
-            ];
-
-            if (adminEmails.includes(email) || email === 'admin') {
+            // Central allowlist — managed in services/adminAccess.ts
+            if (isAdminEmail(email) || username === 'admin') {
                 setIsAdminAuthenticated(true);
                 return true;
             }
@@ -253,6 +263,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return (
         <AdminContext.Provider value={{
             isAdminAuthenticated,
+            adminLoading,
             adminLogin,
             adminLogout,
             students,
