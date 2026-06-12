@@ -9,7 +9,7 @@ import { ArsenalProvider, useArsenal } from './contexts/ArsenalContext';
 import EcoLaunchHandler from './components/EcoLaunchHandler';
 import { hasProgramAccess, normalizeProgramKey, type ProgramKey } from './services/programAccess';
 
-const LoginPage = React.lazy(() => import('./modules/module1/components/auth/LoginPage'));
+const LoginPage = React.lazy(() => import('./pages/LoginPage'));
 const CredentialForgePage = React.lazy(() => import('./pages/CredentialForgePage'));
 const ResetPasswordPage = React.lazy(() => import('./pages/ResetPasswordPage'));
 const Module1Page = React.lazy(() => import('./pages/Module1Page'));
@@ -281,7 +281,11 @@ const AdminLoader: React.FC = () => (
 );
 
 const AdminProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { isAdminAuthenticated } = useAdmin();
+    const { isAdminAuthenticated, adminLoading } = useAdmin();
+
+    if (adminLoading) {
+        return <AdminLoader />;
+    }
 
     if (!isAdminAuthenticated) {
         return <Navigate to="/admin/login" replace />;
