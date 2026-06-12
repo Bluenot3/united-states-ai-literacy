@@ -313,11 +313,14 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 // Requires both authentication AND an active paid subscription.
 // When `programKey` is provided, requires per-program entitlement
 // (program_entitlements row with active/trialing status) — admins bypass.
-// Unauthenticated → /login   |   Authenticated but no access → /paywall
+// `allowUnpaid` keeps the route auth-only (used by the unified /programs
+// hub, which hosts the access/activation panels itself).
+// Unauthenticated → /login   |   Authenticated but no access → /programs#program-access
 const BillingProtectedRoute: React.FC<{
     children: React.ReactNode;
     programKey?: ProgramKey;
-}> = ({ children, programKey }) => {
+    allowUnpaid?: boolean;
+}> = ({ children, programKey, allowUnpaid = false }) => {
     const { isAuthenticated, loading: authLoading, user } = useAuth();
     const { entitled, loading: billingLoading } = useBilling();
     const { isEmbedded } = useArsenal();
@@ -355,14 +358,16 @@ const BillingProtectedRoute: React.FC<{
         return <Navigate to={`/login?return_to=${encodeURIComponent(returnTo)}`} replace />;
     }
 
+    // Auth-only routes (the unified /programs hub renders its own access panels).
+    if (allowUnpaid) return <>{children}</>;
+
     // Per-program gating takes precedence when a program key is resolvable.
     if (resolvedProgramKey) {
         if (programAccess === 'unknown') return <PageLoader />;
         if (programAccess === 'denied') {
-            const returnTo = `${location.pathname}${location.search}`;
             return (
                 <Navigate
-                    to={`/paywall?program=${resolvedProgramKey}&return_to=${encodeURIComponent(returnTo)}`}
+                    to={`/programs?program=${resolvedProgramKey}#program-access`}
                     replace
                 />
             );
@@ -372,8 +377,7 @@ const BillingProtectedRoute: React.FC<{
 
     // Generic fallback for non-program-scoped routes.
     if (!entitled) {
-        const returnTo = `${location.pathname}${location.search}`;
-        return <Navigate to={`/paywall?return_to=${encodeURIComponent(returnTo)}`} replace />;
+        return <Navigate to="/programs#program-access" replace />;
     }
 
     return <>{children}</>;
@@ -450,11 +454,14 @@ const App: React.FC = () => {
                     <Route path="entitlements" element={<AdminEntitlements />} />
                 </Route>
 
-                {/* ── Program routes — require active paid subscription ── */}
+                {/* ── Program routes ──
+                    /programs is the unified hub: signed-in users (paid or not)
+                    see the breakdown + access/activation panels there.
+                    Program content routes below still require entitlement. ── */}
                 <Route
                     path="/programs"
                     element={
-                        <BillingProtectedRoute>
+                        <BillingProtectedRoute allowUnpaid>
                             <Suspense fallback={<PageLoader />}><ProgramSuitePage /></Suspense>
                         </BillingProtectedRoute>
                     }

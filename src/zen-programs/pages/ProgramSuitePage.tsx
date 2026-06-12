@@ -11,6 +11,7 @@ import {
 } from '../programIntegrationContract';
 import { programRegistrationAdapter } from '../programRegistrationAdapter';
 import { getSyntheticStandaloneUserId } from '../components/ProgramAccessGate';
+import ProgramAccessSection from '../components/ProgramAccessSection';
 import { getActiveArsenalProgramBridgeCatalog, type ArsenalProgramBridgeItem } from '../arsenalProgramBridge';
 
 const activeProgramOrder = ['vanguard', 'ai-pioneer'] as const satisfies readonly ProgramKey[];
@@ -1008,6 +1009,12 @@ const ProgramCard: React.FC<ProgramCardProps> = ({ program, bridge, state, isAut
                         >
                             Preview program
                         </Link>
+                        <a
+                            href="#program-access"
+                            className="rounded-full border border-white/20 bg-white/[.07] px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/[.11] focus:outline-none focus:ring-2 focus:ring-white/60"
+                        >
+                            Activate access
+                        </a>
                         {decision.canRegister && (
                             <Link
                                 to={`/programs/${program.slug}/register`}
@@ -1681,6 +1688,9 @@ const ProgramSuitePage: React.FC = () => {
                         );
                     })}
                 </section>
+
+                {/* ── Unified program access & activation (both live tracks) ── */}
+                <ProgramAccessSection />
 
                 <div className="mt-5 grid gap-5 lg:grid-cols-[.9fr_1.1fr]">
                     <ProgramSignalMap selectedProgramKey={selectedProgramKey} onSelect={setSelectedProgramKey} />
