@@ -454,11 +454,14 @@ const App: React.FC = () => {
                     <Route path="entitlements" element={<AdminEntitlements />} />
                 </Route>
 
-                {/* ── Program routes — require active paid subscription ── */}
+                {/* ── Program routes ──
+                    /programs is the unified hub: signed-in users (paid or not)
+                    see the breakdown + access/activation panels there.
+                    Program content routes below still require entitlement. ── */}
                 <Route
                     path="/programs"
                     element={
-                        <BillingProtectedRoute>
+                        <BillingProtectedRoute allowUnpaid>
                             <Suspense fallback={<PageLoader />}><ProgramSuitePage /></Suspense>
                         </BillingProtectedRoute>
                     }
