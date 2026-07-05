@@ -9,8 +9,7 @@ export default {
             fontFamily: {
                 sans: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
                 outfit: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
-                display: ['Cinzel', 'Georgia', 'serif'],
-                orbitron: ['Orbitron', 'monospace'],
+                display: ['Space Grotesk', 'Inter', 'system-ui', 'sans-serif'],
                 'space-grotesk': ['Space Grotesk', 'sans-serif'],
                 jetbrains: ['JetBrains Mono', 'monospace'],
             },

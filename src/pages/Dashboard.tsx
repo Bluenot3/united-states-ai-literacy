@@ -290,14 +290,14 @@ const AgentCore: React.FC = () => {
             const text = document.createElementNS(NS, 'text');
             text.setAttribute('x', '0');
             text.setAttribute('y', '0');
-            text.setAttribute('style', `font-family:Orbitron,monospace;font-size:9px;font-weight:700;fill:${n.color};text-shadow:0 0 6px ${n.color}`);
+            text.setAttribute('style', `font-family:Space Grotesk,sans-serif;font-size:9px;font-weight:700;fill:${n.color};text-shadow:0 0 6px ${n.color}`);
             text.textContent = n.id;
             tGroup.appendChild(text);
 
             const subText = document.createElementNS(NS, 'text');
             subText.setAttribute('x', '0');
             subText.setAttribute('y', '12');
-            subText.setAttribute('style', 'font-family:Orbitron,monospace;font-size:7px;fill:rgba(255,255,255,0.7);');
+            subText.setAttribute('style', 'font-family:Space Grotesk,sans-serif;font-size:7px;fill:rgba(255,255,255,0.7);');
             subText.textContent = n.sub;
             tGroup.appendChild(subText);
 
@@ -886,7 +886,7 @@ const Dashboard: React.FC = () => {
                                                 ))}
                                             </div>
                                             <div className="hh-score-row">
-                                                <div style={{ fontFamily: "'Orbitron',monospace", fontSize: '.56rem', color: 'rgba(255,255,255,.38)' }}>
+                                                <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '.56rem', color: 'rgba(255,255,255,.38)' }}>
                                                     {hhFlipped.size === 5 ? 'Complete! All cards revealed.' : ''}
                                                 </div>
                                                 <button className="hh-reset" onClick={hhReset}>↺ RESET</button>
@@ -1091,8 +1091,8 @@ const Dashboard: React.FC = () => {
                                                 </div>
                                             </div>
                                             <div className="drift-card">
-                                                <span style={{ fontFamily: "'Orbitron',monospace", fontSize: '.5rem', letterSpacing: '1.8px', color: 'rgba(255,87,51,.7)' }}>DRIFT MONITOR</span>
-                                                <span style={{ fontFamily: "'Orbitron',monospace", fontSize: '.8rem', fontWeight: 700, color: driftAlert ? '#ff5733' : '#00ff9f' }}>
+                                                <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '.5rem', letterSpacing: '1.8px', color: 'rgba(255,87,51,.7)' }}>DRIFT MONITOR</span>
+                                                <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '.8rem', fontWeight: 700, color: driftAlert ? '#ff5733' : '#00ff9f' }}>
                                                     {driftAlert ? 'ELEVATED' : 'NOMINAL'}
                                                 </span>
                                                 {driftAlert && <div className="drift-badge">⚠ ALERT</div>}
@@ -1188,7 +1188,7 @@ const Dashboard: React.FC = () => {
                                     <div className="cert">
                                         <div className="cert-co">⬡ ZEN AI CO. ⬡</div>
                                         <div className="cert-name">ZEN AI CO.</div>
-                                        <div style={{ fontSize: '.36rem', letterSpacing: '2px', color: 'rgba(255,255,255,.3)', fontFamily: "'Orbitron',monospace", textAlign: 'center' }}>
+                                        <div style={{ fontSize: '.36rem', letterSpacing: '2px', color: 'rgba(255,255,255,.3)', fontFamily: "'Space Grotesk',sans-serif", textAlign: 'center' }}>
                                             FOUNDED UPON THE PRINCIPLE THAT AI LITERACY IS INFRASTRUCTURE
                                         </div>
                                         <div className="cert-div" />
