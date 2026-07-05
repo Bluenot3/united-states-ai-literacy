@@ -484,213 +484,135 @@ pre.code { background: rgba(0, 0, 0, .58); border: 1px solid rgba(0, 212, 255, .
 }
 
 /* ============================================
-   DARK MODE - Applied globally via .dark-mode class
+   ZEN SOVEREIGN UI — Design tokens
+   The app is dark-first; the legacy .dark-mode override
+   forest was removed. Shell components use tokens directly.
    ============================================ */
-.dark-mode {
-  --color-bg-primary: #0F172A;
-  --color-bg-secondary: #1E293B;
-  --color-bg-tertiary: #334155;
-  --color-bg-card: #1E293B;
-  --color-text-primary: #F8FAFC;
-  --color-text-secondary: #CBD5E1;
-  --color-text-muted: #94A3B8;
-  --color-border: rgba(71, 85, 105, 0.5);
-  --color-shadow: rgba(0, 0, 0, 0.3);
-}
+:root {
+  /* Pio accent (interactive only: progress, live-demo, hover glow) */
+  --pio-cyan: #22D3EE;
+  --pio-violet: #8B5CF6;
+  /* Semantic */
+  --sem-success: #34D399;
+  --sem-warning: #FBBF24;
+  --sem-danger: #FB7185;
 
-/* Apply dark mode styles globally */
-.dark-mode {
-  background-color: #0F172A !important;
-  color: #F1F5F9;
-}
-
-.dark-mode .bg-white,
-.dark-mode .bg-brand-surface,
-.dark-mode .bg-slate-50 {
-  background-color: #1E293B !important;
-}
-
-.dark-mode .bg-brand-bg,
-.dark-mode .bg-gray-50,
-.dark-mode .bg-slate-100 {
-  background-color: #0F172A !important;
-}
-
-.dark-mode .text-brand-text,
-.dark-mode .text-slate-900,
-.dark-mode .text-gray-900,
-.dark-mode .text-slate-800 {
-  color: #F1F5F9 !important;
-}
-
-.dark-mode .text-slate-600,
-.dark-mode .text-gray-600,
-.dark-mode .text-slate-700 {
-  color: #CBD5E1 !important;
-}
-
-.dark-mode .text-brand-text-light,
-.dark-mode .text-slate-500,
-.dark-mode .text-gray-500 {
-  color: #94A3B8 !important;
-}
-
-.dark-mode .border-white,
-.dark-mode .border-slate-100,
-.dark-mode .border-slate-200,
-.dark-mode .border-gray-200 {
-  border-color: rgba(71, 85, 105, 0.5) !important;
-}
-
-.dark-mode .shadow-soft,
-.dark-mode .shadow-lg,
-.dark-mode .shadow-xl,
-.dark-mode .shadow-2xl {
-  --tw-shadow-color: rgba(0, 0, 0, 0.4);
-}
-
-/* Dark mode glass effects */
-.dark-mode .bg-white\/80,
-.dark-mode .bg-white\/90,
-.dark-mode .bg-white\/95 {
-  background-color: rgba(30, 41, 59, 0.9) !important;
-}
-
-.dark-mode .backdrop-blur-xl,
-.dark-mode .backdrop-blur-2xl {
-  backdrop-filter: blur(20px) saturate(180%);
+  /* Legacy Antigravity aliases → remap to Sovereign palette */
+  --c: var(--pio-cyan);
+  --p: var(--pio-violet);
+  --g: var(--sem-success);
+  --y: var(--zen-brass);
+  --r: var(--sem-danger);
+  --o: #FB923C;
+  --bg: var(--zen-void);
 }
 
 /* ============================================
-   DARK MODE - Cards and Premium Panels
+   .zen-glass — single component class replacing
+   .ag-glass / .card-glass / .card-glass-premium /
+   .glass-card / .liquid-glass / .liquid-glass-card /
+   .glass-morphism.  Legacy classes below are aliases.
    ============================================ */
-.dark-mode .glass-panel,
-.dark-mode .card-glass-premium,
-.dark-mode .card-neumorphic {
-  background: #1E293B !important;
-  border-color: rgba(71, 85, 105, 0.5) !important;
+.zen-glass {
+  position: relative;
+  background: var(--zen-panel);
+  border: 1px solid var(--zen-line);
+  border-radius: 1.25rem;
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  box-shadow:
+    inset 0 1px 0 rgba(245, 216, 141, 0.06),
+    0 4px 24px rgba(0, 0, 0, 0.35);
 }
 
-/* Stat card colored backgrounds - make them visible in dark mode */
-.dark-mode .bg-pale-yellow\/10,
-.dark-mode .bg-brand-primary\/10,
-.dark-mode .bg-pale-green\/10,
-.dark-mode .bg-brand-cyan\/10,
-.dark-mode .bg-purple-500\/10,
-.dark-mode .bg-blue-500\/10,
-.dark-mode .bg-green-500\/10,
-.dark-mode .bg-amber-500\/10 {
-  background-color: rgba(51, 65, 85, 0.7) !important;
+.zen-glass--elevated {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(245, 216, 141, 0.08), transparent 34%),
+    var(--zen-panel);
+  border-color: rgba(240, 214, 142, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(245, 216, 141, 0.1),
+    0 18px 48px rgba(2, 6, 23, 0.55);
+  overflow: hidden;
+}
+.zen-glass--elevated::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(115deg, transparent 30%, rgba(245, 216, 141, 0.14) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+  pointer-events: none;
+}
+.zen-glass--elevated:hover::before { transform: translateX(120%); }
+
+.zen-glass--live {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(34, 211, 238, 0.18);
+}
+.zen-glass--live::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(from var(--angle), transparent 0%, transparent 30%, rgba(34, 211, 238, 0.75) 42%, rgba(139, 92, 246, 0.65) 52%, transparent 62%, transparent 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: rotateBorder 6s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+.zen-glass--live .zen-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  z-index: 3;
+}
+.zen-glass--live .zen-corner.tl { top: 10px; left: 10px; border-top: 1.5px solid rgba(34, 211, 238, 0.6); border-left: 1.5px solid rgba(34, 211, 238, 0.6); }
+.zen-glass--live .zen-corner.tr { top: 10px; right: 10px; border-top: 1.5px solid rgba(139, 92, 246, 0.6); border-right: 1.5px solid rgba(139, 92, 246, 0.6); }
+.zen-glass--live .zen-corner.bl { bottom: 10px; left: 10px; border-bottom: 1.5px solid rgba(34, 211, 238, 0.6); border-left: 1.5px solid rgba(34, 211, 238, 0.6); }
+.zen-glass--live .zen-corner.br { bottom: 10px; right: 10px; border-bottom: 1.5px solid rgba(139, 92, 246, 0.6); border-right: 1.5px solid rgba(139, 92, 246, 0.6); }
+
+/* Legacy aliases — keep older pages rendering while we migrate */
+.ag-glass,
+.card-glass,
+.card-glass-premium,
+.glass-card,
+.liquid-glass,
+.liquid-glass-card,
+.glass-morphism,
+.glass-panel {
+  position: relative;
+  background: var(--zen-panel);
+  border: 1px solid var(--zen-line);
+  border-radius: 1.25rem;
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  box-shadow:
+    inset 0 1px 0 rgba(245, 216, 141, 0.06),
+    0 4px 24px rgba(0, 0, 0, 0.35);
 }
 
-/* Stat card text colors - ensure high contrast */
-.dark-mode .text-pale-yellow {
-  color: #FCD34D !important;
+/* Micro-label baseline — enforce 11px + 0.2em tracking */
+.zen-micro-label,
+.tag-line {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(245, 216, 141, 0.72);
 }
 
-.dark-mode .text-pale-green {
-  color: #6EE7B7 !important;
-}
+/* Body baseline */
+html { font-size: 15px; }
+@media (max-width: 480px) { html { font-size: 14.5px; } }
 
-.dark-mode .text-brand-cyan {
-  color: #67E8F9 !important;
-}
-
-/* Border colors for stat cards */
-.dark-mode .border-pale-yellow\/20,
-.dark-mode .border-brand-primary\/20,
-.dark-mode .border-pale-green\/20,
-.dark-mode .border-brand-cyan\/20 {
-  border-color: rgba(71, 85, 105, 0.6) !important;
-}
-
-/* Dark mode inputs */
-.dark-mode input,
-.dark-mode textarea,
-.dark-mode select {
-  background-color: #1E293B !important;
-  border-color: rgba(71, 85, 105, 0.5) !important;
-  color: #F1F5F9 !important;
-}
-
-.dark-mode input::placeholder,
-.dark-mode textarea::placeholder {
-  color: #64748B !important;
-}
-
-/* Dark mode gradients */
-.dark-mode .from-white {
-  --tw-gradient-from: #1E293B !important;
-}
-
-.dark-mode .to-white {
-  --tw-gradient-to: #1E293B !important;
-}
-
-.dark-mode .via-white {
-  --tw-gradient-via: #1E293B !important;
-}
-
-/* ============================================
-   DARK MODE - Additional fixes for contrast
-   ============================================ */
-
-/* Sidebar in dark mode */
-.dark-mode aside {
-  background-color: rgba(15, 23, 42, 0.95) !important;
-  border-color: rgba(71, 85, 105, 0.4) !important;
-}
-
-/* Headers in dark mode */
-.dark-mode header {
-  background-color: rgba(15, 23, 42, 0.9) !important;
-  border-color: rgba(71, 85, 105, 0.4) !important;
-}
-
-/* Module cards text */
-.dark-mode h3,
-.dark-mode h4 {
-  color: #F1F5F9;
-}
-
-/* Secondary text and labels */
-.dark-mode p {
-  color: #CBD5E1;
-}
-
-/* Links in dark mode */
-.dark-mode a {
-  color: inherit;
-}
-
-/* Specific text colors that need more contrast */
-.dark-mode .text-xs.uppercase,
-.dark-mode .tracking-wider {
-  color: #94A3B8 !important;
-}
-
-/* Progress bars background */
-.dark-mode .bg-brand-shadow-dark\/20 {
-  background-color: rgba(51, 65, 85, 0.5) !important;
-}
-
-/* Certificate and badge backgrounds */
-.dark-mode .bg-green-100 {
-  background-color: rgba(34, 197, 94, 0.2) !important;
-}
-
-.dark-mode .text-green-700 {
-  color: #6EE7B7 !important;
-}
-
-.dark-mode .border-green-200 {
-  border-color: rgba(34, 197, 94, 0.3) !important;
-}
-
-/* Quick Actions and other panels */
-.dark-mode .bg-brand-primary\/5 {
-  background-color: rgba(139, 92, 246, 0.15) !important;
-}
 
 /* Reduced Motion Support */
 .reduce-motion * {
