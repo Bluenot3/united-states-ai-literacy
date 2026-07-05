@@ -1,7 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowRight, Sparkles, ShieldCheck, Rocket, Trophy } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getAccentClasses, programs } from '../programsRegistry';
+
 
 const vanguardCurriculumBlueprint = [
     {
