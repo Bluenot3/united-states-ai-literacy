@@ -42,7 +42,7 @@ const ZenHeaderBanner: React.FC<ZenHeaderBannerProps> = ({
                 <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-3">
                         <span className="zen-eyebrow-chip">{eyebrow}</span>
-                        <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-300">
+                        <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-300">
                             EST. 2024
                         </span>
                     </div>
@@ -79,7 +79,7 @@ const ZenHeaderBanner: React.FC<ZenHeaderBannerProps> = ({
                         <div className="zen-panel relative flex w-full max-w-md flex-col justify-between p-5">
                             <div className="flex items-start justify-between gap-4">
                                 <div>
-                                    <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#edd07c]">ZEN Identity</p>
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#edd07c]">ZEN Identity</p>
                                     <p className="mt-3 font-display text-2xl text-[#f9e6b2]">United States AI Literacy</p>
                                 </div>
                                 <ZenBrandMark variant="coin" size="md" />

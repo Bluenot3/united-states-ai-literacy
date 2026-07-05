@@ -64,7 +64,7 @@ const Header: React.FC = () => {
                                 <ZenModuleGlyph name={pageMeta.icon} className="h-3.5 w-3.5" />
                             </span>
                             <div className="min-w-0">
-                                <span className="inline-flex items-center gap-1.5 rounded-full border border-zen-gold/[0.18] bg-[linear-gradient(180deg,rgba(240,214,142,0.09),rgba(240,214,142,0.03))] px-2.5 py-[0.28rem] text-[9px] font-bold uppercase tracking-[0.26em] text-[#f5d88d] before:h-[5px] before:w-[5px] before:rounded-full before:bg-[#f5d88d] before:shadow-[0_0_10px_rgba(245,216,141,0.5)] before:content-['']">
+                                <span className="inline-flex items-center gap-1.5 rounded-full border border-zen-gold/[0.18] bg-[linear-gradient(180deg,rgba(240,214,142,0.09),rgba(240,214,142,0.03))] px-2.5 py-[0.28rem] text-[11px] font-bold uppercase tracking-[0.26em] text-[#f5d88d] before:h-[5px] before:w-[5px] before:rounded-full before:bg-[#f5d88d] before:shadow-[0_0_10px_rgba(245,216,141,0.5)] before:content-['']">
                                     {pageMeta.eyebrow}
                                 </span>
                                 <h1 className="font-display text-[0.92rem] font-semibold tracking-tight text-[#f7e6b6] leading-tight mt-[0.2rem] truncate">
@@ -80,19 +80,19 @@ const Header: React.FC = () => {
                             <div className="flex items-center gap-1.5 rounded-[0.9rem] border border-zen-gold/[0.13] bg-[linear-gradient(180deg,rgba(12,20,38,0.92),rgba(8,14,29,0.88))] px-2.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_20px_rgba(2,6,23,0.38)] backdrop-blur-md">
                                 <ZenModuleGlyph name="progress" className="h-3 w-3 text-zen-gold shrink-0" />
                                 <div>
-                                    <p className="text-[8px] font-bold uppercase tracking-[0.22em] text-zen-gold/60 leading-none">XP</p>
+                                    <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-zen-gold/60 leading-none">XP</p>
                                     <p className="font-display text-[0.82rem] font-semibold text-[#f7e4b0] leading-none mt-[2px]">{user.totalPoints || 0}</p>
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-1.5 rounded-[0.9rem] border border-zen-gold/[0.13] bg-[linear-gradient(180deg,rgba(12,20,38,0.92),rgba(8,14,29,0.88))] px-2.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_20px_rgba(2,6,23,0.38)] backdrop-blur-md">
                                 <div className="h-6 w-6 rounded-[0.5rem] bg-gradient-to-br from-zen-gold via-zen-gold-light to-brand-cyan p-[1px] shadow-[0_4px_10px_rgba(2,6,23,0.3)] shrink-0">
-                                    <div className="flex h-full w-full items-center justify-center rounded-[0.42rem] bg-zen-navy text-[8px] font-bold text-zen-gold">
+                                    <div className="flex h-full w-full items-center justify-center rounded-[0.42rem] bg-zen-navy text-[11px] font-bold text-zen-gold">
                                         {completionPercent}%
                                     </div>
                                 </div>
                                 <div>
-                                    <p className="text-[8px] font-bold uppercase tracking-[0.22em] text-slate-500 leading-none">Modules</p>
+                                    <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500 leading-none">Modules</p>
                                     <p className="font-display text-[0.82rem] font-semibold text-[#f7e4b0] leading-none mt-[2px]">{completedModules}/4</p>
                                 </div>
                             </div>

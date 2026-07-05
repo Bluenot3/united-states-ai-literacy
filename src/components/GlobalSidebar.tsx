@@ -218,7 +218,7 @@ const GlobalSidebar: React.FC = () => {
                     </NavLink>
                     <div className="min-w-0 flex-1">
                         <p className="font-display text-[0.8rem] font-semibold leading-tight tracking-[0.03em] text-[#f6e2ac]">ZEN Vanguard</p>
-                        <p className="text-[8px] uppercase tracking-[0.24em] text-zen-gold/45 mt-px">AI Literacy</p>
+                        <p className="text-[11px] uppercase tracking-[0.24em] text-zen-gold/45 mt-px">AI Literacy</p>
                     </div>
                     <button
                         onClick={(e) => { e.stopPropagation(); toggle(); }}
@@ -234,7 +234,7 @@ const GlobalSidebar: React.FC = () => {
 
                 {/* Navigation links */}
                 <nav className="flex flex-1 flex-col gap-px overflow-y-auto px-1.5 py-2.5 [scrollbar-width:none]">
-                    <p className="mb-1 px-2 text-[8px] font-bold uppercase tracking-[0.30em] text-slate-600/80">Workspace</p>
+                    <p className="mb-1 px-2 text-[11px] font-bold uppercase tracking-[0.30em] text-slate-600/80">Workspace</p>
                     {primaryLinks.map((link) => {
                         const isActive = currentPath === link.to || currentPath.startsWith(link.to + '/');
                         return (
@@ -260,7 +260,7 @@ const GlobalSidebar: React.FC = () => {
 
                     <div className="mx-2 my-1.5 h-px bg-zen-gold/[0.08]" />
 
-                    <p className="mb-1 px-2 text-[8px] font-bold uppercase tracking-[0.30em] text-slate-600/80">Modules</p>
+                    <p className="mb-1 px-2 text-[11px] font-bold uppercase tracking-[0.30em] text-slate-600/80">Modules</p>
                     {moduleInfo.map((module) => {
                         const isActive = currentPath.startsWith(`/module/${module.id}`);
                         const pct = moduleCompletion[module.id] ?? 0;
@@ -284,7 +284,7 @@ const GlobalSidebar: React.FC = () => {
                                         <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-white/[0.06]">
                                             <div className={`h-full rounded-full bg-gradient-to-r ${module.color}`} style={{ width: `${pct}%` }} />
                                         </div>
-                                        <span className="text-[8px] tabular-nums text-slate-600">{pct}%</span>
+                                        <span className="text-[11px] tabular-nums text-slate-600">{pct}%</span>
                                     </div>
                                 </div>
                             </NavLink>
@@ -315,11 +315,11 @@ const GlobalSidebar: React.FC = () => {
                             />
                             <div className="min-w-0 flex-1">
                                 <p className="truncate text-[11px] font-semibold text-white leading-tight">{user.name || 'Learner'}</p>
-                                <p className="text-[9px] text-zen-gold/80 leading-tight">{user.totalPoints || 0} XP</p>
+                                <p className="text-[11px] text-zen-gold/80 leading-tight">{user.totalPoints || 0} XP</p>
                             </div>
                             <button
                                 onClick={handleLogout}
-                                className="shrink-0 rounded-md border border-white/[0.05] px-1.5 py-0.5 text-[9px] font-semibold text-slate-500 transition hover:border-rose-400/25 hover:text-rose-400"
+                                className="shrink-0 rounded-md border border-white/[0.05] px-1.5 py-0.5 text-[11px] font-semibold text-slate-500 transition hover:border-rose-400/25 hover:text-rose-400"
                             >
                                 Out
                             </button>
