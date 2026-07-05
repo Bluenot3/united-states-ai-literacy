@@ -44,7 +44,7 @@ const ZenActionTile: React.FC<ZenActionTileProps> = ({
                     <ZenModuleGlyph name={icon} className="h-6 w-6" />
                 </span>
                 {badge ? (
-                    <span className="rounded-full border border-white/12 bg-white/[0.05] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-300">
+                    <span className="rounded-full border border-white/12 bg-white/[0.05] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300">
                         {badge}
                     </span>
                 ) : null}

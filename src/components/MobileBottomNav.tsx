@@ -38,7 +38,7 @@ const MobileBottomNav: React.FC = () => {
                             <svg className={`mb-1 h-5 w-5 transition-transform duration-300 ${isActive ? 'scale-110' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isActive ? 2.5 : 1.8}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
                             </svg>
-                            <span className={`text-[10px] font-semibold tracking-wide ${isActive ? 'text-zen-gold' : ''}`}>{item.label}</span>
+                            <span className={`text-[11px] font-semibold tracking-wide ${isActive ? 'text-zen-gold' : ''}`}>{item.label}</span>
                         </NavLink>
                     );
                 })}

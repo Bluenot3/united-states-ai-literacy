@@ -1,7 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowRight, Sparkles, ShieldCheck, Rocket, Trophy } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getAccentClasses, programs } from '../programsRegistry';
+
 
 const vanguardCurriculumBlueprint = [
     {
@@ -82,90 +84,104 @@ const ProgramHubPage: React.FC = () => {
             }} />
 
             <div className="relative z-10 mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
-                <section className="relative overflow-hidden rounded-[2.5rem] border border-zen-gold/15 bg-[linear-gradient(135deg,rgba(6,11,24,0.95)_0%,rgba(15,23,42,0.85)_48%,rgba(6,11,24,0.95)_100%)] p-6 shadow-zen-card backdrop-blur-xl sm:p-8 lg:p-10">
-                    <div className="pointer-events-none absolute inset-0">
-                        <div className="absolute left-[8%] top-10 h-44 w-44 rounded-full bg-zen-gold/[0.07] blur-3xl" />
-                        <div className="absolute right-[12%] top-14 h-48 w-48 rounded-full bg-brand-cyan/[0.05] blur-3xl" />
-                        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-zen-gold/20 to-transparent" />
+                {/* ────────────── ZEN Sovereign Landing Hero ────────────── */}
+                <section className="relative overflow-hidden rounded-[2rem] border border-[color:var(--zen-line)] bg-[linear-gradient(180deg,rgba(5,10,24,0.96)_0%,rgba(13,23,48,0.9)_60%,rgba(5,10,24,0.98)_100%)] px-6 py-14 sm:px-10 sm:py-20 lg:px-14 lg:py-24">
+                    <div className="pointer-events-none absolute inset-0 opacity-[0.06]" style={{
+                        backgroundImage: 'linear-gradient(rgba(240,214,142,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(240,214,142,0.6) 1px, transparent 1px)',
+                        backgroundSize: '48px 48px',
+                        maskImage: 'radial-gradient(ellipse 90% 70% at 50% 40%, black 30%, transparent 90%)',
+                    }} />
+                    <div className="pointer-events-none absolute -top-32 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(245,216,141,0.14),transparent_70%)] blur-2xl" />
+
+                    <div className="relative mx-auto max-w-4xl text-center">
+                        <span className="zen-micro-label inline-flex items-center gap-2 rounded-full border border-[color:var(--zen-line)] bg-white/[0.02] px-3 py-1.5">
+                            <Sparkles className="h-3.5 w-3.5" /> ZEN AI Co.
+                        </span>
+                        <h1 className="mt-6 font-[Space_Grotesk] text-4xl font-semibold leading-[1.05] tracking-tight text-[#F5E7C0] sm:text-5xl lg:text-[64px]">
+                            The First Youth AI Literacy Program in U.S. History
+                        </h1>
+                        <p className="mt-5 text-lg leading-relaxed text-slate-300 sm:text-xl">
+                            Students don&rsquo;t study AI here. They ship it.
+                        </p>
+
+                        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-[13px] text-slate-400">
+                            <span className="flex items-center gap-2"><Trophy className="h-4 w-4 text-[color:var(--zen-brass)]" /> Year 3</span>
+                            <span className="hidden h-1 w-1 rounded-full bg-slate-600 sm:block" />
+                            <span>Boys &amp; Girls Clubs of Greater Washington</span>
+                            <span className="hidden h-1 w-1 rounded-full bg-slate-600 sm:block" />
+                            <span>Students deploy live AI apps by Week 4</span>
+                        </div>
+                        {user?.name && (
+                            <p className="mt-4 text-sm text-slate-500">Welcome back, {user.name.split(' ')[0]}.</p>
+                        )}
                     </div>
 
-                    <div className="relative grid gap-8 lg:grid-cols-[1.35fr_0.85fr]">
-                        <div>
-                            <div className="flex flex-wrap items-center gap-2.5">
-                                <span className="rounded-full border border-zen-gold/25 bg-zen-gold/[0.08] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-zen-gold-light">
-                                    Program Hub
+                    {/* Two program cards */}
+                    <div className="relative mx-auto mt-14 grid max-w-5xl gap-6 md:grid-cols-2">
+                        {/* AI Pioneer */}
+                        <Link
+                            to="/programs/pioneer"
+                            className="zen-glass zen-glass--live group relative flex flex-col p-7 transition-transform duration-300 hover:-translate-y-1"
+                        >
+                            <span className="zen-corner tl" />
+                            <span className="zen-corner tr" />
+                            <span className="zen-corner bl" />
+                            <span className="zen-corner br" />
+                            <div className="relative flex items-center gap-3">
+                                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[color:var(--pio-cyan)]/25 to-[color:var(--pio-violet)]/25 text-[color:var(--pio-cyan)] ring-1 ring-inset ring-[color:var(--pio-cyan)]/30">
+                                    <Rocket className="h-5 w-5" />
                                 </span>
-                                <span className="rounded-full border border-white/8 bg-white/[0.04] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400">
-                                    Est. 2024
+                                <span className="zen-micro-label rounded-full border border-[color:var(--pio-cyan)]/30 bg-[color:var(--pio-cyan)]/[0.08] px-2.5 py-1 !text-[color:var(--pio-cyan)]">
+                                    Build &amp; Launch Track
                                 </span>
                             </div>
-                            <h1 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl lg:leading-[1.08]">
-                                Choose the path that matches your current level.
-                            </h1>
-                            <p className="mt-5 max-w-3xl text-base leading-8 text-slate-300 sm:text-lg">
-                                {user?.name ? `${user.name.split(' ')[0]}, ` : ''}
-                                start with the Starter Guide if you want the shortest route from zero context to a finished
-                                deployment. Then choose the program that fits your age, experience, and build goals.
+                            <h2 className="relative mt-6 font-[Space_Grotesk] text-2xl font-semibold tracking-tight text-white">
+                                AI Pioneer Program
+                            </h2>
+                            <p className="relative mt-3 text-[15px] leading-7 text-slate-300">
+                                Zero-to-shipped. Learners build, deploy, and defend real AI applications on Hugging Face &mdash; then earn verified evidence they can show.
                             </p>
+                            <ul className="relative mt-5 space-y-2 text-[14px] leading-6 text-slate-400">
+                                <li className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 rounded-full bg-[color:var(--pio-cyan)]" /> Project-based, artifact-led</li>
+                                <li className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 rounded-full bg-[color:var(--pio-violet)]" /> Ships 3 apps + capstone</li>
+                                <li className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 rounded-full bg-[color:var(--pio-cyan)]" /> Certificate on completion</li>
+                            </ul>
+                            <span className="relative mt-7 inline-flex items-center gap-2 self-start rounded-full bg-gradient-to-r from-[color:var(--pio-cyan)] to-[color:var(--pio-violet)] px-5 py-2.5 text-sm font-semibold text-[#040915] transition group-hover:gap-3">
+                                Enter Pioneer Track <ArrowRight className="h-4 w-4" />
+                            </span>
+                        </Link>
 
-                            <div className="mt-7 flex flex-wrap gap-3">
-                                <Link to="/guide" className="rounded-full bg-gradient-to-r from-zen-gold to-zen-gold-light px-5 py-3 text-sm font-semibold text-zen-navy transition duration-300 hover:-translate-y-0.5 hover:shadow-glowing-gold">
-                                    Open Starter Guide
-                                </Link>
-                                <Link to="/dashboard" className="rounded-full border border-zen-gold/15 bg-zen-gold/[0.06] px-5 py-3 text-sm font-semibold text-white transition duration-300 hover:-translate-y-0.5 hover:bg-zen-gold/[0.1]">
-                                    Open Vanguard Dashboard
-                                </Link>
+                        {/* Vanguard */}
+                        <Link
+                            to="/dashboard"
+                            className="zen-glass zen-glass--elevated group relative flex flex-col p-7 transition-transform duration-300 hover:-translate-y-1"
+                        >
+                            <div className="relative flex items-center gap-3">
+                                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[color:var(--zen-brass)]/25 to-[color:var(--zen-gold)]/25 text-[color:var(--zen-brass)] ring-1 ring-inset ring-[color:var(--zen-brass)]/40">
+                                    <ShieldCheck className="h-5 w-5" />
+                                </span>
+                                <span className="zen-micro-label rounded-full border border-[color:var(--zen-brass)]/30 bg-[color:var(--zen-brass)]/[0.08] px-2.5 py-1">
+                                    Professional Track
+                                </span>
                             </div>
-                        </div>
-
-                        <div className="rounded-[1.9rem] border border-zen-gold/10 bg-zen-gold/[0.03] p-6 backdrop-blur-md">
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zen-gold">Recommended order</p>
-                            <ol className="mt-5 space-y-4 text-sm leading-7 text-slate-300">
-                                <li className="flex items-start gap-3">
-                                    <span className="mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg bg-zen-gold/[0.1] text-[11px] font-bold text-zen-gold">1</span>
-                                    <span>Read the Starter Guide once.</span>
-                                </li>
-                                <li className="flex items-start gap-3">
-                                    <span className="mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg bg-zen-gold/[0.1] text-[11px] font-bold text-zen-gold">2</span>
-                                    <span>Choose AI Pioneer if you need a true beginner path.</span>
-                                </li>
-                                <li className="flex items-start gap-3">
-                                    <span className="mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg bg-zen-gold/[0.1] text-[11px] font-bold text-zen-gold">3</span>
-                                    <span>Move to Vanguard when you are ready to treat projects like production work.</span>
-                                </li>
-                                <li className="flex items-start gap-3">
-                                    <span className="mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg bg-zen-gold/[0.1] text-[11px] font-bold text-zen-gold">4</span>
-                                    <span>Use Arena, Web3, or T3 when you need specialized depth.</span>
-                                </li>
-                            </ol>
-                        </div>
+                            <h2 className="relative mt-6 font-[Space_Grotesk] text-2xl font-semibold tracking-tight text-white">
+                                Vanguard Program
+                            </h2>
+                            <p className="relative mt-3 text-[15px] leading-7 text-slate-300">
+                                For working professionals. Self-paced deep track through foundations, agents, personal AI systems, and production governance.
+                            </p>
+                            <ul className="relative mt-5 space-y-2 text-[14px] leading-6 text-slate-400">
+                                <li className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 rounded-full bg-[color:var(--zen-brass)]" /> 4 flagship modules, self-paced</li>
+                                <li className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 rounded-full bg-[color:var(--zen-gold)]" /> RAG, agents, deployment</li>
+                                <li className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 rounded-full bg-[color:var(--zen-brass)]" /> Verified portfolio artifacts</li>
+                            </ul>
+                            <span className="relative mt-7 inline-flex items-center gap-2 self-start rounded-full bg-gradient-to-r from-[color:var(--zen-brass)] to-[color:var(--zen-gold)] px-5 py-2.5 text-sm font-semibold text-[#1a1204] transition group-hover:gap-3">
+                                Enter Vanguard <ArrowRight className="h-4 w-4" />
+                            </span>
+                        </Link>
                     </div>
                 </section>
 
-                <section className="mt-6 grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-                    <div className="grid gap-4 md:grid-cols-3">
-                        {hubStats.map((stat) => (
-                            <article key={stat.label} className="rounded-[1.6rem] border border-zen-gold/10 bg-zen-surface/60 p-5 shadow-zen-card backdrop-blur-xl">
-                                <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-zen-gold/65">{stat.label}</p>
-                                <p className="mt-3 text-3xl font-black tracking-tight text-white">{stat.value}</p>
-                                <p className="mt-3 text-sm leading-7 text-slate-400">{stat.detail}</p>
-                            </article>
-                        ))}
-                    </div>
-
-                    <article className="rounded-[1.8rem] border border-zen-gold/10 bg-[linear-gradient(180deg,rgba(8,13,29,0.92)_0%,rgba(8,13,29,0.76)_100%)] p-6 shadow-zen-card backdrop-blur-xl">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-zen-gold/65">Launch quality</p>
-                        <h2 className="mt-3 text-2xl font-black tracking-tight text-white">The workspace now reads like a product surface, not a content dump.</h2>
-                        <div className="mt-4 space-y-3">
-                            {platformPillars.map((pillar) => (
-                                <div key={pillar} className="flex items-start gap-3 rounded-[1.2rem] border border-zen-gold/8 bg-zen-navy/45 px-4 py-3">
-                                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-zen-gold/80" />
-                                    <p className="text-sm leading-7 text-slate-300">{pillar}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </article>
-                </section>
 
                 <section className="mt-10 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
                     {programs.map((program, index) => {
