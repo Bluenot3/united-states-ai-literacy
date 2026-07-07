@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import CompletionModal from '../components/CompletionModal';
 import VanguardModuleFrame from '../components/vanguard/VanguardModuleFrame';
 import { useModuleExperience } from '../hooks/useModuleExperience';
+import { EditModeProvider } from '../components/content-overlay/EditModeContext';
 
 import { curriculumData } from '../modules/module1/data/curriculumData';
 import Header from '../modules/module1/components/Header';
@@ -68,48 +69,50 @@ const Module1Page: React.FC = () => {
 
     return (
         <Module1ErrorBoundary>
-            <VanguardModuleFrame
-                moduleNumber={1}
-                title="AI Foundations"
-                subtitle="Learn the mental models behind modern AI, separate real capability from hype, and build the technical confidence needed for the more advanced Vanguard labs."
-                accentClassName="from-violet-500 via-fuchsia-500 to-cyan-400"
-                chipLabels={['AI literacy', 'LLM fundamentals', 'Prompt judgment']}
-                completedSections={moduleProgress.completedSections.length}
-                totalSections={totalSections}
-                header={(
-                    <>
-                        <ScrollProgressBar />
-                        <Header
-                            onCommandPaletteToggle={() => setIsCommandPaletteOpen(true)}
-                            completedSections={moduleProgress.completedSections.length}
-                            totalSections={totalSections}
-                        />
-                    </>
-                )}
-                sidebar={<Sidebar sections={curriculumData.sections} activeSection={activeSection} />}
-                footer={<ModuleFooter currentModule={1} />}
-            >
-                <MainContent
-                    title={curriculumData.title}
-                    sections={curriculumData.sections}
-                    sectionRefs={sectionRefs}
-                    visibleSections={visibleSections}
-                />
-            </VanguardModuleFrame>
+            <EditModeProvider programId="pioneer" moduleId="module1">
+                <VanguardModuleFrame
+                    moduleNumber={1}
+                    title="AI Foundations"
+                    subtitle="Learn the mental models behind modern AI, separate real capability from hype, and build the technical confidence needed for the more advanced Vanguard labs."
+                    accentClassName="from-violet-500 via-fuchsia-500 to-cyan-400"
+                    chipLabels={['AI literacy', 'LLM fundamentals', 'Prompt judgment']}
+                    completedSections={moduleProgress.completedSections.length}
+                    totalSections={totalSections}
+                    header={(
+                        <>
+                            <ScrollProgressBar />
+                            <Header
+                                onCommandPaletteToggle={() => setIsCommandPaletteOpen(true)}
+                                completedSections={moduleProgress.completedSections.length}
+                                totalSections={totalSections}
+                            />
+                        </>
+                    )}
+                    sidebar={<Sidebar sections={curriculumData.sections} activeSection={activeSection} />}
+                    footer={<ModuleFooter currentModule={1} />}
+                >
+                    <MainContent
+                        title={curriculumData.title}
+                        sections={curriculumData.sections}
+                        sectionRefs={sectionRefs}
+                        visibleSections={visibleSections}
+                    />
+                </VanguardModuleFrame>
 
-            <CommandPalette
-                isOpen={isCommandPaletteOpen}
-                onClose={() => setIsCommandPaletteOpen(false)}
-                sections={flattenedSections}
-            />
-            {isModuleComplete && <CompletionCelebration />}
-            {showCompletionModal && (
-                <CompletionModal
-                    moduleId={1}
-                    moduleName="AI Foundations"
-                    onClose={() => setShowCompletionModal(false)}
+                <CommandPalette
+                    isOpen={isCommandPaletteOpen}
+                    onClose={() => setIsCommandPaletteOpen(false)}
+                    sections={flattenedSections}
                 />
-            )}
+                {isModuleComplete && <CompletionCelebration />}
+                {showCompletionModal && (
+                    <CompletionModal
+                        moduleId={1}
+                        moduleName="AI Foundations"
+                        onClose={() => setShowCompletionModal(false)}
+                    />
+                )}
+            </EditModeProvider>
         </Module1ErrorBoundary>
     );
 };

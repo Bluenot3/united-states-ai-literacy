@@ -17,6 +17,7 @@ const AdminLayout: React.FC = () => {
         { path: '/admin/entitlements', label: 'Access & Grants', icon: 'key' },
         { path: '/admin/programs', label: 'Programs', icon: 'dashboard' },
         { path: '/admin/curriculum-studio', label: 'Curriculum Studio', icon: 'book' },
+        { path: '/admin/content', label: 'Content Overlays', icon: 'book' },
         { path: '/admin/activity', label: 'Activity Log', icon: 'activity' },
         { path: '/admin/messages', label: 'Messages', icon: 'mail' },
         { path: '/admin/analytics', label: 'Analytics', icon: 'chart' },
