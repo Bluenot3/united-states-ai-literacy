@@ -49,7 +49,7 @@ export const SectionOverlay: React.FC<SectionOverlayProps> = ({
                     onAddBefore={() => openEditor({ programId, moduleId, sectionId, position: 'before' })}
                     onAddAfter={() => openEditor({ programId, moduleId, sectionId, position: 'after' })}
                     onReplace={() => openEditor({ programId, moduleId, sectionId, position: 'replace' })}
-                    onHide={() => openEditor({ programId, moduleId, sectionId, position: 'hide' })}
+                    onHide={() => openEditor({ programId, moduleId, sectionId, position: 'hide' as any })}
                     hidden={hasHideRow}
                 />
             )}
