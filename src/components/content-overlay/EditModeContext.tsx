@@ -16,7 +16,7 @@ export interface BlockEditorInit {
     programId: string;
     moduleId: string;
     sectionId: string | null;
-    position: 'before' | 'after' | 'replace' | 'append_module';
+    position: 'before' | 'after' | 'replace' | 'hide' | 'append_module';
     existingOverrideId?: string;
 }
 
