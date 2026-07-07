@@ -29,6 +29,7 @@ const AdminAnalytics = React.lazy(() => import('./pages/AdminAnalytics'));
 const AdminSettings = React.lazy(() => import('./pages/AdminSettings'));
 const AdminActivityLog = React.lazy(() => import('./pages/AdminActivityLog'));
 const AdminEntitlements = React.lazy(() => import('./pages/AdminEntitlements'));
+const AdminContentPage = React.lazy(() => import('./pages/AdminContentPage'));
 const ProgramHubPage = React.lazy(() => import('./zen-programs/pages/ProgramHubPage'));
 const ProgramDashboardPage = React.lazy(() => import('./zen-programs/pages/ProgramDashboardPage'));
 const ProgramSuitePage = React.lazy(() => import('./zen-programs/pages/ProgramSuitePage'));
@@ -456,6 +457,7 @@ const App: React.FC = () => {
                     <Route path="programs" element={<ProgramAdminPanel />} />
                     <Route path="curriculum-studio" element={<CurriculumStudio />} />
                     <Route path="entitlements" element={<AdminEntitlements />} />
+                    <Route path="content" element={<AdminContentPage />} />
                 </Route>
 
                 {/* ── Program routes ──
