@@ -1,6 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import SectionRenderer from './SectionRenderer';
 import type { Section } from '../types';
+import { useContentOverrides } from '../../../hooks/useContentOverrides';
+import {
+    SectionOverlay,
+    AppendedSections,
+    ModuleEditControls,
+} from '../../../components/content-overlay/ContentOverlayRenderer';
 
 interface MainContentProps {
     title: string;
