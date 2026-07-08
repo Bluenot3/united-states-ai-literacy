@@ -14,13 +14,247 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admin_allowlist: {
+        Row: {
+          created_at: string
+          email: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+        }
+        Relationships: []
+      }
+      content_overrides: {
+        Row: {
+          block_type: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_published: boolean
+          module_id: string
+          payload: Json
+          position: string
+          program_id: string
+          section_id: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          block_type: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_published?: boolean
+          module_id: string
+          payload?: Json
+          position: string
+          program_id: string
+          section_id?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          block_type?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_published?: boolean
+          module_id?: string
+          payload?: Json
+          position?: string
+          program_id?: string
+          section_id?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      program_entitlements: {
+        Row: {
+          access_ends_at: string | null
+          access_starts_at: string | null
+          amount_total: number | null
+          created_at: string
+          currency: string | null
+          id: string
+          note: string | null
+          program_key: string
+          source: string
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_customer_id: string | null
+          stripe_payment_intent_id: string | null
+          stripe_price_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_ends_at?: string | null
+          access_starts_at?: string | null
+          amount_total?: number | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          note?: string | null
+          program_key: string
+          source?: string
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_price_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_ends_at?: string | null
+          access_starts_at?: string | null
+          amount_total?: number | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          note?: string | null
+          program_key?: string
+          source?: string
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_price_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      program_profiles: {
+        Row: {
+          bio: string | null
+          country: string | null
+          created_at: string
+          display_name: string | null
+          experience_level: string | null
+          goal: string | null
+          mission_badge: string | null
+          organization: string | null
+          program: string | null
+          track: string | null
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          bio?: string | null
+          country?: string | null
+          created_at?: string
+          display_name?: string | null
+          experience_level?: string | null
+          goal?: string | null
+          mission_badge?: string | null
+          organization?: string | null
+          program?: string | null
+          track?: string | null
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          bio?: string | null
+          country?: string | null
+          created_at?: string
+          display_name?: string | null
+          experience_level?: string | null
+          goal?: string | null
+          mission_badge?: string | null
+          organization?: string | null
+          program?: string | null
+          track?: string | null
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      grant_program_access: {
+        Args: {
+          _access_ends_at?: string
+          _note?: string
+          _program_key: string
+          _source?: string
+          _user_id: string
+        }
+        Returns: {
+          access_ends_at: string | null
+          access_starts_at: string | null
+          amount_total: number | null
+          created_at: string
+          currency: string | null
+          id: string
+          note: string | null
+          program_key: string
+          source: string
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_customer_id: string | null
+          stripe_payment_intent_id: string | null
+          stripe_price_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "program_entitlements"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      has_program_access: {
+        Args: { _program_key: string; _user_id: string }
+        Returns: boolean
+      }
+      is_content_admin: { Args: never; Returns: boolean }
+      is_zen_admin: { Args: never; Returns: boolean }
+      revoke_program_access: {
+        Args: { _note?: string; _program_key: string; _user_id: string }
+        Returns: {
+          access_ends_at: string | null
+          access_starts_at: string | null
+          amount_total: number | null
+          created_at: string
+          currency: string | null
+          id: string
+          note: string | null
+          program_key: string
+          source: string
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_customer_id: string | null
+          stripe_payment_intent_id: string | null
+          stripe_price_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "program_entitlements"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       [_ in never]: never
