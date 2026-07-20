@@ -192,6 +192,7 @@ export interface ModuleProgress {
 
 // Session record for analytics
 export interface SessionRecord {
+    id: string;
     startedAt: string;
     endedAt: string;
     moduleId: number;

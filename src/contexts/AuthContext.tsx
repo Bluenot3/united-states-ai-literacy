@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import type { ModuleProgress, SessionRecord, User } from '../types';
 import { dal } from '../services/dal';
@@ -19,7 +19,8 @@ interface AuthContextType {
     setFinalCertification: (certId: string, hash: string) => void;
     getModuleProgress: (moduleId: 1 | 2 | 3 | 4) => ModuleProgress;
     startSession: (moduleId: number) => void;
-    endSession: () => void;
+    trackSessionSection: (sectionId: string) => void;
+    endSession: () => Promise<void>;
     updateProgress: (sectionOrInteractiveId: string, type: 'section' | 'interactive') => void;
 }
 
@@ -110,17 +111,30 @@ const getModuleIdFromPath = (pathname: string): 1 | 2 | 3 | 4 => {
     return 1;
 };
 
+interface ActiveSession {
+    id: string;
+    userId: string | null;
+    moduleId: number;
+    startedAt: string;
+    sectionsViewed: string[];
+}
+
+const toSessionRecord = (session: ActiveSession, endedAt: string): SessionRecord => ({
+    id: session.id,
+    startedAt: session.startedAt,
+    endedAt,
+    moduleId: session.moduleId,
+    sectionsViewed: session.sectionsViewed,
+});
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const location = useLocation();
     const currentModuleId = getModuleIdFromPath(location.pathname);
 
     const [user, setUser] = useState<User | null>(() => (PREVIEW_ACCESS_ENABLED ? readPreviewUser() : null));
     const [loading, setLoading] = useState(true);
-    const [currentSession, setCurrentSession] = useState<{
-        moduleId: number;
-        startedAt: string;
-        sectionsViewed: string[];
-    } | null>(null);
+    const currentSessionRef = useRef<ActiveSession | null>(null);
+    const sessionWriteQueueRef = useRef<Promise<void>>(Promise.resolve());
 
     useEffect(() => {
         let mounted = true;
@@ -171,6 +185,101 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
     }, []);
 
+    const queueSessionWrite = useCallback((session: ActiveSession, endedAt: string): Promise<void> => {
+        if (!session.userId) {
+            return Promise.resolve();
+        }
+
+        const sessionRecord = toSessionRecord(session, endedAt);
+        const nextWrite = sessionWriteQueueRef.current
+            .catch(() => undefined)
+            .then(() => dal.user.upsertSession(session.userId as string, sessionRecord));
+
+        sessionWriteQueueRef.current = nextWrite;
+        return nextWrite;
+    }, []);
+
+    const endSession = useCallback(async () => {
+        const activeSession = currentSessionRef.current;
+        if (!activeSession) {
+            return;
+        }
+
+        // Clear first so route cleanup, logout, or a double click cannot flush twice.
+        currentSessionRef.current = null;
+        const endedAt = new Date().toISOString();
+        const sessionRecord = toSessionRecord(activeSession, endedAt);
+
+        setUser((previousUser) => {
+            if (!previousUser) {
+                return previousUser;
+            }
+
+            const nextUser = {
+                ...previousUser,
+                sessionHistory: [...(previousUser.sessionHistory || []), sessionRecord],
+            };
+            persistPreviewUser(nextUser);
+            return nextUser;
+        });
+
+        try {
+            await queueSessionWrite(activeSession, endedAt);
+        } catch (error) {
+            // Session analytics must never trap a learner in the app or block logout.
+            console.warn('Failed to flush learner session.', error);
+        }
+    }, [queueSessionWrite]);
+
+    const startSession = useCallback((moduleId: number) => {
+        if (!Number.isInteger(moduleId) || moduleId < 1 || moduleId > 4) {
+            return;
+        }
+
+        const userId = dal.auth.getUserId();
+        const activeSession = currentSessionRef.current;
+        if (activeSession?.moduleId === moduleId && activeSession.userId === userId) {
+            return;
+        }
+
+        if (activeSession) {
+            void endSession();
+        }
+
+        const startedAt = new Date().toISOString();
+        const nextSession: ActiveSession = {
+            id: crypto.randomUUID(),
+            userId,
+            moduleId,
+            startedAt,
+            sectionsViewed: [],
+        };
+
+        currentSessionRef.current = nextSession;
+        void queueSessionWrite(nextSession, startedAt).catch((error) => {
+            console.warn('Failed to start learner session.', error);
+        });
+    }, [endSession, queueSessionWrite]);
+
+    const trackSessionSection = useCallback((sectionId: string) => {
+        const activeSession = currentSessionRef.current;
+        if (!activeSession || !sectionId) {
+            return;
+        }
+
+        const nextSession = {
+            ...activeSession,
+            sectionsViewed: activeSession.sectionsViewed.includes(sectionId)
+                ? activeSession.sectionsViewed
+                : [...activeSession.sectionsViewed, sectionId],
+        };
+        currentSessionRef.current = nextSession;
+
+        void queueSessionWrite(nextSession, new Date().toISOString()).catch((error) => {
+            console.warn('Failed to update learner session.', error);
+        });
+    }, [queueSessionWrite]);
+
     const login = useCallback(async (email: string, password: string) => {
         try {
             await dal.auth.login(email, password);
@@ -189,6 +298,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: string,
         type: 'section' | 'interactive'
     ) => {
+        trackSessionSection(id);
         updateUserState((prevUser) => {
             const moduleProgress = { ...prevUser.modules[moduleId] };
             let updated = false;
@@ -212,13 +322,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 return prevUser;
             }
 
-            if (currentSession) {
-                setCurrentSession((previousSession) => previousSession ? {
-                    ...previousSession,
-                    sectionsViewed: [...new Set([...previousSession.sectionsViewed, id])],
-                } : null);
-            }
-
             return {
                 ...prevUser,
                 modules: {
@@ -227,7 +330,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 },
             };
         });
-    }, [currentSession, updateUserState]);
+    }, [trackSessionSection, updateUserState]);
 
     const applyPoints = useCallback((moduleId: 1 | 2 | 3 | 4, amount: number) => {
         updateUserState((prevUser) => {
@@ -318,48 +421,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return user.modules[moduleId] ?? createDefaultModuleProgress();
     }, [user]);
 
-    const startSession = useCallback((moduleId: number) => {
-        setCurrentSession({
-            moduleId,
-            startedAt: new Date().toISOString(),
-            sectionsViewed: [],
-        });
-    }, []);
-
-    const endSession = useCallback(() => {
-        if (!currentSession || !user) {
-            return;
-        }
-
-        const sessionRecord: SessionRecord = {
-            startedAt: currentSession.startedAt,
-            endedAt: new Date().toISOString(),
-            moduleId: currentSession.moduleId,
-            sectionsViewed: currentSession.sectionsViewed,
-        };
-
-        updateUserState((prevUser) => ({
-            ...prevUser,
-            sessionHistory: [...(prevUser.sessionHistory || []), sessionRecord],
-        }));
-
-        setCurrentSession(null);
-    }, [currentSession, updateUserState, user]);
-
     const logout = useCallback(async () => {
-        if (currentSession) {
-            endSession();
-        }
+        await endSession();
 
         try {
             await dal.auth.logout();
         } catch (error) {
             console.warn('Logout failed.', error);
         } finally {
-            setCurrentSession(null);
+            currentSessionRef.current = null;
             setUser(null);
         }
-    }, [currentSession, endSession]);
+    }, [endSession]);
 
     const updateProgress = useCallback((sectionOrInteractiveId: string, type: 'section' | 'interactive') => {
         updateModuleProgress(currentModuleId, sectionOrInteractiveId, type);
@@ -393,6 +466,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setFinalCertification,
         getModuleProgress,
         startSession,
+        trackSessionSection,
         endSession,
         updateProgress,
     };

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useArsenal } from '../../contexts/ArsenalContext';
+import { useAuth } from '../../hooks/useAuth';
 import { getAiClient } from '../../lib/aiClient';
 import { repairContent, repairText } from '../../utils/text';
 import { getCurriculumByProgramId } from '../curriculum';
@@ -3072,6 +3073,7 @@ const ProgramDashboardPage: React.FC = () => {
     const program = programId ? getProgramById(programId) : undefined;
     const curriculum = programId ? getCurriculumByProgramId(programId) : undefined;
     const { emitProgress, emitCompletion } = useArsenal();
+    const { user, startSession, trackSessionSection, endSession } = useAuth();
     const [activeSection, setActiveSection] = useState('');
     const [reflectionDrafts, setReflectionDrafts] = useState<Record<string, string>>({});
     const [progress, setProgress] = useState(() => (
@@ -3090,6 +3092,15 @@ const ProgramDashboardPage: React.FC = () => {
     const leafSections = useMemo(() => (curriculum ? getLeafSections(curriculum.sections) : []), [curriculum]);
     const allLabs = useMemo(() => allSections.flatMap((section) => section.content.filter((item): item is ProgramLabContentItem => item.type === 'lab')), [allSections]);
     const allResources = useMemo(() => allSections.flatMap((section) => section.content.filter((item): item is ProgramResourceContentItem => item.type === 'resource')), [allSections]);
+    const pioneerSessionModuleId = useMemo<1 | 2 | 3 | 4 | null>(() => {
+        if (programId !== 'pioneer' || !curriculum?.sections.length || !activeSection) {
+            return null;
+        }
+
+        const activeModule = findModuleForSection(curriculum.sections, activeSection);
+        const moduleIndex = activeModule ? curriculum.sections.findIndex((section) => section.id === activeModule.id) : -1;
+        return moduleIndex >= 0 && moduleIndex < 4 ? (moduleIndex + 1) as 1 | 2 | 3 | 4 : null;
+    }, [activeSection, curriculum, programId]);
 
     useEffect(() => {
         if (!programId || !curriculum?.sections.length) {
@@ -3121,6 +3132,25 @@ const ProgramDashboardPage: React.FC = () => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeSection, programId]);
+
+    useEffect(() => {
+        if (!user?.id || !pioneerSessionModuleId) {
+            return;
+        }
+
+        startSession(pioneerSessionModuleId);
+        return () => {
+            void endSession();
+        };
+    }, [endSession, pioneerSessionModuleId, startSession, user?.id]);
+
+    useEffect(() => {
+        if (!user?.id || !pioneerSessionModuleId || !activeSection) {
+            return;
+        }
+
+        trackSessionSection(activeSection);
+    }, [activeSection, pioneerSessionModuleId, trackSessionSection, user?.id]);
 
     if (!programId || !program) {
         return <Navigate to="/programs" replace />;

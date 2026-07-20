@@ -1,10 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
-const SUPABASE_KEY =
-    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    import.meta.env.VITE_SUPABASE_KEY ||
-    'public-anon-key-placeholder';
+import {
+    createSupabaseFetch,
+    isSupabaseConfigured,
+    SUPABASE_PUBLISHABLE_KEY,
+    SUPABASE_URL,
+} from './supabaseConfig';
 
 const isEmbedded = typeof window !== 'undefined' && (
     window.location.search.includes('arsenal_launch') ||
@@ -15,10 +15,18 @@ const isEmbedded = typeof window !== 'undefined' && (
 
 if (
     !isEmbedded &&
-    (SUPABASE_URL === 'https://placeholder.supabase.co' ||
-    SUPABASE_KEY === 'public-anon-key-placeholder')
+    !isSupabaseConfigured
 ) {
-    console.warn('Supabase is not fully configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY for real auth and data.');
+    console.warn('Supabase is not fully configured. Set the Vanguard Supabase URL and publishable key for real auth and data.');
 }
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    global: {
+        fetch: createSupabaseFetch(SUPABASE_PUBLISHABLE_KEY),
+    },
+    auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+    },
+});

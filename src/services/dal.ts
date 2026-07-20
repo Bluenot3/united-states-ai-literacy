@@ -104,6 +104,7 @@ async function loadFullUser(supabaseUser: { id: string; email?: string }): Promi
     }
 
     const sessionHistory: SessionRecord[] = sessionRows.map((row) => ({
+        id: row.id as string,
         startedAt: row.started_at as string,
         endedAt: row.ended_at as string,
         moduleId: row.module_id as number,
@@ -207,7 +208,13 @@ export const dal = {
          */
         async signup(email: string, password: string): Promise<{ requiresConfirmation: boolean }> {
             // @ts-expect-error - Type definition clash
-            const { data, error } = await supabase.auth.signUp({ email, password });
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    emailRedirectTo: `${window.location.origin}/login?confirmed=1`,
+                },
+            });
             if (error) throw new Error(error.message);
             // If Supabase returned a session immediately, confirmation is disabled
             return { requiresConfirmation: !data.session };
@@ -311,6 +318,29 @@ export const dal = {
         },
 
         /**
+         * Persist one learner session idempotently. The browser creates the ID once
+         * when the session begins, so activity heartbeats and logout all update the
+         * same row instead of creating duplicates.
+         */
+        async upsertSession(userId: string, session: SessionRecord): Promise<void> {
+            const { error } = await supabase.from('session_history').upsert({
+                id: session.id,
+                user_id: userId,
+                module_id: session.moduleId,
+                started_at: session.startedAt,
+                ended_at: session.endedAt,
+                sections_viewed: session.sectionsViewed,
+            }, {
+                onConflict: 'id',
+            });
+
+            if (error) {
+                console.error('Error persisting learner session:', error);
+                throw error;
+            }
+        },
+
+        /**
          * Admin: Load all students' profiles, module progress, and session history.
          * Requires the current user to be authenticated as an admin email (see RLS policies).
          */
@@ -318,7 +348,7 @@ export const dal = {
             const [profilesResult, progressResult, sessionsResult] = await Promise.all([
                 supabase.from('user_profiles').select('*').order('created_at', { ascending: false }),
                 supabase.from('module_progress').select('*'),
-                supabase.from('session_history').select('*').order('created_at', { ascending: false }),
+                supabase.from('session_history').select('*').order('ended_at', { ascending: false }),
             ]);
 
             const profiles = profilesResult.data ?? [];
@@ -345,6 +375,7 @@ export const dal = {
                 }
 
                 const sessionHistory: import('../types').SessionRecord[] = userSessions.map((row) => ({
+                    id: row.id as string,
                     startedAt: row.started_at as string,
                     endedAt: row.ended_at as string,
                     moduleId: row.module_id as number,
@@ -354,7 +385,7 @@ export const dal = {
                 // Determine status
                 const latestSession = userSessions[0];
                 const lastActiveTime = latestSession
-                    ? new Date(latestSession.created_at as string).getTime()
+                    ? new Date((latestSession.ended_at ?? latestSession.created_at) as string).getTime()
                     : new Date(profile.created_at as string).getTime();
 
                 let status: 'active' | 'inactive' | 'at-risk' = 'inactive';
@@ -368,7 +399,7 @@ export const dal = {
                     avatar: profile.picture as string,
                     enrolledAt: profile.created_at as string,
                     lastActive: latestSession
-                        ? (latestSession.created_at as string)
+                        ? ((latestSession.ended_at ?? latestSession.created_at) as string)
                         : (profile.created_at as string),
                     totalPoints: profile.total_points as number,
                     moduleProgress,

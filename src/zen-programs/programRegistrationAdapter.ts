@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { isSupabaseConfigured } from '../lib/supabaseConfig';
 import {
     getProgramByKey,
     type CampaignUtm,
@@ -463,8 +464,7 @@ export const createSupabaseProgramRegistrationAdapter = (): ProgramRegistrationA
 
 export const isProgramSupabaseAdapterConfigured = () => (
     import.meta.env.VITE_PROGRAM_REGISTRATION_ADAPTER === 'supabase'
-    && Boolean(import.meta.env.VITE_SUPABASE_URL)
-    && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_KEY)
+    && isSupabaseConfigured
 );
 
 export const createProgramRegistrationAdapter = (): ProgramRegistrationAdapter => (
