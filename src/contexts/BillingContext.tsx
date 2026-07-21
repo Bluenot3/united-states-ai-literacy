@@ -1,7 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
-import { isAdminEmail } from '../services/adminAccess';
 
 const RAW_API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 const API_BASE = import.meta.env.DEV
@@ -9,10 +8,7 @@ const API_BASE = import.meta.env.DEV
     : /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(RAW_API_BASE)
         ? ''
         : RAW_API_BASE;
-const STRIPE_PAYMENT_LINKS = {
-    vanguard: import.meta.env.VITE_STRIPE_VANGUARD_PAYMENT_LINK_URL || 'https://buy.stripe.com/5kQ4gze1Og8R31a3V9gEg09',
-    pioneer: import.meta.env.VITE_STRIPE_AI_PIONEER_PAYMENT_LINK_URL || 'https://buy.stripe.com/dRmbJ16zmbSBgS063hgEg0a',
-};
+type CheckoutProgramKey = 'pioneer' | 'vanguard';
 
 interface BillingContextType {
     entitled: boolean;
@@ -21,7 +17,7 @@ interface BillingContextType {
     error: string | null;
     checkEntitlement: () => Promise<boolean>;
     adminBypass: (username: string, password: string) => Promise<boolean>;
-    createCheckoutSession: (returnPath?: string) => Promise<string | null>;
+    createCheckoutSession: (programKey: CheckoutProgramKey, returnPath?: string) => Promise<string | null>;
     clearAdminBypass: () => void;
 }
 
@@ -29,7 +25,7 @@ const BillingContext = createContext<BillingContextType | undefined>(undefined);
 const ADMIN_TOKEN_KEY = 'zenBillingAdminToken';
 
 export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { user, isAuthenticated } = useAuth();
+    const { user, isAuthenticated, isAdmin, adminLoading } = useAuth();
     const [entitled, setEntitled] = useState(false);
     const [isAdminBypass, setIsAdminBypass] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -41,18 +37,22 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
             return false;
         }
 
-        const { data, error: profileError } = await supabase
-            .from('user_profiles')
-            .select('is_entitled')
-            .eq('id', user.id)
-            .maybeSingle();
+        const { data, error: entitlementError } = await supabase
+            .from('program_entitlements')
+            .select('status,access_starts_at,access_ends_at')
+            .eq('user_id', user.id)
+            .in('status', ['active', 'trialing']);
 
-        if (profileError) {
-            console.warn('Supabase entitlement check failed:', profileError);
+        if (entitlementError) {
+            console.warn('Supabase entitlement check failed:', entitlementError);
             return false;
         }
 
-        return data?.is_entitled === true;
+        const now = Date.now();
+        return (data ?? []).some((row) => (
+            (!row.access_starts_at || Date.parse(row.access_starts_at) <= now)
+            && (!row.access_ends_at || Date.parse(row.access_ends_at) > now)
+        ));
     }, [user?.id]);
 
     const checkEntitlement = useCallback(async (): Promise<boolean> => {
@@ -63,7 +63,12 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
             return false;
         }
 
-        if (isAdminEmail(user.email)) {
+        if (adminLoading) {
+            setLoading(true);
+            return false;
+        }
+
+        if (isAdmin) {
             setEntitled(true);
             setIsAdminBypass(true);
             setError(null);
@@ -72,13 +77,6 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
 
         if (import.meta.env.DEV && user.email === 'preview@zenai.world') {
-            setEntitled(true);
-            setIsAdminBypass(true);
-            setLoading(false);
-            return true;
-        }
-
-        if (sessionStorage.getItem('zen_arsenal_embedded') === 'true') {
             setEntitled(true);
             setIsAdminBypass(true);
             setLoading(false);
@@ -102,7 +100,11 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 params.append('token', adminToken);
             }
 
-            const response = await fetch(`${API_BASE}/api/billing/status?${params.toString()}`);
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) throw new Error('Supabase session token unavailable.');
+            const response = await fetch(`${API_BASE}/api/billing/status?${params.toString()}`, {
+                headers: { Authorization: `Bearer ${session.access_token}` },
+            });
             const data = await response.json();
             const nextEntitled = data.entitled === true;
 
@@ -119,9 +121,14 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         } finally {
             setLoading(false);
         }
-    }, [adminToken, readSupabaseEntitlement, user?.email]);
+    }, [adminLoading, adminToken, isAdmin, readSupabaseEntitlement, user?.email]);
 
     useEffect(() => {
+        if (adminLoading) {
+            setLoading(true);
+            return;
+        }
+
         if (isAuthenticated && user?.email) {
             void checkEntitlement();
             return;
@@ -130,7 +137,7 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setEntitled(false);
         setIsAdminBypass(false);
         setLoading(false);
-    }, [checkEntitlement, isAuthenticated, user?.email]);
+    }, [adminLoading, checkEntitlement, isAuthenticated, user?.email]);
 
     const adminBypass = useCallback(async (username: string, password: string): Promise<boolean> => {
         if (!user?.email) {
@@ -144,13 +151,20 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
         try {
             setError(null);
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+                setError('Your Supabase session has expired. Sign in again.');
+                return false;
+            }
             const response = await fetch(`${API_BASE}/api/admin/bypass`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${session.access_token}`,
+                },
                 body: JSON.stringify({
                     username,
                     password,
-                    userEmail: user.email,
                 }),
             });
 
@@ -173,21 +187,10 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
     }, [user?.email]);
 
-    const getPaymentLinkForPath = useCallback((returnPath?: string): string | null => {
-        const normalizedPath = returnPath?.toLowerCase() ?? '';
-
-        if (normalizedPath.includes('/pioneer') || normalizedPath.includes('/ai-pioneer')) {
-            return STRIPE_PAYMENT_LINKS.pioneer;
-        }
-
-        if (normalizedPath.includes('/vanguard')) {
-            return STRIPE_PAYMENT_LINKS.vanguard;
-        }
-
-        return STRIPE_PAYMENT_LINKS.vanguard || STRIPE_PAYMENT_LINKS.pioneer || null;
-    }, []);
-
-    const createCheckoutSession = useCallback(async (returnPath?: string): Promise<string | null> => {
+    const createCheckoutSession = useCallback(async (
+        programKey: CheckoutProgramKey,
+        returnPath?: string,
+    ): Promise<string | null> => {
         if (!user?.email) {
             const currentPath = typeof window !== 'undefined'
                 ? `${window.location.pathname}${window.location.search}`
@@ -199,7 +202,12 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
             return `/login?return_to=${encodeURIComponent(loginReturnPath)}`;
         }
 
-        if (isAdminEmail(user.email)) {
+        if (adminLoading) {
+            setError('Your account access is still loading. Please try again.');
+            return null;
+        }
+
+        if (isAdmin) {
             setEntitled(true);
             setIsAdminBypass(true);
             setError(null);
@@ -207,30 +215,21 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
 
         if (!API_BASE) {
-            const fallbackLink = getPaymentLinkForPath(returnPath);
-            if (fallbackLink) {
-                setError(null);
-                return fallbackLink;
-            }
-
-            setError('Checkout is not configured for this program yet.');
+            setError('Secure checkout is temporarily unavailable. No payment was taken.');
             return null;
         }
 
         try {
             setError(null);
-            const programKey = (() => {
-                const p = (returnPath || '').toLowerCase();
-                if (p.includes('/pioneer') || p.includes('/ai-pioneer')) return 'pioneer';
-                if (p.includes('/vanguard') || p.startsWith('/dashboard') || p.startsWith('/module')) return 'vanguard';
-                return null;
-            })();
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) throw new Error('Supabase session token unavailable.');
             const response = await fetch(`${API_BASE}/api/stripe/create-checkout-session`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${session.access_token}`,
+                },
                 body: JSON.stringify({
-                    userEmail: user.email,
-                    userId: user.id,
                     programKey,
                     returnPath,
                 }),
@@ -242,25 +241,14 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 return data.url;
             }
 
-            const fallbackLink = getPaymentLinkForPath(returnPath);
-            if (fallbackLink) {
-                return fallbackLink;
-            }
-
             setError(data.error || 'Failed to create checkout session.');
             return null;
         } catch (requestError) {
             console.error('Checkout session error:', requestError);
-            const fallbackLink = getPaymentLinkForPath(returnPath);
-            if (fallbackLink) {
-                setError(null);
-                return fallbackLink;
-            }
-
             setError('Failed to start checkout.');
             return null;
         }
-    }, [getPaymentLinkForPath, user?.email]);
+    }, [adminLoading, isAdmin, user?.email]);
 
     const clearAdminBypass = useCallback(() => {
         setAdminToken(null);

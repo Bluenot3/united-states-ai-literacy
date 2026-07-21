@@ -128,8 +128,12 @@ const emptyProgress = (): ProgramProgress => ({
     lastActiveAt: null,
 });
 
-export const getProgramProgress = (programId: string): ProgramProgress => {
-    const key = `zenPrograms.${programId}.progress`;
+const programProgressKey = (programId: string, ownerId?: string | null) => (
+    ownerId ? `zenPrograms.${programId}.${ownerId}.progress` : `zenPrograms.${programId}.progress`
+);
+
+export const getProgramProgress = (programId: string, ownerId?: string | null): ProgramProgress => {
+    const key = programProgressKey(programId, ownerId);
     const stored = localStorage.getItem(key);
 
     if (stored) {
@@ -143,8 +147,22 @@ export const getProgramProgress = (programId: string): ProgramProgress => {
     return emptyProgress();
 };
 
+export const saveProgramProgressSnapshot = (programId: string, progress: ProgramProgress, ownerId?: string | null): ProgramProgress => {
+    const key = programProgressKey(programId, ownerId);
+    const normalized: ProgramProgress = {
+        ...emptyProgress(),
+        ...progress,
+        completedSections: [...new Set(progress.completedSections ?? [])],
+        exploredResources: [...new Set(progress.exploredResources ?? [])],
+        completedLabs: [...new Set(progress.completedLabs ?? [])],
+        reflections: { ...(progress.reflections ?? {}) },
+    };
+
+    localStorage.setItem(key, JSON.stringify(normalized));
+    return normalized;
+};
+
 export const saveProgramProgress = (programId: string, sectionId: string, markComplete = true): void => {
-    const key = `zenPrograms.${programId}.progress`;
     const progress = getProgramProgress(programId);
 
     if (!progress.startedAt) {
@@ -157,11 +175,10 @@ export const saveProgramProgress = (programId: string, sectionId: string, markCo
 
     progress.lastViewedSection = sectionId;
     progress.lastActiveAt = new Date().toISOString();
-    localStorage.setItem(key, JSON.stringify(progress));
+    saveProgramProgressSnapshot(programId, progress);
 };
 
 export const saveProgramResourceExplored = (programId: string, resourceId: string): ProgramProgress => {
-    const key = `zenPrograms.${programId}.progress`;
     const progress = getProgramProgress(programId);
     progress.exploredResources = progress.exploredResources ?? [];
 
@@ -170,12 +187,10 @@ export const saveProgramResourceExplored = (programId: string, resourceId: strin
     }
 
     progress.lastActiveAt = new Date().toISOString();
-    localStorage.setItem(key, JSON.stringify(progress));
-    return progress;
+    return saveProgramProgressSnapshot(programId, progress);
 };
 
 export const saveProgramLabComplete = (programId: string, labId: string, reflection?: string): ProgramProgress => {
-    const key = `zenPrograms.${programId}.progress`;
     const progress = getProgramProgress(programId);
     progress.completedLabs = progress.completedLabs ?? [];
     progress.reflections = progress.reflections ?? {};
@@ -189,11 +204,10 @@ export const saveProgramLabComplete = (programId: string, labId: string, reflect
     }
 
     progress.lastActiveAt = new Date().toISOString();
-    localStorage.setItem(key, JSON.stringify(progress));
-    return progress;
+    return saveProgramProgressSnapshot(programId, progress);
 };
 
-export const resetProgramProgress = (programId: string): void => {
-    const key = `zenPrograms.${programId}.progress`;
+export const resetProgramProgress = (programId: string, ownerId?: string | null): void => {
+    const key = programProgressKey(programId, ownerId);
     localStorage.removeItem(key);
 };

@@ -1,8 +1,8 @@
 // Curriculum Studio override store.
 // Admin-authored blocks are layered on top of the shipped curriculum data so
 // admins can extend any program section (or add whole new sections) without
-// touching code. Persistence is browser localStorage with JSON export/import
-// for backup and handoff to a future backend sync.
+// touching code. Browser storage is retained as an offline draft/backup; the
+// published source of truth is synchronized through Supabase.
 import type { ProgramContentItem, ProgramCurriculum, ProgramSection } from './types';
 
 export interface StudioBlock {
@@ -19,6 +19,8 @@ export interface StudioCustomSection {
 export interface ProgramStudioOverride {
     sectionBlocks: Record<string, StudioBlock[]>;
     customSections: StudioCustomSection[];
+    sectionModes: Record<string, 'append' | 'replace'>;
+    sectionTitles: Record<string, string>;
 }
 
 export type StudioState = Record<string, ProgramStudioOverride>;
@@ -32,6 +34,8 @@ export const createStudioId = (prefix = 'blk') =>
 export const emptyProgramOverride = (): ProgramStudioOverride => ({
     sectionBlocks: {},
     customSections: [],
+    sectionModes: {},
+    sectionTitles: {},
 });
 
 export function loadStudioState(): StudioState {
@@ -59,6 +63,8 @@ export function getProgramOverride(state: StudioState, programId: string): Progr
     return {
         sectionBlocks: override.sectionBlocks ?? {},
         customSections: override.customSections ?? [],
+        sectionModes: override.sectionModes ?? {},
+        sectionTitles: override.sectionTitles ?? {},
     };
 }
 
@@ -85,25 +91,37 @@ export function resetProgramOverride(programId: string): StudioState {
 
 const applyToSections = (
     sections: ProgramSection[],
-    blocks: Record<string, StudioBlock[]>,
+    override: ProgramStudioOverride,
 ): ProgramSection[] =>
-    sections.map((section) => ({
-        ...section,
-        content: blocks[section.id]?.length
-            ? [...section.content, ...blocks[section.id].map((block) => block.item)]
-            : section.content,
-        subSections: section.subSections ? applyToSections(section.subSections, blocks) : section.subSections,
-    }));
+    sections.map((section) => {
+        const authoredItems = (override.sectionBlocks[section.id] ?? []).map((block) => block.item);
+        const replaceBaseline = override.sectionModes[section.id] === 'replace';
 
-export function applyStudioOverrides(programId: string, curriculum: ProgramCurriculum): ProgramCurriculum {
-    const override = getProgramOverride(loadStudioState(), programId);
+        return {
+            ...section,
+            title: override.sectionTitles[section.id]?.trim() || section.title,
+            content: replaceBaseline
+                ? authoredItems
+                : authoredItems.length
+                    ? [...section.content, ...authoredItems]
+                    : section.content,
+            subSections: section.subSections ? applyToSections(section.subSections, override) : section.subSections,
+        };
+    });
+
+export function applyProgramStudioOverride(
+    curriculum: ProgramCurriculum,
+    override: ProgramStudioOverride,
+): ProgramCurriculum {
     const hasSectionBlocks = Object.values(override.sectionBlocks).some((blocks) => blocks?.length > 0);
+    const hasSectionChanges = Object.keys(override.sectionModes).length > 0
+        || Object.keys(override.sectionTitles).length > 0;
 
-    if (!hasSectionBlocks && override.customSections.length === 0) {
+    if (!hasSectionBlocks && !hasSectionChanges && override.customSections.length === 0) {
         return curriculum;
     }
 
-    const sections = applyToSections(curriculum.sections, override.sectionBlocks);
+    const sections = applyToSections(curriculum.sections, override);
     const customSections: ProgramSection[] = override.customSections.map((custom) => ({
         id: custom.id,
         title: custom.title || 'Untitled section',
@@ -112,4 +130,8 @@ export function applyStudioOverrides(programId: string, curriculum: ProgramCurri
     }));
 
     return { ...curriculum, sections: [...sections, ...customSections] };
+}
+
+export function applyStudioOverrides(programId: string, curriculum: ProgramCurriculum): ProgramCurriculum {
+    return applyProgramStudioOverride(curriculum, getProgramOverride(loadStudioState(), programId));
 }

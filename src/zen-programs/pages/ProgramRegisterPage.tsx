@@ -1,19 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
-import { isAdminEmail } from '../../services/adminAccess';
 import { useAuth } from '../../hooks/useAuth';
 import { getProgramBySlug, isActivePublicProgramKey, parseProgramCampaignParams, type UserProgramState } from '../programIntegrationContract';
 import { programRegistrationAdapter } from '../programRegistrationAdapter';
-import { getSyntheticStandaloneUserId } from '../components/ProgramAccessGate';
 
 const ProgramRegisterPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const { search } = useLocation();
-    const { user } = useAuth();
-    const isAdmin = isAdminEmail(user?.email);
+    const { user, isAdmin } = useAuth();
     const program = slug ? getProgramBySlug(slug) : undefined;
     const campaign = useMemo(() => parseProgramCampaignParams(new URLSearchParams(search)), [search]);
-    const [email, setEmail] = useState(user?.email ?? '');
+    const registrationEmail = user?.email.trim() ?? '';
     const [displayName, setDisplayName] = useState(user?.name ?? '');
     const [submitting, setSubmitting] = useState(false);
     const [state, setState] = useState<UserProgramState | null>(null);
@@ -33,10 +30,13 @@ const ProgramRegisterPage: React.FC = () => {
         setError(null);
 
         try {
-            const userId = user?.id ?? getSyntheticStandaloneUserId(email);
+            if (!user?.id || !registrationEmail) {
+                throw new Error('Sign in with a confirmed email before registering.');
+            }
+
             const registration = await programRegistrationAdapter.registerForProgram({
-                userId,
-                email,
+                userId: user.id,
+                email: registrationEmail,
                 displayName,
                 programKey: program.programKey,
                 source: campaign.source ?? 'program-register-page',
@@ -106,12 +106,14 @@ const ProgramRegisterPage: React.FC = () => {
                         <label className="block">
                             <span className="text-xs font-semibold uppercase tracking-[0.22em] text-zen-gold/70">Email</span>
                             <input
-                                value={email}
-                                onChange={(event) => setEmail(event.target.value)}
+                                value={registrationEmail}
                                 type="email"
                                 required
-                                className="mt-2 w-full rounded-2xl border border-zen-gold/10 bg-zen-navy/70 px-4 py-3 text-sm text-white outline-none transition focus:border-zen-gold/35"
+                                readOnly
+                                aria-readonly="true"
+                                className="mt-2 w-full cursor-not-allowed rounded-2xl border border-zen-gold/10 bg-zen-navy/50 px-4 py-3 text-sm text-slate-300 outline-none"
                             />
+                            <span className="mt-2 block text-xs text-slate-500">Uses your signed-in Arsenal account email.</span>
                         </label>
                         <label className="block">
                             <span className="text-xs font-semibold uppercase tracking-[0.22em] text-zen-gold/70">Name</span>

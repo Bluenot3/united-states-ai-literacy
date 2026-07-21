@@ -13,8 +13,54 @@ interface VanguardModuleFrameProps {
     header: React.ReactNode;
     sidebar: React.ReactNode;
     footer: React.ReactNode;
+    activeSectionTitle?: string;
+    activeSectionComplete?: boolean;
+    canCompleteActiveSection?: boolean;
+    completionBlockedReason?: string;
+    onCompleteActiveSection?: () => void;
     bleed?: boolean;
 }
+
+interface LockedVanguardSectionProps {
+    id: string;
+    title: string;
+    accentClassName: string;
+    className?: string;
+}
+
+export const LockedVanguardSection = React.forwardRef<HTMLDivElement, LockedVanguardSectionProps>(({
+    id,
+    title,
+    accentClassName,
+    className = '',
+}, ref) => (
+    <div
+        id={id}
+        ref={ref}
+        className={`scroll-mt-28 ${className}`}
+        aria-label={`${title} is locked`}
+        data-section-locked="true"
+    >
+        <div className="relative overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-[linear-gradient(160deg,rgba(7,14,30,0.86)_0%,rgba(9,16,33,0.92)_100%)] p-6 opacity-80 shadow-[0_18px_48px_rgba(2,6,23,0.34)] md:p-8">
+            <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accentClassName} opacity-35`} />
+            <div className="flex items-start gap-4">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-slate-400" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
+                        <rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="1.8" />
+                        <path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                    </svg>
+                </span>
+                <div className="min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Locked checkpoint</p>
+                    <h2 className="mt-2 text-xl font-black tracking-tight text-slate-300 md:text-2xl">{title}</h2>
+                    <p className="mt-2 text-sm leading-6 text-slate-500">Complete the previous section to unlock this lesson and its activities.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+));
+
+LockedVanguardSection.displayName = 'LockedVanguardSection';
 
 const MODULE_AMBIENTS: Record<number, { orb1: string; orb2: string; orb3: string; ring: string }> = {
     1: { orb1: 'bg-violet-500/[0.14]', orb2: 'bg-fuchsia-400/[0.13]', orb3: 'bg-cyan-400/[0.09]', ring: 'from-violet-500 via-fuchsia-500 to-cyan-400' },
@@ -35,6 +81,11 @@ const VanguardModuleFrame: React.FC<VanguardModuleFrameProps> = ({
     header,
     sidebar,
     footer,
+    activeSectionTitle,
+    activeSectionComplete = false,
+    canCompleteActiveSection = true,
+    completionBlockedReason,
+    onCompleteActiveSection,
     bleed = true,
 }) => {
     const progressPercent = totalSections > 0
@@ -130,6 +181,30 @@ const VanguardModuleFrame: React.FC<VanguardModuleFrameProps> = ({
 
                             {/* Mobile sidebar */}
                             <div className="mb-4 lg:hidden">{sidebar}</div>
+
+                            {onCompleteActiveSection && activeSectionTitle && (
+                                <div className="sticky top-3 z-30 mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cyan-200/20 bg-[#07101f]/95 px-4 py-3 shadow-[0_18px_50px_rgba(2,6,23,.55)] backdrop-blur-xl">
+                                    <div className="min-w-0">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200">Current checkpoint</p>
+                                        <p className="mt-1 truncate text-sm font-bold text-white">{activeSectionTitle}</p>
+                                        {!activeSectionComplete && !canCompleteActiveSection && completionBlockedReason && (
+                                            <p className="mt-1 text-xs text-amber-200">{completionBlockedReason}</p>
+                                        )}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={onCompleteActiveSection}
+                                        disabled={activeSectionComplete || !canCompleteActiveSection}
+                                        className="rounded-full bg-cyan-100 px-4 py-2 text-xs font-black text-slate-950 transition hover:-translate-y-0.5 disabled:cursor-default disabled:bg-emerald-300 disabled:text-emerald-950"
+                                    >
+                                        {activeSectionComplete
+                                            ? 'Section completed'
+                                            : canCompleteActiveSection
+                                                ? 'Complete this section'
+                                                : 'Complete required quiz'}
+                                    </button>
+                                </div>
+                            )}
 
                             {/* Content */}
                             <main className="min-w-0 text-white">{children}</main>

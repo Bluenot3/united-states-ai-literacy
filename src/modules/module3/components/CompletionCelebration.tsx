@@ -139,11 +139,10 @@ const CompletionCelebration: React.FC = () => {
                             <h2 className="text-2xl font-bold text-emerald-600 tracking-tighter">ZEN AI VANGUARD</h2>
                             <p className="font-semibold text-brand-text-light">Certificate of Completion</p>
                         </div>
-                        <img
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${certId}`}
-                            alt="Certificate QR Code"
-                            className="w-20 h-20 bg-white p-1 rounded-md"
-                        />
+                        <div className="flex h-20 w-20 flex-col items-center justify-center rounded-xl border border-emerald-500/25 bg-emerald-500/10 text-center">
+                            <span className="text-xl font-black text-emerald-500">ZEN</span>
+                            <span className="text-[8px] font-bold uppercase tracking-[0.18em] text-brand-text-light">Credential</span>
+                        </div>
                     </div>
 
                     <div className="text-center z-10 my-4">

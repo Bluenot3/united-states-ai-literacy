@@ -2,11 +2,15 @@ import React, { createContext, useCallback, useEffect, useMemo, useRef, useState
 import { useLocation } from 'react-router-dom';
 import type { ModuleProgress, SessionRecord, User } from '../types';
 import { dal } from '../services/dal';
+import { getCanonicalAdminStatus } from '../services/adminAccess';
 
 interface AuthContextType {
     user: User | null;
     loading: boolean;
     isAuthenticated: boolean;
+    isAdmin: boolean;
+    adminLoading: boolean;
+    refreshAdminStatus: () => Promise<boolean>;
     login: (email: string, password: string) => Promise<void>;
     signup: (email: string, password: string) => Promise<{ requiresConfirmation: boolean }>;
     logout: () => Promise<void>;
@@ -15,8 +19,7 @@ interface AuthContextType {
     updateLastViewedSection: (moduleId: 1 | 2 | 3 | 4, sectionId: string) => void;
     resetModuleProgress: (moduleId: 1 | 2 | 3 | 4) => void;
     resetProgress: () => void;
-    setModuleCertificate: (moduleId: 1 | 2 | 3 | 4, certId: string, hash: string) => void;
-    setFinalCertification: (certId: string, hash: string) => void;
+    setModuleCertificate: (moduleId: 1 | 2 | 3 | 4, certId: string, hash: string) => Promise<void>;
     getModuleProgress: (moduleId: 1 | 2 | 3 | 4) => ModuleProgress;
     startSession: (moduleId: number) => void;
     trackSessionSection: (sectionId: string) => void;
@@ -27,7 +30,10 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const PREVIEW_USER_STORAGE_KEY = 'zenPreviewUser';
-const PREVIEW_ACCESS_ENABLED = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true';
+// Preview identities are opt-in. Development builds otherwise use the same
+// Supabase session path as production so local QA cannot accidentally pass on
+// a synthetic learner that will never exist after deployment.
+const PREVIEW_ACCESS_ENABLED = import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true';
 
 const createDefaultModuleProgress = (): ModuleProgress => ({
     completedSections: [],
@@ -133,8 +139,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const [user, setUser] = useState<User | null>(() => (PREVIEW_ACCESS_ENABLED ? readPreviewUser() : null));
     const [loading, setLoading] = useState(true);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [adminLoading, setAdminLoading] = useState(!PREVIEW_ACCESS_ENABLED);
     const currentSessionRef = useRef<ActiveSession | null>(null);
     const sessionWriteQueueRef = useRef<Promise<void>>(Promise.resolve());
+    const userWriteQueueRef = useRef<Promise<void>>(Promise.resolve());
+    const adminLookupVersionRef = useRef(0);
+
+    const refreshAdminStatus = useCallback(async (): Promise<boolean> => {
+        const lookupVersion = ++adminLookupVersionRef.current;
+        if (PREVIEW_ACCESS_ENABLED || !dal.auth.getUserId()) {
+            if (lookupVersion === adminLookupVersionRef.current) {
+                setIsAdmin(false);
+                setAdminLoading(false);
+            }
+            return false;
+        }
+
+        setAdminLoading(true);
+        const allowed = await getCanonicalAdminStatus();
+        if (lookupVersion === adminLookupVersionRef.current) {
+            setIsAdmin(allowed);
+            setAdminLoading(false);
+        }
+        return allowed;
+    }, []);
 
     useEffect(() => {
         let mounted = true;
@@ -142,6 +171,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (PREVIEW_ACCESS_ENABLED) {
             setUser((previous) => previous ?? readPreviewUser());
             setLoading(false);
+            setAdminLoading(false);
         }
 
         const unsubscribe = dal.auth.onAuthStateChanged((incomingUser: User | null) => {
@@ -151,10 +181,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (incomingUser) {
                 setUser(normalizeUser(incomingUser));
+                void refreshAdminStatus();
             } else if (PREVIEW_ACCESS_ENABLED) {
                 setUser(readPreviewUser());
+                setIsAdmin(false);
+                setAdminLoading(false);
             } else {
                 setUser(null);
+                adminLookupVersionRef.current += 1;
+                setIsAdmin(false);
+                setAdminLoading(false);
             }
 
             setLoading(false);
@@ -165,6 +201,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             unsubscribe();
         };
     }, []);
+
+    const queueUserWrite = useCallback((userId: string, nextUser: User): Promise<void> => {
+        const nextWrite = userWriteQueueRef.current
+            .catch(() => undefined)
+            .then(() => dal.user.updateUser(userId, nextUser));
+
+        userWriteQueueRef.current = nextWrite;
+        return nextWrite;
+    }, [refreshAdminStatus]);
 
     const updateUserState = useCallback((updater: (prevUser: User) => User | null) => {
         setUser((prevUser) => {
@@ -177,13 +222,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const nextUser = updater(baseUser);
             const userId = dal.auth.getUserId();
 
+            persistPreviewUser(nextUser);
+
             if (nextUser && userId) {
-                void dal.user.updateUser(userId, nextUser).catch(console.error);
+                void queueUserWrite(userId, nextUser).catch(console.error);
             }
 
             return nextUser;
         });
-    }, []);
+    }, [queueUserWrite]);
 
     const queueSessionWrite = useCallback((session: ActiveSession, endedAt: string): Promise<void> => {
         if (!session.userId) {
@@ -281,13 +328,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [queueSessionWrite]);
 
     const login = useCallback(async (email: string, password: string) => {
-        try {
-            await dal.auth.login(email, password);
-            // Auth state change will be handled by onAuthStateChanged listener
-        } catch (error) {
-            throw error;
-        }
-    }, []);
+        const authenticatedUser = await dal.auth.login(email, password);
+        setUser(normalizeUser(authenticatedUser));
+        setLoading(false);
+        await refreshAdminStatus();
+    }, [refreshAdminStatus]);
 
     const signup = useCallback(async (email: string, password: string) => {
         return await dal.auth.signup(email, password);
@@ -390,28 +435,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
     }, [updateUserState]);
 
-    const setModuleCertificate = useCallback((moduleId: 1 | 2 | 3 | 4, certId: string, hash: string) => {
-        updateUserState((prevUser) => ({
-            ...prevUser,
+    const setModuleCertificate = useCallback(async (moduleId: 1 | 2 | 3 | 4, certId: string, hash: string) => {
+        if (!user) {
+            throw new Error('A signed-in learner is required to save a module certificate.');
+        }
+
+        const completedAt = new Date().toISOString();
+        const nextUser: User = {
+            ...user,
             modules: {
-                ...prevUser.modules,
+                ...user.modules,
                 [moduleId]: {
-                    ...prevUser.modules[moduleId],
-                    completedAt: new Date().toISOString(),
+                    ...user.modules[moduleId],
+                    completedAt,
                     certificateId: certId,
                     certificateHash: hash,
                 },
             },
-        }));
-    }, [updateUserState]);
+        };
 
-    const setFinalCertification = useCallback((certId: string, hash: string) => {
-        updateUserState((prevUser) => ({
-            ...prevUser,
-            finalCertificationId: certId,
-            finalCertificationHash: hash,
-        }));
-    }, [updateUserState]);
+        const userId = dal.auth.getUserId();
+        if (userId) {
+            await queueUserWrite(userId, nextUser);
+        }
+
+        persistPreviewUser(nextUser);
+        setUser(nextUser);
+    }, [queueUserWrite, user]);
 
     const getModuleProgress = useCallback((moduleId: 1 | 2 | 3 | 4): ModuleProgress => {
         if (!user) {
@@ -425,12 +475,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await endSession();
 
         try {
+            await userWriteQueueRef.current;
+        } catch (error) {
+            console.warn('Learner progress could not be fully flushed before logout.', error);
+        }
+
+        try {
             await dal.auth.logout();
         } catch (error) {
             console.warn('Logout failed.', error);
         } finally {
             currentSessionRef.current = null;
             setUser(null);
+            adminLookupVersionRef.current += 1;
+            setIsAdmin(false);
+            setAdminLoading(false);
         }
     }, [endSession]);
 
@@ -454,6 +513,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user: userWithLegacyProgress,
         loading,
         isAuthenticated: !!userWithLegacyProgress,
+        isAdmin,
+        adminLoading,
+        refreshAdminStatus,
         login,
         signup,
         logout,
@@ -463,7 +525,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         resetModuleProgress,
         resetProgress: () => resetModuleProgress(currentModuleId),
         setModuleCertificate,
-        setFinalCertification,
         getModuleProgress,
         startSession,
         trackSessionSection,

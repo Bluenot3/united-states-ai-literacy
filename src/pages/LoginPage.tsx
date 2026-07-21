@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { dal } from '../services/dal';
-import { isAdminEmail } from '../services/adminAccess';
 
 const valueProps = [
     'Learn what AI, LLMs, and automation actually mean.',
@@ -23,25 +22,24 @@ const LoginPage: React.FC = () => {
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [loading, setLoading] = useState(false);
-    const { login, signup, isAuthenticated, user } = useAuth();
+    const { login, signup, isAuthenticated, isAdmin, adminLoading } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const rawReturnTo = new URLSearchParams(location.search).get('return_to');
     const returnTo = safeReturnTo(rawReturnTo);
-    const showDemoHint = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true';
+    const showDemoHint = import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true';
 
     // Admins land in the Admin Command Center unless an explicit return_to
     // was requested; everyone else follows return_to (default /programs).
-    const destinationFor = (signedInEmail?: string | null) =>
-        !rawReturnTo && isAdminEmail(signedInEmail) ? '/admin' : returnTo;
+    const destination = !rawReturnTo && isAdmin ? '/admin' : returnTo;
 
     // If already signed in, bounce immediately.
     useEffect(() => {
-        if (isAuthenticated) {
-            navigate(destinationFor(user?.email), { replace: true });
+        if (isAuthenticated && !adminLoading) {
+            navigate(destination, { replace: true });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isAuthenticated, navigate, returnTo, user?.email]);
+    }, [adminLoading, destination, isAuthenticated, navigate]);
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
@@ -58,15 +56,12 @@ const LoginPage: React.FC = () => {
         try {
             if (isLogin) {
                 await login(email, password);
-                navigate(destinationFor(email), { replace: true });
             } else {
                 const result = await signup(email, password);
                 if (result?.requiresConfirmation) {
                     setSuccessMessage('Account created. Confirm your email, then sign in.');
                     setIsLogin(true);
                     setPassword('');
-                } else {
-                    navigate(destinationFor(email), { replace: true });
                 }
             }
         } catch (authError) {
@@ -220,17 +215,6 @@ const LoginPage: React.FC = () => {
                                 </button>
                             </div>
                         )}
-
-                        {isAdminEmail(email) && (
-                            <div className="flex items-start gap-2 rounded-[0.85rem] border border-zen-gold/30 bg-zen-gold/[0.08] px-3.5 py-2.5 text-[12px] leading-[1.6] text-zen-gold">
-                                <span className="mt-[3px] h-[6px] w-[6px] flex-shrink-0 rounded-full bg-zen-gold shadow-[0_0_8px_rgba(201,168,76,0.7)]" />
-                                <span>
-                                    <span className="font-semibold">Admin account detected.</span>{' '}
-                                    Sign in for full free access to every program plus the Admin Command Center.
-                                </span>
-                            </div>
-                        )}
-
 
                         {successMessage && (
                             <div className="rounded-[0.85rem] border border-zen-emerald/25 bg-zen-emerald/[0.08] px-3.5 py-2.5 text-[12px] text-emerald-200">

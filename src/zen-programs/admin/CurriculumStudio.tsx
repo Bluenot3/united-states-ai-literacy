@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { curriculumRegistry } from '../curriculum';
 import type {
     ProgramCalloutContentItem,
@@ -6,7 +6,9 @@ import type {
     ProgramContentItem,
     ProgramEmbedContentItem,
     ProgramHtmlContentItem,
+    ProgramLabContentItem,
     ProgramMediaContentItem,
+    ProgramResourceContentItem,
     ProgramSection,
     ProgramTextContentItem,
 } from '../types';
@@ -24,8 +26,14 @@ import {
     type StudioState,
 } from '../curriculumStudioStore';
 import StudioMediaBlock from '../components/StudioMediaBlocks';
+import SmartCodeBlock from '../components/SmartCodeBlock';
+import {
+    loadCurriculumStudioDraft,
+    publishCurriculumStudio,
+    saveCurriculumStudioDraft,
+} from '../curriculumStudioRemote';
 
-type BlockTypeId = 'heading' | 'paragraph' | 'list' | 'quote' | 'callout' | 'code' | 'image' | 'video' | 'embed' | 'html' | 'divider';
+type BlockTypeId = 'heading' | 'paragraph' | 'list' | 'quote' | 'callout' | 'code' | 'resource' | 'lab' | 'image' | 'video' | 'embed' | 'html' | 'divider';
 
 const blockPalette: Array<{ type: BlockTypeId; label: string; hint: string; glyph: string }> = [
     { type: 'heading', label: 'Heading', hint: 'Section sub-title', glyph: 'H' },
@@ -34,6 +42,8 @@ const blockPalette: Array<{ type: BlockTypeId; label: string; hint: string; glyp
     { type: 'quote', label: 'Quote', hint: 'Highlighted quote', glyph: '“”' },
     { type: 'callout', label: 'Callout', hint: 'Info / success / warning', glyph: '!' },
     { type: 'code', label: 'Code', hint: 'Code snippet', glyph: '<>' },
+    { type: 'resource', label: 'Tool / resource', hint: 'Link, embed, or interactive activity', glyph: 'R' },
+    { type: 'lab', label: 'Build lab', hint: 'Hands-on assignment and reflection', glyph: 'L' },
     { type: 'image', label: 'Image', hint: 'Image from URL', glyph: '🖼' },
     { type: 'video', label: 'Video', hint: 'YouTube, Vimeo, Loom, MP4', glyph: '▶' },
     { type: 'embed', label: 'Embed / URL', hint: 'Any page in an iframe', glyph: '🌐' },
@@ -48,7 +58,9 @@ const createBlockItem = (type: BlockTypeId): ProgramContentItem => {
         case 'list': return { type: 'list', content: [''] };
         case 'quote': return { type: 'quote', content: '' };
         case 'callout': return { type: 'callout', title: 'Heads up', tone: 'info', content: [''] };
-        case 'code': return { type: 'code', title: '', language: 'python', content: '' };
+        case 'code': return { type: 'code', title: '', language: '', content: '' };
+        case 'resource': return { type: 'resource', title: 'New tool', href: '', content: '', status: 'Ready', embed: false, instructions: [''], completionHint: '' };
+        case 'lab': return { type: 'lab', id: createStudioId('lab'), title: 'New build lab', objective: '', steps: [''], expectedOutput: '', reflectionPrompt: '' };
         case 'image': return { type: 'image', src: '', alt: '', caption: '' };
         case 'video': return { type: 'video', src: '', caption: '' };
         case 'embed': return { type: 'embed', url: '', title: '', height: 480 };
@@ -106,20 +118,77 @@ const CurriculumStudio: React.FC = () => {
     const [programId, setProgramId] = useState(programIds[0] ?? 'pioneer');
     const [state, setState] = useState<StudioState>(() => loadStudioState());
     const [savedAt, setSavedAt] = useState<Date | null>(null);
+    const [publishedAt, setPublishedAt] = useState<Date | null>(null);
+    const [remoteReadyProgram, setRemoteReadyProgram] = useState<string | null>(null);
+    const [remoteSaving, setRemoteSaving] = useState(false);
+    const [publishing, setPublishing] = useState(false);
     const [statusMessage, setStatusMessage] = useState<string | null>(null);
     const [showBaseline, setShowBaseline] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const baseCurriculum = curriculumRegistry[programId];
     const override = getProgramOverride(state, programId);
+    const serializedOverride = useMemo(() => JSON.stringify(override), [override]);
+
+    useEffect(() => {
+        let active = true;
+        setRemoteReadyProgram(null);
+        setStatusMessage('Loading the shared Supabase draft…');
+
+        void loadCurriculumStudioDraft(programId)
+            .then((remoteDocument) => {
+                if (!active) return;
+                if (remoteDocument) {
+                    setState((previous) => {
+                        const next = { ...previous, [programId]: remoteDocument };
+                        saveStudioState(next);
+                        return next;
+                    });
+                    setStatusMessage('Shared Supabase draft loaded. Changes here are visible to other admins.');
+                } else {
+                    setStatusMessage('No shared draft yet. Your existing local draft will become the first Supabase draft.');
+                }
+                setRemoteReadyProgram(programId);
+            })
+            .catch((error) => {
+                console.warn('Curriculum Studio Supabase draft could not be loaded.', error);
+                if (active) {
+                    setStatusMessage('Supabase draft unavailable. Local backup remains safe; publishing is paused until connection returns.');
+                }
+            });
+
+        return () => {
+            active = false;
+        };
+    }, [programId]);
+
+    useEffect(() => {
+        if (remoteReadyProgram !== programId) return;
+
+        const timer = window.setTimeout(() => {
+            setRemoteSaving(true);
+            void saveCurriculumStudioDraft(programId, JSON.parse(serializedOverride) as ProgramStudioOverride)
+                .then(() => setSavedAt(new Date()))
+                .catch((error) => {
+                    console.warn('Curriculum Studio Supabase autosave failed.', error);
+                    setStatusMessage('Supabase autosave failed. The local backup is still intact.');
+                })
+                .finally(() => setRemoteSaving(false));
+        }, 700);
+
+        return () => window.clearTimeout(timer);
+    }, [programId, remoteReadyProgram, serializedOverride]);
 
     const navEntries = useMemo(() => {
-        const entries = baseCurriculum ? buildNavEntries(baseCurriculum.sections) : [];
+        const entries = baseCurriculum ? buildNavEntries(baseCurriculum.sections).map((entry) => ({
+            ...entry,
+            title: override.sectionTitles[entry.id]?.trim() || entry.title,
+        })) : [];
         override.customSections.forEach((custom) => {
             entries.push({ id: custom.id, title: custom.title, icon: custom.icon, depth: 0, isModule: false, custom: true });
         });
         return entries;
-    }, [baseCurriculum, override.customSections]);
+    }, [baseCurriculum, override.customSections, override.sectionTitles]);
 
     const [activeSectionId, setActiveSectionId] = useState<string>(() => navEntries[0]?.id ?? '');
     const activeEntry = navEntries.find((entry) => entry.id === activeSectionId) ?? navEntries[0];
@@ -146,6 +215,8 @@ const CurriculumStudio: React.FC = () => {
             const draft = next[programId] ?? (next[programId] = emptyProgramOverride());
             draft.sectionBlocks = draft.sectionBlocks ?? {};
             draft.customSections = draft.customSections ?? [];
+            draft.sectionModes = draft.sectionModes ?? {};
+            draft.sectionTitles = draft.sectionTitles ?? {};
             mutator(draft);
             saveStudioState(next);
             setSavedAt(new Date());
@@ -239,6 +310,53 @@ const CurriculumStudio: React.FC = () => {
         setStatusMessage('Studio content for this program cleared.');
     };
 
+    const editBuiltInSection = () => {
+        if (!baseSection) return;
+        commit((draft) => {
+            const additions = draft.sectionBlocks[activeId] ?? [];
+            draft.sectionModes[activeId] = 'replace';
+            draft.sectionTitles[activeId] = draft.sectionTitles[activeId] || baseSection.title;
+            draft.sectionBlocks[activeId] = [
+                ...baseSection.content.map((item) => ({
+                    id: createStudioId('base'),
+                    item: JSON.parse(JSON.stringify(item)) as ProgramContentItem,
+                })),
+                ...additions,
+            ];
+        });
+        setShowBaseline(false);
+    };
+
+    const restoreBuiltInSection = () => {
+        if (!window.confirm("Restore the shipped section? This removes this section's Studio replacement and additions after you publish.")) return;
+        commit((draft) => {
+            delete draft.sectionModes[activeId];
+            delete draft.sectionTitles[activeId];
+            delete draft.sectionBlocks[activeId];
+        });
+    };
+
+    const handlePublish = async () => {
+        if (remoteReadyProgram !== programId) {
+            setStatusMessage('Wait for the Supabase draft to finish loading before publishing.');
+            return;
+        }
+
+        setPublishing(true);
+        try {
+            await publishCurriculumStudio(programId, override);
+            const published = new Date();
+            setPublishedAt(published);
+            setSavedAt(published);
+            setStatusMessage('Published to Supabase. Learners will receive this version on their next curriculum load.');
+        } catch (error) {
+            console.warn('Curriculum Studio publish failed.', error);
+            setStatusMessage('Publish failed. The shared draft and local backup remain safe.');
+        } finally {
+            setPublishing(false);
+        }
+    };
+
     const totalBlocks = Object.values(override.sectionBlocks).reduce((sum, list) => sum + (list?.length ?? 0), 0);
 
     const renderBlockEditor = (block: StudioBlock, index: number) => {
@@ -297,11 +415,89 @@ const CurriculumStudio: React.FC = () => {
                             <input className={inputClass} value={code.title ?? ''} onChange={(e) => set({ ...code, title: e.target.value })} />
                         </div>
                         <div>
-                            <label className={labelClass}>Language</label>
-                            <input className={inputClass} value={code.language ?? ''} placeholder="python, js, html…" onChange={(e) => set({ ...code, language: e.target.value })} />
+                            <label className={labelClass}>Language (optional)</label>
+                            <input className={inputClass} value={code.language ?? ''} placeholder="Leave blank to auto-detect" onChange={(e) => set({ ...code, language: e.target.value })} />
                         </div>
                     </div>
                     <textarea className={monoClass} rows={6} value={code.content} placeholder="Paste code here" onChange={(e) => set({ ...code, content: e.target.value })} />
+                </div>
+            );
+        } else if (item.type === 'resource') {
+            const resource = item as ProgramResourceContentItem;
+            const content = Array.isArray(resource.content) ? resource.content.join('\n') : resource.content ?? '';
+            fields = (
+                <div className="space-y-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        <div>
+                            <label className={labelClass}>Tool title</label>
+                            <input className={inputClass} value={resource.title} onChange={(e) => set({ ...resource, title: e.target.value })} />
+                        </div>
+                        <div>
+                            <label className={labelClass}>URL (optional)</label>
+                            <input className={inputClass} value={resource.href ?? ''} placeholder="https://..." onChange={(e) => set({ ...resource, href: e.target.value })} />
+                        </div>
+                    </div>
+                    <div>
+                        <label className={labelClass}>What learners should know</label>
+                        <textarea className={inputClass} rows={3} value={content} onChange={(e) => set({ ...resource, content: e.target.value })} />
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        <div>
+                            <label className={labelClass}>Why it matters</label>
+                            <textarea className={inputClass} rows={3} value={resource.why ?? ''} onChange={(e) => set({ ...resource, why: e.target.value })} />
+                        </div>
+                        <div>
+                            <label className={labelClass}>Completion hint</label>
+                            <textarea className={inputClass} rows={3} value={resource.completionHint ?? ''} onChange={(e) => set({ ...resource, completionHint: e.target.value })} />
+                        </div>
+                    </div>
+                    <div>
+                        <label className={labelClass}>Instructions - one step per line</label>
+                        <textarea className={inputClass} rows={4} value={(resource.instructions ?? []).join('\n')} onChange={(e) => set({ ...resource, instructions: e.target.value.split('\n') })} />
+                    </div>
+                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-300">
+                        <input type="checkbox" checked={resource.embed === true} onChange={(e) => set({ ...resource, embed: e.target.checked })} />
+                        Embed the URL inside the lesson
+                    </label>
+                    {resource.interactive && (
+                        <p className="rounded-lg border border-cyan-300/15 bg-cyan-300/[0.06] px-3 py-2 text-xs text-cyan-100">
+                            Native interactive: {resource.interactive}. Its code-backed behavior remains connected while you edit its lesson copy.
+                        </p>
+                    )}
+                </div>
+            );
+        } else if (item.type === 'lab') {
+            const lab = item as ProgramLabContentItem;
+            fields = (
+                <div className="space-y-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        <div>
+                            <label className={labelClass}>Lab title</label>
+                            <input className={inputClass} value={lab.title} onChange={(e) => set({ ...lab, title: e.target.value })} />
+                        </div>
+                        <div>
+                            <label className={labelClass}>Stable lab ID</label>
+                            <input className={inputClass} value={lab.id} onChange={(e) => set({ ...lab, id: e.target.value })} />
+                        </div>
+                    </div>
+                    <div>
+                        <label className={labelClass}>Objective</label>
+                        <textarea className={inputClass} rows={3} value={lab.objective} onChange={(e) => set({ ...lab, objective: e.target.value })} />
+                    </div>
+                    <div>
+                        <label className={labelClass}>Steps - one per line</label>
+                        <textarea className={inputClass} rows={5} value={lab.steps.join('\n')} onChange={(e) => set({ ...lab, steps: e.target.value.split('\n') })} />
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        <div>
+                            <label className={labelClass}>Expected output</label>
+                            <textarea className={inputClass} rows={3} value={lab.expectedOutput} onChange={(e) => set({ ...lab, expectedOutput: e.target.value })} />
+                        </div>
+                        <div>
+                            <label className={labelClass}>Reflection prompt</label>
+                            <textarea className={inputClass} rows={3} value={lab.reflectionPrompt ?? ''} onChange={(e) => set({ ...lab, reflectionPrompt: e.target.value })} />
+                        </div>
+                    </div>
                 </div>
             );
         } else if (item.type === 'image' || item.type === 'video') {
@@ -370,7 +566,7 @@ const CurriculumStudio: React.FC = () => {
             fields = <p className="text-xs text-slate-500">Visual divider — no settings needed.</p>;
         }
 
-        const showPreview = ['image', 'video', 'embed', 'html', 'divider'].includes(item.type);
+        const showPreview = ['code', 'image', 'video', 'embed', 'html', 'divider'].includes(item.type);
 
         return (
             <article key={block.id} className="rounded-[1.4rem] border border-zen-gold/10 bg-zen-navy/55 p-4 sm:p-5">
@@ -388,7 +584,9 @@ const CurriculumStudio: React.FC = () => {
                 {showPreview && (
                     <div className="mt-4 border-t border-white/8 pt-4">
                         <p className={labelClass}>Live preview</p>
-                        <StudioMediaBlock item={item} variant="dark" />
+                        {item.type === 'code'
+                            ? <SmartCodeBlock code={item.content} language={item.language} title={item.title} />
+                            : <StudioMediaBlock item={item} variant="dark" />}
                     </div>
                 )}
             </article>
@@ -410,10 +608,18 @@ const CurriculumStudio: React.FC = () => {
                             <h1 className="mt-2 text-3xl font-black tracking-tight">Curriculum Studio</h1>
                             <p className="mt-2 max-w-2xl text-sm text-slate-400">
                                 Add lesson content to any program section — text, images, video, live embeds, even interactive HTML.
-                                Your blocks appear after the built-in content. The built-in curriculum is never modified.
+                                Append new blocks or use Edit existing section to replace, reorder, or remove content. The shipped version always stays recoverable.
                             </p>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => void handlePublish()}
+                                disabled={publishing || remoteReadyProgram !== programId}
+                                className="rounded-full border border-emerald-300/35 bg-emerald-400/[0.12] px-4 py-2 text-sm font-bold text-emerald-200 transition hover:bg-emerald-400/[0.2] disabled:cursor-wait disabled:opacity-50"
+                            >
+                                {publishing ? 'Publishing…' : 'Publish to learners'}
+                            </button>
                             <button type="button" onClick={handleExport} className="rounded-full border border-zen-gold/20 bg-zen-gold/[0.08] px-4 py-2 text-sm font-semibold text-zen-gold transition hover:bg-zen-gold/[0.15]">Export JSON</button>
                             <button type="button" onClick={() => fileInputRef.current?.click()} className="rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.08]">Import</button>
                             <button type="button" onClick={handleResetProgram} className="rounded-full border border-red-400/25 bg-red-500/[0.06] px-4 py-2 text-sm font-semibold text-red-300 transition hover:bg-red-500/[0.12]">Reset program</button>
@@ -450,8 +656,9 @@ const CurriculumStudio: React.FC = () => {
                         <div className="ml-auto flex items-center gap-3 text-xs text-slate-400">
                             <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5">{totalBlocks} Studio block{totalBlocks === 1 ? '' : 's'} in this program</span>
                             <span className={`rounded-full px-3 py-1.5 ${savedAt ? 'border border-emerald-300/25 bg-emerald-400/[0.08] text-emerald-300' : 'border border-white/10 bg-white/[0.04]'}`}>
-                                {savedAt ? `Saved ${savedAt.toLocaleTimeString()}` : 'Autosave on'}
+                                {remoteSaving ? 'Saving to Supabase…' : savedAt ? `Supabase saved ${savedAt.toLocaleTimeString()}` : 'Supabase autosave on'}
                             </span>
+                            {publishedAt && <span className="rounded-full border border-cyan-300/25 bg-cyan-400/[0.08] px-3 py-1.5 text-cyan-200">Published {publishedAt.toLocaleTimeString()}</span>}
                         </div>
                     </div>
                     {statusMessage && (
@@ -486,8 +693,8 @@ const CurriculumStudio: React.FC = () => {
                             })}
                         </nav>
                         <p className="mt-3 border-t border-white/8 px-1 pt-3 text-[11px] leading-5 text-slate-500">
-                            Content saves instantly in this browser and shows up live for anyone using it here.
-                            Use <span className="text-slate-300">Export JSON</span> to back up or publish edits everywhere via the backend sync (pending).
+                            Drafts autosave to Supabase and remain invisible to learners until you choose
+                            <span className="text-slate-300"> Publish to learners</span>. Export JSON remains an offline backup.
                         </p>
                     </aside>
 
@@ -505,6 +712,13 @@ const CurriculumStudio: React.FC = () => {
                                                 onChange={(e) => renameCustomSection(activeEntry.id, e.target.value)}
                                                 placeholder="Section title"
                                             />
+                                        ) : override.sectionModes[activeId] === 'replace' ? (
+                                            <input
+                                                className={`${inputClass} mt-1 max-w-xl text-lg font-bold`}
+                                                value={override.sectionTitles[activeId] ?? activeEntry.title}
+                                                onChange={(e) => commit((draft) => { draft.sectionTitles[activeId] = e.target.value; })}
+                                                placeholder="Section title"
+                                            />
                                         ) : (
                                             <h2 className="mt-1 truncate text-xl font-black text-white">{activeEntry.title}</h2>
                                         )}
@@ -516,12 +730,17 @@ const CurriculumStudio: React.FC = () => {
                                     )}
                                 </div>
 
-                                {baseSection && (
+                                {baseSection && override.sectionModes[activeId] !== 'replace' && (
                                     <div className="mt-4 rounded-[1.2rem] border border-white/8 bg-zen-navy/50">
-                                        <button type="button" onClick={() => setShowBaseline((v) => !v)} className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm text-slate-300">
-                                            <span>Built-in content — {baseSection.content.length} block{baseSection.content.length === 1 ? '' : 's'} (read-only, your blocks appear after it)</span>
-                                            <span className={`transition-transform ${showBaseline ? 'rotate-180' : ''}`}>▾</span>
-                                        </button>
+                                        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                                            <button type="button" onClick={() => setShowBaseline((v) => !v)} className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left text-sm text-slate-300">
+                                                <span>Shipped content — {baseSection.content.length} block{baseSection.content.length === 1 ? '' : 's'}</span>
+                                                <span className={`transition-transform ${showBaseline ? 'rotate-180' : ''}`}>▾</span>
+                                            </button>
+                                            <button type="button" onClick={editBuiltInSection} className="rounded-full border border-cyan-300/25 bg-cyan-300/[0.08] px-3 py-1.5 text-xs font-bold text-cyan-100">
+                                                Edit existing section
+                                            </button>
+                                        </div>
                                         {showBaseline && (
                                             <div className="space-y-1.5 border-t border-white/8 px-4 py-3">
                                                 {baseSection.content.map((item, i) => (
@@ -532,6 +751,14 @@ const CurriculumStudio: React.FC = () => {
                                                 ))}
                                             </div>
                                         )}
+                                    </div>
+                                )}
+                                {baseSection && override.sectionModes[activeId] === 'replace' && (
+                                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[1.2rem] border border-emerald-300/20 bg-emerald-300/[0.07] px-4 py-3">
+                                        <p className="text-sm font-semibold text-emerald-100">Editing the complete section. Publishing replaces the shipped blocks for learners; progress IDs stay intact.</p>
+                                        <button type="button" onClick={restoreBuiltInSection} className="rounded-full border border-white/15 px-3 py-1.5 text-xs font-bold text-slate-200">
+                                            Restore shipped section
+                                        </button>
                                     </div>
                                 )}
                             </section>

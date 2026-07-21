@@ -2,6 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
     deleteOverride,
     fetchAllOverrides,
+    isShippedVanguardQuizId,
+    parsePublicQuizPayload,
+    removeVanguardQuizOverride,
     setPublished,
     upsertOverride,
     type ContentOverride,
@@ -10,6 +13,8 @@ import {
 } from '../services/contentOverrides';
 
 const ALL = '__all__';
+const VANGUARD_PROGRAM_ID = 'vanguard';
+const VANGUARD_MODULE_IDS = ['module1', 'module2', 'module3', 'module4'];
 
 const AdminContentPage: React.FC = () => {
     const [rows, setRows] = useState<ContentOverride[]>([]);
@@ -29,8 +34,14 @@ const AdminContentPage: React.FC = () => {
 
     useEffect(() => { void refresh(); }, []);
 
-    const programs = useMemo(() => Array.from(new Set(rows.map((r) => r.program_id))).sort(), [rows]);
-    const modules = useMemo(() => Array.from(new Set(rows.map((r) => r.module_id))).sort(), [rows]);
+    const programs = useMemo(
+        () => Array.from(new Set([VANGUARD_PROGRAM_ID, ...rows.map((r) => r.program_id)])).sort(),
+        [rows],
+    );
+    const modules = useMemo(
+        () => Array.from(new Set([...VANGUARD_MODULE_IDS, ...rows.map((r) => r.module_id)])).sort(),
+        [rows],
+    );
 
     const filtered = useMemo(() => rows.filter((r) => {
         if (programFilter !== ALL && r.program_id !== programFilter) return false;
@@ -46,9 +57,36 @@ const AdminContentPage: React.FC = () => {
     };
 
     const remove = async (row: ContentOverride) => {
+        if (row.block_type === 'quiz') {
+            const quiz = parsePublicQuizPayload(row.payload);
+            if (!quiz) {
+                alert('This quiz record is invalid and cannot be changed from the generic content table. Open the module editor for a safe repair.');
+                return;
+            }
+            const shipped = isShippedVanguardQuizId(quiz.quiz_id);
+            const action = shipped ? 'restore the shipped quiz' : 'remove this custom quiz';
+            if (!confirm(`This will ${action} for ${row.module_id}. Continue?`)) return;
+            const ok = await removeVanguardQuizOverride(row.id);
+            if (!ok) {
+                alert('Quiz change failed. Nothing was removed.');
+                return;
+            }
+            void refresh();
+            return;
+        }
         if (!confirm(`Delete override for ${row.program_id}/${row.module_id}?`)) return;
-        await deleteOverride(row.id);
+        const ok = await deleteOverride(row.id);
+        if (!ok) {
+            alert('Delete failed. Nothing was removed.');
+            return;
+        }
         void refresh();
+    };
+
+    const moduleEditorHref = (row: ContentOverride) => {
+        const moduleNumber = row.module_id.match(/(\d+)$/)?.[1];
+        const base = moduleNumber ? `/module/${moduleNumber}` : '/admin/content';
+        return row.section_id ? `${base}#${encodeURIComponent(row.section_id)}` : base;
     };
 
     const editing = editingId ? rows.find((r) => r.id === editingId) ?? null : null;
@@ -60,8 +98,9 @@ const AdminContentPage: React.FC = () => {
                     <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-zen-gold/70">Admin CMS</p>
                     <h1 className="mt-1 text-3xl font-black tracking-tight">Content overlays</h1>
                     <p className="mt-2 max-w-2xl text-sm text-slate-400">
-                        Add, edit, publish, hide, or replace content on Pioneer module pages without code changes.
-                        Drafts stay invisible to students until you toggle Published.
+                        Add, edit, publish, hide, or replace content across all four Vanguard module pages without code changes.
+                        Drafts stay invisible to students until you toggle Published, and modules keep their shipped content when no override exists.
+                        Quiz rows use the module editor so their private answer keys and public questions are always published together.
                     </p>
                 </div>
                 <button
@@ -123,34 +162,62 @@ const AdminContentPage: React.FC = () => {
                                     <td className="px-4 py-3">{r.position}</td>
                                     <td className="px-4 py-3">{r.block_type}</td>
                                     <td className="px-4 py-3">
-                                        <input
-                                            type="number"
-                                            defaultValue={r.sort_order}
-                                            onBlur={async (e) => {
-                                                const v = Number(e.target.value) || 0;
-                                                if (v !== r.sort_order) {
-                                                    await upsertOverride({ ...r, sort_order: v });
-                                                    void refresh();
-                                                }
-                                            }}
-                                            className="w-16 rounded border border-white/10 bg-slate-900 px-2 py-1 text-xs"
-                                        />
+                                        {r.block_type === 'quiz' ? (
+                                            <span
+                                                className="inline-flex w-16 justify-center rounded border border-white/10 bg-slate-900/50 px-2 py-1 text-xs text-slate-500"
+                                                title="Change quiz placement in the module editor"
+                                            >
+                                                {r.sort_order}
+                                            </span>
+                                        ) : (
+                                            <input
+                                                type="number"
+                                                defaultValue={r.sort_order}
+                                                onBlur={async (e) => {
+                                                    const v = Number(e.target.value) || 0;
+                                                    if (v !== r.sort_order) {
+                                                        await upsertOverride({ ...r, sort_order: v });
+                                                        void refresh();
+                                                    }
+                                                }}
+                                                className="w-16 rounded border border-white/10 bg-slate-900 px-2 py-1 text-xs"
+                                            />
+                                        )}
                                     </td>
                                     <td className="px-4 py-3">
-                                        <button
-                                            onClick={() => togglePublish(r)}
-                                            className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest ${
-                                                r.is_published
-                                                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                                                    : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                                            }`}
-                                        >
-                                            {r.is_published ? 'Published' : 'Draft'}
-                                        </button>
+                                        {r.block_type === 'quiz' ? (
+                                            <span
+                                                className="inline-flex rounded-full border border-emerald-500/40 bg-emerald-500/20 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-300"
+                                                title="Quizzes are published atomically from the module editor"
+                                            >
+                                                Published
+                                            </span>
+                                        ) : (
+                                            <button
+                                                onClick={() => togglePublish(r)}
+                                                className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest ${
+                                                    r.is_published
+                                                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                                        : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                                                }`}
+                                            >
+                                                {r.is_published ? 'Published' : 'Draft'}
+                                            </button>
+                                        )}
                                     </td>
                                     <td className="px-4 py-3 text-right">
-                                        <button onClick={() => setEditingId(r.id)} className="mr-2 text-xs text-zen-gold hover:underline">Edit</button>
-                                        <button onClick={() => remove(r)} className="text-xs text-red-400 hover:underline">Delete</button>
+                                        {r.block_type === 'quiz' ? (
+                                            <a href={moduleEditorHref(r)} className="mr-2 text-xs text-zen-gold hover:underline">
+                                                Open module editor
+                                            </a>
+                                        ) : (
+                                            <button onClick={() => setEditingId(r.id)} className="mr-2 text-xs text-zen-gold hover:underline">Edit</button>
+                                        )}
+                                        <button onClick={() => remove(r)} className="text-xs text-red-400 hover:underline">
+                                            {r.block_type === 'quiz' && parsePublicQuizPayload(r.payload) && isShippedVanguardQuizId(parsePublicQuizPayload(r.payload)!.quiz_id)
+                                                ? 'Restore'
+                                                : 'Delete'}
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
@@ -186,7 +253,7 @@ const QuickEditor: React.FC<{
     onClose: () => void;
     onSaved: () => void;
 }> = ({ existing, onClose, onSaved }) => {
-    const [programId, setProgramId] = useState(existing?.program_id ?? 'pioneer');
+    const [programId, setProgramId] = useState(existing?.program_id ?? VANGUARD_PROGRAM_ID);
     const [moduleId, setModuleId] = useState(existing?.module_id ?? 'module1');
     const [sectionId, setSectionId] = useState(existing?.section_id ?? '');
     const [position, setPosition] = useState<OverridePosition>(existing?.position ?? 'after');

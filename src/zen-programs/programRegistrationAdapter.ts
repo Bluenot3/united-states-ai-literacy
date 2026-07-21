@@ -374,6 +374,29 @@ export const createSupabaseProgramRegistrationAdapter = (): ProgramRegistrationA
     },
 
     async adminUpdateRegistrationStatus(input) {
+        const paidProgramKey = input.programKey === 'ai-pioneer'
+            ? 'pioneer'
+            : input.programKey === 'vanguard'
+                ? 'vanguard'
+                : null;
+
+        if (paidProgramKey) {
+            const { error: entitlementError } = input.status === 'enrolled'
+                ? await supabase.rpc('grant_program_access', {
+                    _user_id: input.userId,
+                    _program_key: paidProgramKey,
+                    _source: 'program-enrollment',
+                    _access_ends_at: null,
+                    _note: 'Enrollment approved in Program Admin',
+                })
+                : await supabase.rpc('revoke_program_access', {
+                    _user_id: input.userId,
+                    _program_key: paidProgramKey,
+                    _note: `Program Admin changed registration to ${input.status}`,
+                });
+            if (entitlementError) throw entitlementError;
+        }
+
         const { data, error } = await supabase
             .from('program_registrations')
             .update({
@@ -397,7 +420,36 @@ export const createSupabaseProgramRegistrationAdapter = (): ProgramRegistrationA
     },
 
     async adminGrantProgramAccess(input) {
-        const { error } = await supabase.from('program_access_grants').upsert({
+        const paidProgramKey = input.programKey === 'ai-pioneer'
+            ? 'pioneer'
+            : input.programKey === 'vanguard'
+                ? 'vanguard'
+                : null;
+        const fullAccess = input.accessLevel === 'enrolled'
+            || input.accessLevel === 'facilitator'
+            || input.accessLevel === 'admin';
+
+        if (paidProgramKey && fullAccess) {
+            const { error: entitlementError } = await supabase.rpc('grant_program_access', {
+                _user_id: input.userId,
+                _program_key: paidProgramKey,
+                _source: 'program-admin',
+                _access_ends_at: input.expiresAt ?? null,
+                _note: input.reason ?? null,
+            });
+            if (entitlementError) throw entitlementError;
+        }
+
+        if (paidProgramKey && !fullAccess) {
+            const { error: entitlementError } = await supabase.rpc('revoke_program_access', {
+                _user_id: input.userId,
+                _program_key: paidProgramKey,
+                _note: input.reason ?? `Program Admin changed access to ${input.accessLevel}`,
+            });
+            if (entitlementError) throw entitlementError;
+        }
+
+        const { error: grantError } = await supabase.from('program_access_grants').upsert({
             user_id: input.userId,
             program_key: input.programKey,
             access_level: input.accessLevel,
@@ -407,7 +459,8 @@ export const createSupabaseProgramRegistrationAdapter = (): ProgramRegistrationA
             updated_at: nowIso(),
         }, { onConflict: 'user_id,program_key' });
 
-        if (error) throw error;
+        if (grantError && !paidProgramKey) throw grantError;
+        if (grantError) console.warn('Canonical entitlement update succeeded, but access-grant audit sync failed.', grantError);
 
         return {
             userId: input.userId,
@@ -463,8 +516,8 @@ export const createSupabaseProgramRegistrationAdapter = (): ProgramRegistrationA
 });
 
 export const isProgramSupabaseAdapterConfigured = () => (
-    import.meta.env.VITE_PROGRAM_REGISTRATION_ADAPTER === 'supabase'
-    && isSupabaseConfigured
+    isSupabaseConfigured
+    && import.meta.env.VITE_PROGRAM_REGISTRATION_ADAPTER !== 'mock'
 );
 
 export const createProgramRegistrationAdapter = (): ProgramRegistrationAdapter => (

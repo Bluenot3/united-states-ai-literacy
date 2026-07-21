@@ -1,20 +1,31 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useArsenal } from '../../contexts/ArsenalContext';
 import { useAuth } from '../../hooks/useAuth';
 import { getAiClient } from '../../lib/aiClient';
 import { repairContent, repairText } from '../../utils/text';
 import { getCurriculumByProgramId } from '../curriculum';
+import { loadPublishedCurriculumStudio } from '../curriculumStudioRemote';
+import type { ProgramStudioOverride } from '../curriculumStudioStore';
+import SmartCodeBlock from '../components/SmartCodeBlock';
 import StudioMediaBlock from '../components/StudioMediaBlocks';
 import { getRegistryProgramIdForProgramKey, toProgramKey } from '../programIntegrationContract';
+import {
+    findAggregateProgressRecord,
+    mergeProgramProgress,
+    PROGRAM_PROGRESS_LESSON_KEY,
+    PROGRAM_PROGRESS_MODULE_KEY,
+    progressFromRecord,
+    progressMetadata,
+} from '../programProgressSync';
+import { programRegistrationAdapter } from '../programRegistrationAdapter';
 import { getProgramById } from '../programsRegistry';
 import {
     getProgramProgress,
-    saveProgramLabComplete,
-    saveProgramProgress,
-    saveProgramResourceExplored,
+    saveProgramProgressSnapshot,
     type ProgramContentItem,
     type ProgramLabContentItem,
+    type ProgramProgress,
     type ProgramResourceContentItem,
     type ProgramSection,
 } from '../types';
@@ -73,6 +84,21 @@ const flattenSections = (sections: ProgramSection[]): ProgramSection[] => (
 );
 
 const getLeafSections = (sections: ProgramSection[]) => flattenSections(sections).filter((section) => !section.subSections?.length);
+
+const resourceProgressKey = (sectionId: string, title: string) => `${sectionId}::${title}`;
+
+const scopeLegacyResourceProgress = (progress: ProgramProgress, sections: ProgramSection[]): ProgramProgress => {
+    const allSections = flattenSections(sections);
+    const exploredResources = (progress.exploredResources ?? []).map((entry) => {
+        if (entry.includes('::')) return entry;
+        const owner = allSections.find((section) => section.content.some((item) => (
+            item.type === 'resource' && item.title === entry
+        )));
+        return owner ? resourceProgressKey(owner.id, entry) : entry;
+    });
+
+    return { ...progress, exploredResources: [...new Set(exploredResources)] };
+};
 
 const findSection = (sections: ProgramSection[], sectionId: string): ProgramSection | null => {
     for (const section of sections) {
@@ -3070,14 +3096,22 @@ const ProgramDashboardPage: React.FC = () => {
         const programKey = toProgramKey(routeProgramId);
         return programKey ? getRegistryProgramIdForProgramKey(programKey) : routeProgramId;
     }, [routeProgramId]);
+    const programKey = useMemo(() => toProgramKey(programId), [programId]);
     const program = programId ? getProgramById(programId) : undefined;
-    const curriculum = programId ? getCurriculumByProgramId(programId) : undefined;
+    const [publishedStudioOverride, setPublishedStudioOverride] = useState<ProgramStudioOverride | null>(null);
+    const curriculum = useMemo(
+        () => (programId ? getCurriculumByProgramId(programId, publishedStudioOverride) : undefined),
+        [programId, publishedStudioOverride],
+    );
     const { emitProgress, emitCompletion } = useArsenal();
     const { user, startSession, trackSessionSection, endSession } = useAuth();
     const [activeSection, setActiveSection] = useState('');
     const [reflectionDrafts, setReflectionDrafts] = useState<Record<string, string>>({});
+    const [progressHydrated, setProgressHydrated] = useState(false);
+    const [remoteProgressWritable, setRemoteProgressWritable] = useState(false);
+    const hydratedProgressScopeRef = useRef<string | null>(null);
     const [progress, setProgress] = useState(() => (
-        programId ? getProgramProgress(programId) : {
+        programId ? getProgramProgress(programId, user?.id) : {
             completedSections: [],
             completedLabs: [],
             exploredResources: [],
@@ -3091,7 +3125,11 @@ const ProgramDashboardPage: React.FC = () => {
     const allSections = useMemo(() => (curriculum ? flattenSections(curriculum.sections) : []), [curriculum]);
     const leafSections = useMemo(() => (curriculum ? getLeafSections(curriculum.sections) : []), [curriculum]);
     const allLabs = useMemo(() => allSections.flatMap((section) => section.content.filter((item): item is ProgramLabContentItem => item.type === 'lab')), [allSections]);
-    const allResources = useMemo(() => allSections.flatMap((section) => section.content.filter((item): item is ProgramResourceContentItem => item.type === 'resource')), [allSections]);
+    const allResourceEntries = useMemo(() => allSections.flatMap((section) => (
+        section.content
+            .filter((item): item is ProgramResourceContentItem => item.type === 'resource')
+            .map((item) => ({ sectionId: section.id, item }))
+    )), [allSections]);
     const pioneerSessionModuleId = useMemo<1 | 2 | 3 | 4 | null>(() => {
         if (programId !== 'pioneer' || !curriculum?.sections.length || !activeSection) {
             return null;
@@ -3103,28 +3141,126 @@ const ProgramDashboardPage: React.FC = () => {
     }, [activeSection, curriculum, programId]);
 
     useEffect(() => {
+        if (!programId) return;
+        let active = true;
+        setPublishedStudioOverride(null);
+
+        void loadPublishedCurriculumStudio(programId)
+            .then((document) => {
+                if (active) setPublishedStudioOverride(document);
+            })
+            .catch((error) => {
+                console.warn('Published Supabase curriculum additions could not be loaded; built-in curriculum remains available.', error);
+            });
+
+        return () => {
+            active = false;
+        };
+    }, [programId]);
+
+    useEffect(() => {
         if (!programId || !curriculum?.sections.length) {
             return;
         }
 
-        const stored = getProgramProgress(programId);
+        const stored = scopeLegacyResourceProgress(getProgramProgress(programId, user?.id), curriculum.sections);
         const firstModule = curriculum.sections[0];
+        const progressScope = `${programId}:${user?.id ?? 'anonymous'}`;
+        hydratedProgressScopeRef.current = null;
+        setRemoteProgressWritable(false);
         setProgress(stored);
         setActiveSection(stored.lastViewedSection || firstModule.id);
-    }, [curriculum, programId]);
+        const localOnly = !user?.id || !programKey;
+        if (localOnly) hydratedProgressScopeRef.current = progressScope;
+        setProgressHydrated(localOnly);
+    }, [curriculum, programId, programKey, user?.id]);
+
+    useEffect(() => {
+        if (!programId || !programKey || !user?.id || !curriculum?.sections.length) {
+            return;
+        }
+
+        let active = true;
+        setProgressHydrated(false);
+        setRemoteProgressWritable(false);
+
+        void programRegistrationAdapter.getUserProgramProgress(user.id, programKey)
+            .then((records) => {
+                if (!active) return;
+                const local = getProgramProgress(programId, user.id);
+                const remote = progressFromRecord(findAggregateProgressRecord(records));
+                const merged = saveProgramProgressSnapshot(
+                    programId,
+                    scopeLegacyResourceProgress(mergeProgramProgress(local, remote), curriculum.sections),
+                    user.id,
+                );
+                const validLastSection = findSection(curriculum.sections, merged.lastViewedSection);
+
+                setProgress(merged);
+                setActiveSection(validLastSection?.id || curriculum.sections[0].id);
+                hydratedProgressScopeRef.current = `${programId}:${user.id}`;
+                setRemoteProgressWritable(true);
+                setProgressHydrated(true);
+            })
+            .catch((error) => {
+                console.warn('Supabase program progress could not be restored; local progress remains available.', error);
+                if (active) {
+                    hydratedProgressScopeRef.current = `${programId}:${user.id}`;
+                    setProgressHydrated(true);
+                }
+            });
+
+        return () => {
+            active = false;
+        };
+    }, [curriculum, programId, programKey, user?.id]);
+
+    useEffect(() => {
+        const progressScope = programId ? `${programId}:${user?.id ?? 'anonymous'}` : null;
+        if (!programId || !progressHydrated || hydratedProgressScopeRef.current !== progressScope) return;
+        saveProgramProgressSnapshot(programId, progress, user?.id);
+    }, [programId, progress, progressHydrated, user?.id]);
+
+    useEffect(() => {
+        if (!progressHydrated || !remoteProgressWritable || !programKey || !user?.id) return;
+
+        const timer = window.setTimeout(() => {
+            const completed = new Set(progress.completedSections);
+            const completedCount = leafSections.filter((section) => completed.has(section.id)).length;
+            const progressPercent = leafSections.length
+                ? Math.round((completedCount / leafSections.length) * 100)
+                : 0;
+
+            void programRegistrationAdapter.updateProgramProgress({
+                userId: user.id,
+                programKey,
+                moduleKey: PROGRAM_PROGRESS_MODULE_KEY,
+                lessonKey: PROGRAM_PROGRESS_LESSON_KEY,
+                progressPercent,
+                status: progressPercent >= 100 ? 'completed' : 'started',
+                metadata: progressMetadata(progress),
+            }).catch((error) => {
+                console.warn('Supabase program progress save failed; the offline copy remains intact.', error);
+            });
+        }, 350);
+
+        return () => window.clearTimeout(timer);
+    }, [leafSections, programKey, progress, progressHydrated, remoteProgressWritable, user?.id]);
 
     useEffect(() => {
         if (!programId || !activeSection) {
             return;
         }
 
-        setProgress((current) => ({
-            ...current,
-            lastViewedSection: activeSection,
-            startedAt: current.startedAt || new Date().toISOString(),
-            lastActiveAt: new Date().toISOString(),
-        }));
-        saveProgramProgress(programId, activeSection, false);
+        setProgress((current) => {
+            const now = new Date().toISOString();
+            return {
+                ...current,
+                lastViewedSection: activeSection,
+                startedAt: current.startedAt || now,
+                lastActiveAt: now,
+            };
+        });
 
         const sectionIndex = leafSections.findIndex((section) => section.id === activeSection);
         if (sectionIndex >= 0 && !progress.completedSections.includes(activeSection)) {
@@ -3187,7 +3323,9 @@ const ProgramDashboardPage: React.FC = () => {
         (module.subSections ?? [module]).every((section) => progress.completedSections.includes(section.id))
     ));
     const completedLabs = allLabs.filter((lab) => progress.completedLabs?.includes(lab.id));
-    const exploredResources = allResources.filter((resource) => progress.exploredResources?.includes(resource.title));
+    const exploredResources = allResourceEntries.filter(({ sectionId, item }) => (
+        progress.exploredResources?.includes(resourceProgressKey(sectionId, item.title))
+    ));
     const progressPercent = leafSections.length ? Math.round((completedLeafSections.length / leafSections.length) * 100) : 0;
     const isModuleView = Boolean(currentSection.subSections?.length);
     const learnItems = currentSection.content.filter((item) => ['heading', 'paragraph', 'quote', 'list', 'callout', 'image', 'video', 'embed', 'html', 'divider'].includes(item.type));
@@ -3198,14 +3336,29 @@ const ProgramDashboardPage: React.FC = () => {
     const labItems = currentSection.content.filter((item): item is ProgramLabContentItem => item.type === 'lab');
     const codeItems = currentSection.content.filter((item) => item.type === 'code');
     const isCurrentComplete = progress.completedSections.includes(currentSection.id);
+    const firstIncompleteIndex = leafSections.findIndex((section) => !progress.completedSections.includes(section.id));
+    const currentResourcesComplete = resourceItems.every((resource) => (
+        progress.exploredResources?.includes(resourceProgressKey(currentSection.id, resource.title))
+    ));
+    const currentLabsComplete = labItems.every((lab) => progress.completedLabs?.includes(lab.id));
+    const currentRequirementsMet = currentResourcesComplete && currentLabsComplete;
+
+    const isSectionUnlocked = (sectionId: string) => {
+        if (firstIncompleteIndex < 0) return true;
+        const target = findSection(curriculum.sections, sectionId);
+        const targetLeaf = target?.subSections?.length ? firstLeafForModule(target) : target;
+        const targetIndex = targetLeaf ? leafSections.findIndex((section) => section.id === targetLeaf.id) : -1;
+        return targetIndex < 0 || targetIndex <= firstIncompleteIndex;
+    };
 
     const goToSection = (sectionId: string) => {
+        if (!isSectionUnlocked(sectionId)) return;
         setActiveSection(sectionId);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const markSectionComplete = () => {
-        if (!programId || isModuleView || isCurrentComplete) {
+        if (!programId || isModuleView || isCurrentComplete || !currentRequirementsMet) {
             return;
         }
 
@@ -3218,7 +3371,6 @@ const ProgramDashboardPage: React.FC = () => {
         };
 
         setProgress(nextProgress);
-        saveProgramProgress(programId, currentSection.id, true);
         emitProgress(programId, currentSection.id, currentSection.id, currentIndex, 'completed');
 
         if (nextProgress.completedSections.length >= leafSections.length) {
@@ -3227,11 +3379,28 @@ const ProgramDashboardPage: React.FC = () => {
     };
 
     const markResourceExplored = (title: string) => {
-        setProgress(saveProgramResourceExplored(programId, title));
+        setProgress((current) => ({
+            ...current,
+            exploredResources: [...new Set([
+                ...(current.exploredResources ?? []),
+                resourceProgressKey(currentSection.id, title),
+            ])],
+            lastActiveAt: new Date().toISOString(),
+        }));
     };
 
     const markLabComplete = (labId: string) => {
-        setProgress(saveProgramLabComplete(programId, labId, reflectionDrafts[labId]));
+        setProgress((current) => {
+            const reflection = reflectionDrafts[labId]?.trim();
+            return {
+                ...current,
+                completedLabs: [...new Set([...(current.completedLabs ?? []), labId])],
+                reflections: reflection
+                    ? { ...(current.reflections ?? {}), [labId]: reflection }
+                    : current.reflections ?? {},
+                lastActiveAt: new Date().toISOString(),
+            };
+        });
     };
 
     const renderLearnItem = (item: ProgramContentItem, index: number) => {
@@ -3378,7 +3547,7 @@ const ProgramDashboardPage: React.FC = () => {
     };
 
     const renderResource = (item: ProgramResourceContentItem, variant: 'standalone' | 'pod' = 'standalone') => {
-        const explored = progress.exploredResources?.includes(item.title);
+        const explored = progress.exploredResources?.includes(resourceProgressKey(currentSection.id, item.title));
         const nativeResource = renderNativeResource(item);
         const hasExternalPreview = Boolean(item.embed && item.href);
         const shouldEmbed = Boolean(hasExternalPreview && !item.interactive && variant === 'standalone');
@@ -3459,7 +3628,6 @@ const ProgramDashboardPage: React.FC = () => {
                             title={item.title}
                             src={item.href}
                             loading="lazy"
-                            onLoad={() => markResourceExplored(item.title)}
                             className="h-[260px] w-full bg-white sm:h-[300px] lg:h-[340px]"
                             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
                         />
@@ -3658,7 +3826,7 @@ const ProgramDashboardPage: React.FC = () => {
                             <div className="mt-4 grid grid-cols-1 gap-2">
                                 <ShellMetric label="Sections" value={`${completedLeafSections.length}/${leafSections.length}`} sublabel="done" />
                                 <ShellMetric label="Labs" value={`${completedLabs.length}/${allLabs.length}`} sublabel="done" />
-                                <ShellMetric label="Tools" value={`${exploredResources.length}/${allResources.length}`} sublabel="seen" />
+                                <ShellMetric label="Tools" value={`${exploredResources.length}/${allResourceEntries.length}`} sublabel="seen" />
                             </div>
                         </div>
 
@@ -3666,6 +3834,7 @@ const ProgramDashboardPage: React.FC = () => {
                             {curriculum.sections.map((module, moduleIndex) => {
                                 const moduleTheme = moduleThemes[moduleIndex % moduleThemes.length];
                                 const selected = activeModule.id === module.id;
+                                const moduleUnlocked = isSectionUnlocked(module.id);
                                 const moduleLeaves = module.subSections ?? [module];
                                 const moduleCompleteCount = moduleLeaves.filter((section) => progress.completedSections.includes(section.id)).length;
 
@@ -3674,34 +3843,51 @@ const ProgramDashboardPage: React.FC = () => {
                                         <button
                                             type="button"
                                             onClick={() => goToSection(module.id)}
+                                            disabled={!moduleUnlocked}
+                                            aria-disabled={!moduleUnlocked}
                                             className={[
                                                 'flex w-full items-start gap-3 rounded-[1.1rem] border px-3 py-3 text-left transition',
-                                                selected ? `border-white/28 bg-gradient-to-r ${moduleTheme.active} text-slate-950 shadow-[0_16px_36px_rgba(14,165,233,.28)]` : 'border-transparent text-white hover:bg-white/[0.08]',
+                                                !moduleUnlocked
+                                                    ? 'cursor-not-allowed border-white/[0.04] bg-white/[0.02] text-slate-500 opacity-55'
+                                                    : selected
+                                                        ? `border-white/28 bg-gradient-to-r ${moduleTheme.active} text-slate-950 shadow-[0_16px_36px_rgba(14,165,233,.28)]`
+                                                        : 'border-transparent text-white hover:bg-white/[0.08]',
                                             ].join(' ')}
                                         >
                                             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950/85 text-xs font-black text-white">{module.icon ?? `M${moduleIndex + 1}`}</span>
                                             <span className="min-w-0 flex-1">
                                                 <span className="block text-[10px] font-black uppercase tracking-[0.22em] opacity-70">Module {moduleIndex + 1}</span>
                                                 <span className="mt-1 block text-sm font-black leading-5">{repaired(module.title)}</span>
-                                                <span className="mt-2 block text-[11px] font-bold opacity-70">{moduleCompleteCount}/{moduleLeaves.length} sections</span>
+                                                <span className="mt-2 block text-[11px] font-bold opacity-70">
+                                                    {moduleUnlocked ? `${moduleCompleteCount}/${moduleLeaves.length} sections` : 'Locked until the previous section is complete'}
+                                                </span>
                                             </span>
                                         </button>
                                         <div className="mt-2 space-y-1">
                                             {module.subSections?.map((section, sectionIndex) => {
                                                 const selectedSection = currentSection.id === section.id;
                                                 const complete = progress.completedSections.includes(section.id);
+                                                const unlocked = isSectionUnlocked(section.id);
 
                                                 return (
                                                     <button
                                                         key={section.id}
                                                         type="button"
                                                         onClick={() => goToSection(section.id)}
+                                                        disabled={!unlocked}
+                                                        aria-disabled={!unlocked}
                                                         className={[
                                                             'flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm transition',
-                                                            selectedSection ? 'border-cyan-100/34 bg-cyan-200/[0.14] text-white shadow-[inset_0_1px_0_rgba(255,255,255,.07)]' : complete ? 'border-emerald-200/24 bg-emerald-200/[0.10] text-emerald-50' : 'border-transparent text-slate-100 hover:bg-white/[0.08] hover:text-white',
+                                                            !unlocked
+                                                                ? 'cursor-not-allowed border-white/[0.04] bg-white/[0.015] text-slate-600 opacity-55'
+                                                                : selectedSection
+                                                                    ? 'border-cyan-100/34 bg-cyan-200/[0.14] text-white shadow-[inset_0_1px_0_rgba(255,255,255,.07)]'
+                                                                    : complete
+                                                                        ? 'border-emerald-200/24 bg-emerald-200/[0.10] text-emerald-50'
+                                                                        : 'border-transparent text-slate-100 hover:bg-white/[0.08] hover:text-white',
                                                         ].join(' ')}
                                                     >
-                                                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/[0.07] text-[10px] font-black">{complete ? 'OK' : `S${sectionIndex + 1}`}</span>
+                                                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/[0.07] text-[10px] font-black">{!unlocked ? 'LOCK' : complete ? 'OK' : `S${sectionIndex + 1}`}</span>
                                                         <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{repaired(section.title)}</span>
                                                     </button>
                                                 );
@@ -3780,6 +3966,7 @@ const ProgramDashboardPage: React.FC = () => {
                             <div className="grid gap-4 md:grid-cols-2">
                                 {currentSection.subSections?.map((section, index) => {
                                     const complete = progress.completedSections.includes(section.id);
+                                    const unlocked = isSectionUnlocked(section.id);
                                     const sectionLabs = section.content.filter((item) => item.type === 'lab').length;
                                     const sectionResources = section.content.filter((item) => item.type === 'resource').length;
 
@@ -3788,12 +3975,14 @@ const ProgramDashboardPage: React.FC = () => {
                                             key={section.id}
                                             type="button"
                                             onClick={() => goToSection(section.id)}
-                                            className={`group overflow-hidden rounded-[1.7rem] border p-5 text-left transition hover:-translate-y-1 hover:border-cyan-100/36 ${missionPanel}`}
+                                            disabled={!unlocked}
+                                            aria-disabled={!unlocked}
+                                            className={`group overflow-hidden rounded-[1.7rem] border p-5 text-left transition ${unlocked ? `hover:-translate-y-1 hover:border-cyan-100/36 ${missionPanel}` : 'cursor-not-allowed border-white/8 bg-slate-950/55 opacity-55'}`}
                                         >
                                             <div className="flex items-center justify-between gap-3">
                                                 <span className={`rounded-full bg-gradient-to-r ${theme.active} px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-950`}>Section {index + 1}</span>
                                                 <span className={complete ? 'rounded-full bg-emerald-200 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-emerald-950' : 'rounded-full border border-white/18 bg-black/34 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-50'}>
-                                                    {complete ? 'Complete' : 'Open'}
+                                                    {complete ? 'Complete' : unlocked ? 'Open' : 'Locked'}
                                                 </span>
                                             </div>
                                             <h3 className={`mt-5 text-2xl font-black tracking-tight text-white ${headingLift}`}>{repaired(section.title)}</h3>
@@ -3830,7 +4019,7 @@ const ProgramDashboardPage: React.FC = () => {
                                 summary={getSectionSummary(currentSection)}
                                 toolCount={resourceItems.length}
                                 labCount={labItems.length}
-                                exploredCount={resourceItems.filter((resource) => progress.exploredResources?.includes(resource.title)).length}
+                                exploredCount={resourceItems.filter((resource) => progress.exploredResources?.includes(resourceProgressKey(currentSection.id, resource.title))).length}
                                 completedLabCount={labItems.filter((lab) => progress.completedLabs?.includes(lab.id)).length}
                                 theme={theme}
                             />
@@ -3913,9 +4102,14 @@ const ProgramDashboardPage: React.FC = () => {
                                     <summary className={`cursor-pointer text-sm font-black uppercase tracking-[0.2em] text-slate-50 ${textLift}`}>Advanced source notes</summary>
                                     <div className="mt-4 space-y-4">
                                         {codeItems.map((item, index) => (
-                                            <pre key={`${item.type}-${index}`} className="max-h-96 overflow-auto rounded-[1.1rem] border border-white/14 bg-black/50 p-4 text-xs font-semibold leading-6 text-slate-100">
-                                                {item.type === 'code' ? repaired(item.content) : ''}
-                                            </pre>
+                                            item.type === 'code' ? (
+                                                <SmartCodeBlock
+                                                    key={`${item.type}-${index}`}
+                                                    code={item.content}
+                                                    language={item.language}
+                                                    title={item.title}
+                                                />
+                                            ) : null
                                         ))}
                                     </div>
                                 </details>
@@ -3926,7 +4120,11 @@ const ProgramDashboardPage: React.FC = () => {
                                     <div>
                                         <p className={`text-[10px] font-black uppercase tracking-[0.24em] text-emerald-50 ${textLift}`}>Completion checkpoint</p>
                                         <h3 className={`mt-2 text-xl font-black text-white ${headingLift}`}>{isCurrentComplete ? 'Section complete' : 'Ready to lock this section?'}</h3>
-                                        <p className="mt-1 text-sm font-semibold leading-6 text-emerald-50">Explore the tools, finish the lab, then mark the section complete.</p>
+                                        <p className="mt-1 text-sm font-semibold leading-6 text-emerald-50">
+                                            {currentRequirementsMet
+                                                ? 'Required tools and labs are complete. You can lock this section.'
+                                                : `Complete ${resourceItems.filter((resource) => !progress.exploredResources?.includes(resourceProgressKey(currentSection.id, resource.title))).length} remaining tool(s) and ${labItems.filter((lab) => !progress.completedLabs?.includes(lab.id)).length} remaining lab(s) first.`}
+                                        </p>
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         {previousSection && (
@@ -3937,13 +4135,17 @@ const ProgramDashboardPage: React.FC = () => {
                                         <button
                                             type="button"
                                             onClick={markSectionComplete}
-                                            disabled={isCurrentComplete}
-                                            className={isCurrentComplete ? 'rounded-full border border-emerald-100/20 bg-emerald-200/20 px-5 py-3 text-sm font-black text-emerald-50' : 'rounded-full border border-white/20 bg-emerald-200 px-5 py-3 text-sm font-black text-emerald-950 shadow-[0_14px_30px_rgba(16,185,129,.26)] transition hover:-translate-y-0.5 hover:bg-white'}
+                                            disabled={isCurrentComplete || !currentRequirementsMet}
+                                            className={isCurrentComplete
+                                                ? 'rounded-full border border-emerald-100/20 bg-emerald-200/20 px-5 py-3 text-sm font-black text-emerald-50'
+                                                : currentRequirementsMet
+                                                    ? 'rounded-full border border-white/20 bg-emerald-200 px-5 py-3 text-sm font-black text-emerald-950 shadow-[0_14px_30px_rgba(16,185,129,.26)] transition hover:-translate-y-0.5 hover:bg-white'
+                                                    : 'cursor-not-allowed rounded-full border border-white/12 bg-white/[0.07] px-5 py-3 text-sm font-black text-slate-400'}
                                         >
-                                            {isCurrentComplete ? 'Complete' : 'Mark complete'}
+                                            {isCurrentComplete ? 'Complete' : currentRequirementsMet ? 'Mark complete' : 'Finish requirements'}
                                         </button>
                                         {nextSection && (
-                                            <button type="button" onClick={() => goToSection(nextSection.id)} className={`rounded-full border border-white/20 bg-gradient-to-r ${theme.active} px-5 py-3 text-sm font-black text-slate-950 shadow-[0_14px_30px_rgba(34,211,238,.24)] transition hover:-translate-y-0.5`}>
+                                            <button type="button" disabled={!isCurrentComplete} onClick={() => goToSection(nextSection.id)} className={`rounded-full border border-white/20 bg-gradient-to-r ${theme.active} px-5 py-3 text-sm font-black text-slate-950 shadow-[0_14px_30px_rgba(34,211,238,.24)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40`}>
                                                 Next
                                             </button>
                                         )}

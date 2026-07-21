@@ -10,6 +10,18 @@ interface ArsenalContextType {
 
 const ArsenalContext = createContext<ArsenalContextType | undefined>(undefined);
 
+const getParentTargetOrigin = (): string => {
+    if (!document.referrer) return window.location.origin;
+    try {
+        const referrer = new URL(document.referrer);
+        return referrer.protocol === 'https:' || referrer.protocol === 'http:'
+            ? referrer.origin
+            : window.location.origin;
+    } catch {
+        return window.location.origin;
+    }
+};
+
 export const ArsenalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isEmbedded, setIsEmbedded] = useState(false);
     const [programId, setProgramId] = useState<string | null>(null);
@@ -18,21 +30,15 @@ export const ArsenalProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const searchParams = new URLSearchParams(window.location.search);
         const urlArsenalLaunch = searchParams.get('arsenal_launch') === '1';
         const urlProgramId = searchParams.get('program') || searchParams.get('program_id');
-        
-        const isUrlEmbedded = urlArsenalLaunch || (urlProgramId === 'pioneer' || urlProgramId === 'vanguard');
+        const validProgramId = urlProgramId === 'pioneer' || urlProgramId === 'vanguard'
+            ? urlProgramId
+            : null;
+        // Embedding changes presentation and enables postMessage events only.
+        // It is never trusted for authentication, billing, or entitlement.
+        const framedLaunch = window.parent !== window && urlArsenalLaunch && Boolean(validProgramId);
 
-        if (isUrlEmbedded) {
-            sessionStorage.setItem('zen_arsenal_embedded', 'true');
-            if (urlProgramId) {
-                sessionStorage.setItem('zen_arsenal_program', urlProgramId);
-            }
-        }
-
-        const sessionEmbedded = sessionStorage.getItem('zen_arsenal_embedded') === 'true';
-        const sessionProgramId = sessionStorage.getItem('zen_arsenal_program');
-
-        setIsEmbedded(sessionEmbedded);
-        setProgramId(sessionProgramId);
+        setIsEmbedded(framedLaunch);
+        setProgramId(validProgramId);
     }, []);
 
     const emitProgress = (module_id: string, lesson_id: string, section_id: string, section_order: number, status: 'started' | 'completed') => {
@@ -47,7 +53,7 @@ export const ArsenalProvider: React.FC<{ children: React.ReactNode }> = ({ child
             status,
             completed_at: status === 'completed' ? new Date().toISOString() : undefined,
             external_event_id: crypto.randomUUID()
-        }, "*");
+        }, getParentTargetOrigin());
     };
 
     const emitArtifact = (module_id: string, lesson_id: string, artifact_title: string, artifact_url: string, artifact_type: 'app' | 'project') => {
@@ -62,7 +68,7 @@ export const ArsenalProvider: React.FC<{ children: React.ReactNode }> = ({ child
             artifact_type,
             completed_at: new Date().toISOString(),
             external_event_id: crypto.randomUUID()
-        }, "*");
+        }, getParentTargetOrigin());
     };
 
     const emitCompletion = () => {
@@ -72,7 +78,7 @@ export const ArsenalProvider: React.FC<{ children: React.ReactNode }> = ({ child
             program_id: programId,
             completed_at: new Date().toISOString(),
             external_event_id: crypto.randomUUID()
-        }, "*");
+        }, getParentTargetOrigin());
     };
 
     return (

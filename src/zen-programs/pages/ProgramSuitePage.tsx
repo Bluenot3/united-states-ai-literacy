@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { isAdminEmail } from '../../services/adminAccess';
 import { useAuth } from '../../hooks/useAuth';
 import {
     getProgramAccessDecision,
@@ -1387,14 +1386,19 @@ const SparklerCanvas: React.FC = () => {
 };
 
 const ProgramSuitePage: React.FC = () => {
-    const { user, isAuthenticated } = useAuth();
-    const isAdmin = isAdminEmail(user?.email);
+    const { user, isAuthenticated, isAdmin } = useAuth();
     const [states, setStates] = useState<UserProgramState[]>([]);
     const [selectedProgramKey, setSelectedProgramKey] = useState<ActiveProgramKey>('vanguard');
     const [control, setControl] = useState(58);
     const userId = getUserId(user);
+    const hasSupabaseUserId = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
 
     useEffect(() => {
+        if (programRegistrationAdapter.mode === 'supabase' && (!isAuthenticated || !user?.id || !hasSupabaseUserId)) {
+            setStates([]);
+            return;
+        }
+
         let active = true;
         void programRegistrationAdapter.getCurrentUserProgramStates(userId)
             .then((nextStates) => {
@@ -1405,7 +1409,7 @@ const ProgramSuitePage: React.FC = () => {
         return () => {
             active = false;
         };
-    }, [userId]);
+    }, [hasSupabaseUserId, isAuthenticated, user?.id, userId]);
 
     const statesByProgramKey = useMemo(() => new Map(states.map((state) => [state.programKey, state])), [states]);
     const programs = useMemo(() => sortPrograms(getProgramCatalog()), []);

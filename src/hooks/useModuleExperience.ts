@@ -1,11 +1,23 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MutableRefObject } from 'react';
 import { useAuth } from './useAuth';
+import {
+    isShippedVanguardQuizId,
+    parsePublicQuizPayload,
+    quizCompletionKey,
+    type ContentOverride,
+} from '../services/contentOverrides';
 
 type TrackableSection = {
     id: string;
     title: string;
+    content?: unknown;
     subSections?: TrackableSection[];
+};
+
+type TrackableContentBlock = {
+    component?: string;
+    interactiveId?: string;
 };
 
 interface UseModuleExperienceOptions<TSection extends TrackableSection> {
@@ -13,6 +25,7 @@ interface UseModuleExperienceOptions<TSection extends TrackableSection> {
     sections: TSection[];
     initialSectionId?: string;
     sectionRefs?: MutableRefObject<Record<string, HTMLElement | null>>;
+    publishedOverrides?: ContentOverride[];
 }
 
 const OBSERVER_DELAY_MS = 120;
@@ -22,6 +35,7 @@ export const useModuleExperience = <TSection extends TrackableSection>({
     sections,
     initialSectionId = 'overview',
     sectionRefs,
+    publishedOverrides = [],
 }: UseModuleExperienceOptions<TSection>) => {
     const {
         user,
@@ -29,6 +43,7 @@ export const useModuleExperience = <TSection extends TrackableSection>({
         addPoints,
         updateLastViewedSection,
         getModuleProgress,
+        isAdmin,
     } = useAuth();
 
     const initialModuleProgress = getModuleProgress(moduleId);
@@ -46,12 +61,57 @@ export const useModuleExperience = <TSection extends TrackableSection>({
     const isInitialIntersection = useRef(true);
 
     const moduleProgress = getModuleProgress(moduleId);
+    const adminPreview = isAdmin;
+
+    const sectionSuppression = useMemo(() => {
+        const rowsBySection = new Map<string, ContentOverride[]>();
+        publishedOverrides
+            .filter((row) => row.is_published && row.section_id)
+            .forEach((row) => {
+                const rows = rowsBySection.get(row.section_id as string) ?? [];
+                rows.push(row);
+                rowsBySection.set(row.section_id as string, rows);
+            });
+
+        const directlyHidden = new Set<string>();
+        const directlyReplaced = new Set<string>();
+        rowsBySection.forEach((rows, sectionId) => {
+            if (rows.some((row) => row.position === 'hide')) directlyHidden.add(sectionId);
+            if (rows.some((row) => row.position === 'replace')) directlyReplaced.add(sectionId);
+        });
+
+        const hiddenForLearners = new Set<string>();
+        const suppressedQuizSections = new Set<string>();
+        const collect = (nestedSections: TSection[], ancestorSuppressed = false) => {
+            nestedSections.forEach((section) => {
+                const isDirectlyHidden = directlyHidden.has(section.id);
+                const isDirectlyReplaced = directlyReplaced.has(section.id);
+                const isHiddenForLearners = ancestorSuppressed || isDirectlyHidden;
+                const isQuizSuppressed = ancestorSuppressed || isDirectlyHidden || isDirectlyReplaced;
+
+                // A replacement stays visible at its attachment point, while
+                // its original descendants and all attached quizzes do not.
+                if (isHiddenForLearners) hiddenForLearners.add(section.id);
+                if (isQuizSuppressed) suppressedQuizSections.add(section.id);
+                if (section.subSections?.length) {
+                    collect(section.subSections as TSection[], isQuizSuppressed);
+                }
+            });
+        };
+        collect(sections);
+        return { hiddenForLearners, suppressedQuizSections };
+    }, [publishedOverrides, sections]);
+    const hiddenSectionIds = useMemo(
+        () => adminPreview ? new Set<string>() : sectionSuppression.hiddenForLearners,
+        [adminPreview, sectionSuppression.hiddenForLearners],
+    );
 
     const flattenedSections = useMemo(() => {
         const allSections: (TSection & { parentTitle?: string })[] = [];
 
         const recurse = (nestedSections: TSection[], parentTitle?: string) => {
             nestedSections.forEach((section) => {
+                if (hiddenSectionIds.has(section.id)) return;
                 allSections.push({ ...section, parentTitle });
 
                 if (section.subSections?.length) {
@@ -63,9 +123,75 @@ export const useModuleExperience = <TSection extends TrackableSection>({
         recurse(sections);
 
         return allSections;
-    }, [sections]);
+    }, [hiddenSectionIds, sections]);
 
     const totalSections = flattenedSections.length;
+    const curriculumSectionIds = useMemo(
+        () => new Set(flattenedSections.map((section) => section.id)),
+        [flattenedSections],
+    );
+    const completedSectionIds = useMemo(
+        () => new Set(
+            moduleProgress.completedSections.filter((sectionId) => curriculumSectionIds.has(sectionId)),
+        ),
+        [curriculumSectionIds, moduleProgress.completedSections],
+    );
+    const completedSectionCount = completedSectionIds.size;
+    const firstIncompleteSectionIndex = flattenedSections.findIndex(
+        (section) => !completedSectionIds.has(section.id),
+    );
+    const publishedQuizRows = useMemo(() => publishedOverrides.flatMap((row) => {
+        if (!row.is_published || row.block_type !== 'quiz') return [];
+        const quiz = parsePublicQuizPayload(row.payload);
+        return quiz ? [{ row, quiz }] : [];
+    }), [publishedOverrides]);
+    const effectivePublishedQuizRows = useMemo(() => publishedQuizRows.filter(({ row }) => {
+        if (row.position === 'append_module') return flattenedSections.length > 0;
+        if (!row.section_id || !curriculumSectionIds.has(row.section_id)) return false;
+        return !sectionSuppression.suppressedQuizSections.has(row.section_id);
+    }), [curriculumSectionIds, flattenedSections.length, publishedQuizRows, sectionSuppression.suppressedQuizSections]);
+    const publishedQuizCompletionIds = useMemo(
+        () => effectivePublishedQuizRows.map(({ row, quiz }) => quizCompletionKey(row, quiz.quiz_id)),
+        [effectivePublishedQuizRows],
+    );
+    const allPublishedQuizzesComplete = publishedQuizCompletionIds.every(
+        (quizId) => moduleProgress.completedInteractives.includes(quizId),
+    );
+    const allSectionsComplete = totalSections > 0
+        && firstIncompleteSectionIndex === -1
+        && allPublishedQuizzesComplete;
+    const unlockedSectionIds = useMemo(() => {
+        if (adminPreview) {
+            return new Set(flattenedSections.map((section) => section.id));
+        }
+
+        const lastUnlockedIndex = firstIncompleteSectionIndex === -1
+            ? flattenedSections.length - 1
+            : firstIncompleteSectionIndex;
+
+        return new Set(
+            flattenedSections
+                .slice(0, Math.max(lastUnlockedIndex + 1, 0))
+                .map((section) => section.id),
+        );
+    }, [adminPreview, firstIncompleteSectionIndex, flattenedSections]);
+
+    useEffect(() => {
+        if (!user || unlockedSectionIds.has(activeSection)) {
+            return;
+        }
+
+        const fallbackSection = firstIncompleteSectionIndex >= 0
+            ? flattenedSections[firstIncompleteSectionIndex]
+            : flattenedSections.find((section) => unlockedSectionIds.has(section.id));
+        if (!fallbackSection) {
+            return;
+        }
+
+        setActiveSection(fallbackSection.id);
+        setVisibleSections(new Set([fallbackSection.id]));
+        updateLastViewedSection(moduleId, fallbackSection.id);
+    }, [activeSection, firstIncompleteSectionIndex, flattenedSections, moduleId, unlockedSectionIds, updateLastViewedSection, user]);
 
     useEffect(() => {
         const handleInteraction = () => {
@@ -99,16 +225,14 @@ export const useModuleExperience = <TSection extends TrackableSection>({
     }, []);
 
     useEffect(() => {
-        if (user && !isModuleComplete && moduleProgress.completedSections.length >= totalSections) {
-            setIsModuleComplete(true);
-        }
-    }, [isModuleComplete, moduleProgress.completedSections.length, totalSections, user]);
+        setIsModuleComplete(Boolean(user && allSectionsComplete));
+    }, [allSectionsComplete, user]);
 
     useEffect(() => {
-        if (user && !moduleProgress.certificateId && moduleProgress.completedSections.length >= totalSections * 0.9) {
+        if (user && allSectionsComplete && !moduleProgress.certificateId) {
             setShowCompletionModal(true);
         }
-    }, [moduleProgress, totalSections, user]);
+    }, [allSectionsComplete, moduleProgress.certificateId, user]);
 
     useEffect(() => {
         if (!user) {
@@ -134,10 +258,6 @@ export const useModuleExperience = <TSection extends TrackableSection>({
                 updateLastViewedSection(moduleId, sectionId);
             }
 
-            if (!moduleProgress.completedSections.includes(sectionId)) {
-                updateModuleProgress(moduleId, sectionId, 'section');
-                addPoints(moduleId, 10);
-            }
         };
 
         const setupTimer = window.setTimeout(() => {
@@ -170,6 +290,7 @@ export const useModuleExperience = <TSection extends TrackableSection>({
             );
 
             observedElements = flattenedSections
+                .filter((section) => unlockedSectionIds.has(section.id))
                 .map((section) => sectionRefs?.current[section.id] ?? document.getElementById(section.id))
                 .filter(Boolean) as HTMLElement[];
 
@@ -182,23 +303,81 @@ export const useModuleExperience = <TSection extends TrackableSection>({
             observer?.disconnect();
         };
     }, [
-        addPoints,
         flattenedSections,
         moduleId,
-        moduleProgress.completedSections,
         sectionRefs,
+        unlockedSectionIds,
         updateLastViewedSection,
+        user,
+    ]);
+
+    const activeSectionRecord = flattenedSections.find((section) => section.id === activeSection);
+    const requiredQuizIds = useMemo(() => {
+        const originalSuppressed = sectionSuppression.suppressedQuizSections.has(activeSection);
+        const originalQuizIds = !originalSuppressed && Array.isArray(activeSectionRecord?.content)
+            ? (activeSectionRecord.content as TrackableContentBlock[])
+                .filter((block) => block.component === 'SectionQuiz' && block.interactiveId)
+                .map((block) => block.interactiveId as string)
+            : [];
+        const lastSectionId = flattenedSections[flattenedSections.length - 1]?.id;
+
+        const required = originalQuizIds.map((quizId) => {
+            const replacement = effectivePublishedQuizRows.find(({ quiz }) => quiz.quiz_id === quizId);
+            return replacement ? quizCompletionKey(replacement.row, quizId) : quizId;
+        });
+
+        effectivePublishedQuizRows.forEach(({ row, quiz }) => {
+            if (isShippedVanguardQuizId(quiz.quiz_id)) return;
+            const belongsToActiveSection = row.section_id === activeSection
+                || (row.position === 'append_module' && activeSection === lastSectionId);
+            if (belongsToActiveSection) required.push(quizCompletionKey(row, quiz.quiz_id));
+        });
+
+        return [...new Set(required)];
+    }, [activeSection, activeSectionRecord, effectivePublishedQuizRows, flattenedSections, sectionSuppression.suppressedQuizSections]);
+    const missingRequiredQuizIds = requiredQuizIds.filter(
+        (quizId) => !moduleProgress.completedInteractives.includes(quizId),
+    );
+    const canCompleteActiveSection = unlockedSectionIds.has(activeSection) && missingRequiredQuizIds.length === 0;
+
+    const completeActiveSection = useCallback(() => {
+        if (
+            !user
+            || !activeSection
+            || !unlockedSectionIds.has(activeSection)
+            || !canCompleteActiveSection
+            || moduleProgress.completedSections.includes(activeSection)
+        ) return;
+        updateModuleProgress(moduleId, activeSection, 'section');
+        addPoints(moduleId, 10);
+    }, [
+        activeSection,
+        addPoints,
+        canCompleteActiveSection,
+        moduleId,
+        moduleProgress.completedSections,
+        unlockedSectionIds,
         updateModuleProgress,
         user,
     ]);
+
+    const activeSectionTitle = flattenedSections.find((section) => section.id === activeSection)?.title ?? activeSection;
 
     return {
         user,
         moduleProgress,
         activeSection,
+        activeSectionTitle,
+        completeActiveSection,
+        canCompleteActiveSection,
+        missingRequiredQuizIds,
         visibleSections,
         flattenedSections,
         totalSections,
+        completedSectionCount,
+        hiddenSectionIds,
+        unlockedSectionIds,
+        allSectionsComplete,
         isCommandPaletteOpen,
         setIsCommandPaletteOpen,
         isModuleComplete,

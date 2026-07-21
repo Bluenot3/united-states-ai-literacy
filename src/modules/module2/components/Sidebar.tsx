@@ -6,12 +6,17 @@ import StickySectionNavCard from '../../../components/vanguard/StickySectionNavC
 interface SidebarProps {
     sections: Section[];
     activeSection: string;
+    unlockedSectionIds: Set<string>;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ sections, activeSection }) => {
+const Sidebar: React.FC<SidebarProps> = ({ sections, activeSection, unlockedSectionIds }) => {
     const { user } = useAuth();
 
     const handleNavigate = (sectionId: string) => {
+        if (!unlockedSectionIds.has(sectionId)) {
+            return;
+        }
+
         const element = document.getElementById(sectionId);
         if (!element) {
             return;
@@ -37,6 +42,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sections, activeSection }) => {
                 accentClassName="from-sky-500 via-cyan-500 to-emerald-400"
                 activeAccentClassName="from-sky-600 via-cyan-600 to-emerald-500"
                 onNavigate={handleNavigate}
+                unlockedSectionIds={unlockedSectionIds}
             />
         </aside>
     );

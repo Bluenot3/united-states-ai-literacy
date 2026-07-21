@@ -9,6 +9,8 @@ declare const jspdf: any;
 interface CompletionModalProps {
     moduleId: 1 | 2 | 3 | 4;
     moduleName: string;
+    completedSections: number;
+    totalSections: number;
     onClose: () => void;
 }
 
@@ -55,18 +57,24 @@ const launchConfetti = () => {
     }
 };
 
-const CompletionModal: React.FC<CompletionModalProps> = ({ moduleId, moduleName, onClose }) => {
+const CompletionModal: React.FC<CompletionModalProps> = ({
+    moduleId,
+    moduleName,
+    completedSections,
+    totalSections,
+    onClose,
+}) => {
     const { user, getModuleProgress, setModuleCertificate } = useAuth();
     const navigate = useNavigate();
     const [certificateGenerated, setCertificateGenerated] = useState(false);
     const [certificateId, setCertificateId] = useState<string | null>(null);
+    const [verificationSource, setVerificationSource] = useState<'supabase' | 'supabase-cache' | 'local' | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [generationError, setGenerationError] = useState<string | null>(null);
     const [certificateName, setCertificateName] = useState(user?.name || 'Student');
     const certificateRef = useRef<HTMLDivElement>(null);
 
     const moduleProgress = getModuleProgress(moduleId);
-    const totalSections = moduleId === 1 ? 50 : moduleId === 4 ? 60 : 40;
-
     useEffect(() => {
         launchConfetti();
     }, []);
@@ -74,23 +82,26 @@ const CompletionModal: React.FC<CompletionModalProps> = ({ moduleId, moduleName,
     const handleGenerateCertificate = async () => {
         if (!user) return;
         setIsGenerating(true);
+        setGenerationError(null);
 
         try {
             const cert = await generateModuleCertificate(
                 moduleId,
                 certificateName,
                 user.email,
-                moduleProgress.completedSections.length,
+                completedSections,
                 totalSections,
                 moduleProgress.completedInteractives.length,
                 moduleProgress.points
             );
 
-            setModuleCertificate(moduleId, cert.id, cert.sha256Hash);
+            await setModuleCertificate(moduleId, cert.id, cert.sha256Hash);
             setCertificateId(cert.id);
+            setVerificationSource(cert.verificationSource ?? 'local');
             setCertificateGenerated(true);
         } catch (error) {
             console.error('Failed to generate certificate:', error);
+            setGenerationError('Your certificate could not be saved. Please try again before leaving this page.');
         } finally {
             setIsGenerating(false);
         }
@@ -180,12 +191,21 @@ const CompletionModal: React.FC<CompletionModalProps> = ({ moduleId, moduleName,
                                 Maybe Later
                             </button>
                         </div>
+                        {generationError && (
+                            <p role="alert" className="mt-4 text-center text-sm font-semibold text-red-400">
+                                {generationError}
+                            </p>
+                        )}
                     </>
                 ) : (
                     <>
                         <div className="text-center mb-4">
                             <h2 className="text-2xl font-bold text-brand-text">Certificate Generated!</h2>
-                            <p className="text-brand-text-light text-sm">SHA-256 verified and timestamped</p>
+                            <p className="text-brand-text-light text-sm">
+                                {verificationSource === 'supabase'
+                                    ? 'Stored in Supabase with a SHA-256 record fingerprint'
+                                    : 'Saved on this device with a SHA-256 record fingerprint'}
+                            </p>
                         </div>
 
                         {/* Mini certificate preview */}

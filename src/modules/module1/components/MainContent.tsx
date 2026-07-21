@@ -7,12 +7,15 @@ import {
     AppendedSections,
     ModuleEditControls,
 } from '../../../components/content-overlay/ContentOverlayRenderer';
+import { LockedVanguardSection } from '../../../components/vanguard/VanguardModuleFrame';
 
 interface MainContentProps {
     title: string;
     sections: Section[];
     sectionRefs: React.MutableRefObject<Record<string, HTMLElement | null>>;
     visibleSections: Set<string>;
+    unlockedSectionIds: Set<string>;
+    hiddenSectionIds: Set<string>;
 }
 
 const overviewPillars = [
@@ -35,9 +38,9 @@ const isPart2Start = (section: Section): boolean => {
     );
 };
 
-const MainContent: React.FC<MainContentProps> = ({ title, sections, sectionRefs, visibleSections }) => {
+const MainContent: React.FC<MainContentProps> = ({ title, sections, sectionRefs, visibleSections, unlockedSectionIds, hiddenSectionIds }) => {
     // Admin content overlay — additive. Empty results ⇒ page renders identically.
-    const { buckets, rows } = useContentOverrides('pioneer', 'module1');
+    const { buckets, rows } = useContentOverrides('vanguard', 'module1');
     const rowsById = React.useMemo(() => {
         const map = new Map<string, typeof rows[number]>();
         for (const r of rows) map.set(r.id, r);
@@ -47,10 +50,37 @@ const MainContent: React.FC<MainContentProps> = ({ title, sections, sectionRefs,
     let part2Inserted = false;
 
     const renderSections = (sectionsToRender: Section[], level: number = 0): React.ReactNode => sectionsToRender.map((section) => {
+        if (hiddenSectionIds.has(section.id)) return null;
+
         const showPart2Divider = level === 0 && !part2Inserted && isPart2Start(section);
         if (showPart2Divider) part2Inserted = true;
 
         const bucket = buckets.bySection.get(section.id) ?? {};
+        const isUnlocked = unlockedSectionIds.has(section.id);
+
+        if (!isUnlocked) {
+            return (
+                <React.Fragment key={section.id}>
+                    {showPart2Divider && (
+                        <div className="relative my-14 flex items-center gap-5">
+                            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-violet-400/40 to-transparent" />
+                            <div className="flex items-center gap-3 rounded-full border border-violet-400/25 bg-violet-400/[0.08] px-5 py-2.5 backdrop-blur-sm">
+                                <span className="h-1.5 w-1.5 rounded-full bg-violet-400 shadow-[0_0_6px_rgba(167,139,250,0.8)]" />
+                                <span className="text-[11px] font-bold uppercase tracking-[0.32em] text-violet-300">Part 2</span>
+                            </div>
+                            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-violet-400/40 to-transparent" />
+                        </div>
+                    )}
+                    <LockedVanguardSection
+                        id={section.id}
+                        ref={(element) => { sectionRefs.current[section.id] = element; }}
+                        title={section.title}
+                        accentClassName="from-violet-500 via-fuchsia-500 to-cyan-400"
+                        className="mb-14"
+                    />
+                </React.Fragment>
+            );
+        }
 
         const originalBody = (
             <div

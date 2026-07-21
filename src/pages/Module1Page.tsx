@@ -3,6 +3,7 @@ import CompletionModal from '../components/CompletionModal';
 import VanguardModuleFrame from '../components/vanguard/VanguardModuleFrame';
 import { useModuleExperience } from '../hooks/useModuleExperience';
 import { EditModeProvider } from '../components/content-overlay/EditModeContext';
+import { useContentOverrides } from '../hooks/useContentOverrides';
 
 import { curriculumData } from '../modules/module1/data/curriculumData';
 import Header from '../modules/module1/components/Header';
@@ -45,13 +46,26 @@ class Module1ErrorBoundary extends React.Component<{ children: React.ReactNode }
 
 const Module1Page: React.FC = () => {
     const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+    const { rows: contentOverrideRows } = useContentOverrides('vanguard', 'module1');
+    const publishedOverrides = React.useMemo(
+        () => contentOverrideRows.filter((row) => row.is_published),
+        [contentOverrideRows],
+    );
     const {
         user,
         moduleProgress,
         activeSection,
+        activeSectionTitle,
+        completeActiveSection,
+        canCompleteActiveSection,
+        missingRequiredQuizIds,
         visibleSections,
         flattenedSections,
         totalSections,
+        completedSectionCount,
+        hiddenSectionIds,
+        unlockedSectionIds,
+        allSectionsComplete,
         isCommandPaletteOpen,
         setIsCommandPaletteOpen,
         isModuleComplete,
@@ -61,6 +75,7 @@ const Module1Page: React.FC = () => {
         moduleId: 1,
         sections: curriculumData.sections,
         sectionRefs,
+        publishedOverrides,
     });
 
     if (!user) {
@@ -69,46 +84,63 @@ const Module1Page: React.FC = () => {
 
     return (
         <Module1ErrorBoundary>
-            <EditModeProvider programId="pioneer" moduleId="module1">
+            <EditModeProvider programId="vanguard" moduleId="module1">
                 <VanguardModuleFrame
                     moduleNumber={1}
                     title="AI Foundations"
                     subtitle="Learn the mental models behind modern AI, separate real capability from hype, and build the technical confidence needed for the more advanced Vanguard labs."
                     accentClassName="from-violet-500 via-fuchsia-500 to-cyan-400"
                     chipLabels={['AI literacy', 'LLM fundamentals', 'Prompt judgment']}
-                    completedSections={moduleProgress.completedSections.length}
+                    completedSections={completedSectionCount}
                     totalSections={totalSections}
                     header={(
                         <>
                             <ScrollProgressBar />
                             <Header
                                 onCommandPaletteToggle={() => setIsCommandPaletteOpen(true)}
-                                completedSections={moduleProgress.completedSections.length}
+                                completedSections={completedSectionCount}
                                 totalSections={totalSections}
                             />
                         </>
                     )}
-                    sidebar={<Sidebar sections={curriculumData.sections} activeSection={activeSection} />}
-                    footer={<ModuleFooter currentModule={1} />}
+                    sidebar={<Sidebar sections={curriculumData.sections} activeSection={activeSection} unlockedSectionIds={unlockedSectionIds} />}
+                    activeSectionTitle={activeSectionTitle}
+                    activeSectionComplete={moduleProgress.completedSections.includes(activeSection)}
+                    canCompleteActiveSection={canCompleteActiveSection}
+                    completionBlockedReason={missingRequiredQuizIds.length > 0 ? 'Pass the section quiz to clear this checkpoint.' : undefined}
+                    onCompleteActiveSection={completeActiveSection}
+                    footer={(
+                        <ModuleFooter
+                            currentModule={1}
+                            canAdvance={Boolean(moduleProgress.certificateId)}
+                            certificateId={moduleProgress.certificateId}
+                            readyToClaim={allSectionsComplete}
+                            onRequestCertificate={() => setShowCompletionModal(true)}
+                        />
+                    )}
                 >
                     <MainContent
                         title={curriculumData.title}
                         sections={curriculumData.sections}
                         sectionRefs={sectionRefs}
                         visibleSections={visibleSections}
+                        unlockedSectionIds={unlockedSectionIds}
+                        hiddenSectionIds={hiddenSectionIds}
                     />
                 </VanguardModuleFrame>
 
                 <CommandPalette
                     isOpen={isCommandPaletteOpen}
                     onClose={() => setIsCommandPaletteOpen(false)}
-                    sections={flattenedSections}
+                    sections={flattenedSections.filter((section) => unlockedSectionIds.has(section.id))}
                 />
                 {isModuleComplete && <CompletionCelebration />}
                 {showCompletionModal && (
                     <CompletionModal
                         moduleId={1}
                         moduleName="AI Foundations"
+                        completedSections={completedSectionCount}
+                        totalSections={totalSections}
                         onClose={() => setShowCompletionModal(false)}
                     />
                 )}

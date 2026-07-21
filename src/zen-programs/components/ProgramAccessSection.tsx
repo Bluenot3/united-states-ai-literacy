@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useBilling } from '../../contexts/BillingContext';
-import { isAdminEmail } from '../../services/adminAccess';
 import { hasProgramAccess } from '../../services/programAccess';
 import {
     isProfileComplete,
@@ -36,7 +35,7 @@ const PANELS: PanelConfig[] = [
         mark: 'VA',
         eyebrow: 'Operator command route',
         title: 'ZEN Vanguard',
-        price: '$75 program access',
+        price: '$75 one-time access',
         body: 'Operator-grade AI systems training. Activate full access to the Vanguard systems curriculum, operator labs, certificates, and progress layer.',
         destination: '/dashboard',
         gradient: 'from-[#f8fafc] via-[#ef4444] to-[#1d4ed8]',
@@ -53,9 +52,9 @@ const PANELS: PanelConfig[] = [
         mark: 'AI',
         eyebrow: 'Builder launch route',
         title: 'AI Pioneer Program',
-        price: '$45 program access',
+        price: '$45 one-time access',
         body: 'Build, launch, and showcase real AI tools. Activate your seat to unlock the build path, labs, Hugging Face deployment, portfolio artifacts, and certificate track.',
-        destination: '/programs/pioneer',
+        destination: '/programs/pioneer/launch',
         gradient: 'from-[#ffffff] via-[#3b82f6] to-[#dc2626]',
         glow: 'rgba(59,130,246,.32)',
         features: [
@@ -84,12 +83,12 @@ const emptyProfile = (name: string, program: ProgramKind): ZenProfile => ({
 });
 
 const ProgramAccessSection: React.FC = () => {
-    const { user, isAuthenticated } = useAuth();
+    const { user, isAuthenticated, isAdmin } = useAuth();
     const { createCheckoutSession, checkEntitlement, error: billingError } = useBilling();
     const location = useLocation();
     const navigate = useNavigate();
     const sectionRef = useRef<HTMLElement | null>(null);
-    const admin = isAdminEmail(user?.email);
+    const admin = isAdmin;
 
     const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
     const highlightedProgram: ProgramKind | null = (() => {
@@ -156,7 +155,7 @@ const ProgramAccessSection: React.FC = () => {
 
     const startCheckout = useCallback(async (panel: PanelConfig) => {
         setBusy(panel.kind);
-        const url = await createCheckoutSession(panel.destination);
+        const url = await createCheckoutSession(panel.kind, panel.destination);
         if (url) {
             goTo(url);
             return;

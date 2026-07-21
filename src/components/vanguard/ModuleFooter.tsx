@@ -42,11 +42,81 @@ const NEXT_MODULE_MAP: Record<number, NextModuleInfo> = {
 
 interface ModuleFooterProps {
     currentModule: number;
+    canAdvance: boolean;
+    certificateId?: string | null;
+    readyToClaim?: boolean;
+    onRequestCertificate?: () => void;
+    finalCertificateId?: string | null;
+    onRequestFinalCertificate?: () => void;
+    isFinalCertificateLoading?: boolean;
+    finalCertificateError?: string | null;
 }
 
-const ModuleFooter: React.FC<ModuleFooterProps> = ({ currentModule }) => {
+const ModuleFooter: React.FC<ModuleFooterProps> = ({
+    currentModule,
+    canAdvance,
+    certificateId,
+    readyToClaim = false,
+    onRequestCertificate,
+    finalCertificateId,
+    onRequestFinalCertificate,
+    isFinalCertificateLoading = false,
+    finalCertificateError,
+}) => {
     const navigate = useNavigate();
     const next = NEXT_MODULE_MAP[currentModule];
+    const isFinalModule = currentModule === 4;
+    const canViewFinalCertificate = isFinalModule && Boolean(finalCertificateId);
+    const canClaimFinalCertificate = isFinalModule && Boolean(certificateId) && !finalCertificateId;
+    const canStartNextModule = !isFinalModule && canAdvance && Boolean(next?.route);
+    const canClaimModuleCertificate = !certificateId && readyToClaim;
+    const isActionable = canViewFinalCertificate
+        || canClaimFinalCertificate
+        || canStartNextModule
+        || canClaimModuleCertificate;
+
+    const handleAdvance = () => {
+        if (isFinalCertificateLoading) {
+            return;
+        }
+
+        if (canViewFinalCertificate && finalCertificateId) {
+            navigate(`/certificate/${encodeURIComponent(finalCertificateId)}`);
+            return;
+        }
+
+        if (canClaimFinalCertificate) {
+            onRequestFinalCertificate?.();
+            return;
+        }
+
+        if (canStartNextModule && next?.route) {
+            navigate(next.route);
+            return;
+        }
+
+        if (canClaimModuleCertificate) {
+            onRequestCertificate?.();
+        }
+    };
+
+    const ctaLabel = isFinalModule
+        ? canViewFinalCertificate
+            ? 'View Vanguard Certificate'
+            : canClaimFinalCertificate
+                ? isFinalCertificateLoading ? 'Issuing Credential...' : 'Claim Vanguard Certificate'
+                : readyToClaim ? 'Claim Module 4 Credential' : 'Complete All Sections'
+        : canAdvance ? 'Start Module' : readyToClaim ? 'Claim Module Credential' : 'Complete All Sections';
+
+    const actionLabel = canViewFinalCertificate
+        ? 'View your Vanguard certificate'
+        : canClaimFinalCertificate
+            ? 'Claim your Vanguard certificate'
+            : canStartNextModule
+                ? `Continue to ${next?.title}`
+                : canClaimModuleCertificate
+                    ? 'Claim this module credential to continue'
+                    : 'Complete all module sections to continue';
 
     const handleScrollTop = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -58,12 +128,19 @@ const ModuleFooter: React.FC<ModuleFooterProps> = ({ currentModule }) => {
             {next && (
                 <div className="module-cta-banner">
                     <div
-                        className="group relative cursor-pointer overflow-hidden rounded-[1.75rem] border border-white/10 bg-[linear-gradient(145deg,rgba(7,14,30,0.96)_0%,rgba(12,20,40,0.92)_100%)] p-6 shadow-[0_24px_70px_rgba(2,6,23,0.5)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:shadow-[0_32px_80px_rgba(2,6,23,0.6)] md:p-8"
-                        onClick={() => navigate(next.route)}
+                        className={`group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-[linear-gradient(145deg,rgba(7,14,30,0.96)_0%,rgba(12,20,40,0.92)_100%)] p-6 shadow-[0_24px_70px_rgba(2,6,23,0.5)] backdrop-blur-xl transition-all duration-300 md:p-8 ${isActionable && !isFinalCertificateLoading ? 'cursor-pointer hover:-translate-y-1 hover:border-white/20 hover:shadow-[0_32px_80px_rgba(2,6,23,0.6)]' : 'cursor-not-allowed opacity-70'}`}
+                        onClick={handleAdvance}
                         role="button"
                         tabIndex={0}
-                        onKeyDown={(e) => e.key === 'Enter' && navigate(next.route)}
-                        aria-label={`Continue to Module ${next.moduleNumber}: ${next.title}`}
+                        onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                handleAdvance();
+                            }
+                        }}
+                        aria-disabled={!isActionable || isFinalCertificateLoading}
+                        aria-busy={isFinalCertificateLoading}
+                        aria-label={actionLabel}
                     >
                         {/* Gradient aurora top edge */}
                         <div className={`absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r ${next.accentClassName} opacity-70 transition-opacity duration-300 group-hover:opacity-100`} />
@@ -94,7 +171,7 @@ const ModuleFooter: React.FC<ModuleFooterProps> = ({ currentModule }) => {
                             {/* CTA Arrow button */}
                             <div className="flex-shrink-0">
                                 <div className={`inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r ${next.accentClassName} px-5 py-3 text-sm font-bold text-white shadow-lg transition-all duration-200 group-hover:shadow-xl group-hover:scale-105`}>
-                                    <span>{next.moduleNumber === 0 ? 'Claim Certificate' : 'Start Module'}</span>
+                                    <span>{ctaLabel}</span>
                                     <svg className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                                     </svg>
@@ -122,6 +199,11 @@ const ModuleFooter: React.FC<ModuleFooterProps> = ({ currentModule }) => {
                             </span>
                         </div>
                     </div>
+                    {finalCertificateError && (
+                        <p role="alert" className="mt-3 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200">
+                            {finalCertificateError}
+                        </p>
+                    )}
                 </div>
             )}
 

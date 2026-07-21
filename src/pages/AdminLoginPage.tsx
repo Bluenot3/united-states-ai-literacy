@@ -23,7 +23,6 @@ const AdminLoginPage: React.FC = () => {
         setLoading(true);
 
         try {
-            // Pass raw inputs. The context handles mapping 'admin' to email if needed.
             const success = await adminLogin(username, password);
             if (success) {
                 navigate('/admin');
@@ -110,18 +109,18 @@ const AdminLoginPage: React.FC = () => {
                     <form onSubmit={handleSubmit} className="space-y-6 relative">
                         <div>
                             <label htmlFor="username" className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                                Username
+                                Admin email
                             </label>
                             <div className="relative group">
                                 <input
                                     id="username"
-                                    type="text"
+                                    type="email"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
-                                    placeholder="Enter username"
+                                    placeholder="you@example.com"
                                     className="w-full px-4 py-4 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all"
                                     disabled={loading}
-                                    autoComplete="off"
+                                    autoComplete="username"
                                 />
 
                             </div>
@@ -140,7 +139,7 @@ const AdminLoginPage: React.FC = () => {
                                     placeholder="••••••••••"
                                     className="w-full px-4 py-4 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all font-mono tracking-widest"
                                     disabled={loading}
-                                    autoComplete="off"
+                                    autoComplete="current-password"
                                 />
                                 <button
                                     type="button"

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { isAdminEmail } from '../../services/adminAccess';
+import { hasProgramAccess, normalizeProgramKey } from '../../services/programAccess';
 import { useAuth } from '../../hooks/useAuth';
 import { getAccentClasses } from '../programsRegistry';
 import {
@@ -11,15 +11,15 @@ import {
 } from '../programIntegrationContract';
 import { programRegistrationAdapter } from '../programRegistrationAdapter';
 import { getSyntheticStandaloneUserId, ProgramAccessGate } from '../components/ProgramAccessGate';
+import ProgramLiveSessions from '../components/ProgramLiveSessions';
 import { getArsenalProgramBridgeItem } from '../arsenalProgramBridge';
 
 const pathway = ['Learn', 'Build', 'Deploy', 'Verify'];
 
 const ProgramDetailPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
-    const program = slug ? getProgramBySlug(slug) : undefined;
-    const { user, isAuthenticated } = useAuth();
-    const isAdmin = isAdminEmail(user?.email);
+    const program = useMemo(() => (slug ? getProgramBySlug(slug) : undefined), [slug]);
+    const { user, isAuthenticated, isAdmin } = useAuth();
     const [state, setState] = useState<UserProgramState | null>(null);
     const userId = user?.id ?? getSyntheticStandaloneUserId(user?.email);
 
@@ -27,16 +27,31 @@ const ProgramDetailPage: React.FC = () => {
         if (!program) return;
 
         let active = true;
-        void programRegistrationAdapter.getRegistrationForProgram(userId, program.programKey)
-            .then((nextState) => {
-                if (active) setState(nextState);
+        const paidProgramKey = normalizeProgramKey(program.programKey);
+        void Promise.all([
+            programRegistrationAdapter.getRegistrationForProgram(userId, program.programKey),
+            user?.id && paidProgramKey
+                ? hasProgramAccess(user.id, user.email, paidProgramKey)
+                : Promise.resolve(false),
+        ])
+            .then(([nextState, paidAccess]) => {
+                if (!active) return;
+                setState(paidAccess ? {
+                    ...(nextState ?? {
+                        userId,
+                        programKey: program.programKey,
+                        progressPercent: 0,
+                    }),
+                    registrationStatus: 'enrolled',
+                    accessLevel: 'enrolled',
+                } : nextState);
             })
             .catch((error) => console.warn('Program registration state unavailable.', error));
 
         return () => {
             active = false;
         };
-    }, [program, userId]);
+    }, [program, user?.email, user?.id, userId]);
 
     const colors = useMemo(() => (
         program ? getAccentClasses((program.metadata.accentColor as Parameters<typeof getAccentClasses>[0]) ?? 'blue') : null
@@ -139,6 +154,8 @@ const ProgramDetailPage: React.FC = () => {
                         </article>
                     ))}
                 </section>
+
+                <ProgramLiveSessions programKey={program.programKey} />
 
                 <section className="mt-6 overflow-hidden rounded-[1.8rem] border border-zen-gold/10 bg-zen-surface/60 p-6 shadow-zen-card backdrop-blur-xl">
                     <div className="flex flex-wrap items-start justify-between gap-4">

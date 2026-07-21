@@ -128,7 +128,7 @@ const slugAliases: Record<string, ProgramKey> = {
 
 const programKeyDefaults: Record<ProgramKey, Pick<ProgramCatalogItem, 'status' | 'registrationEnabled' | 'previewEnabled' | 'fullAccessRequiresEnrollment' | 'visibility' | 'credentialLabel'>> = {
     'ai-pioneer': {
-        status: 'preview',
+        status: 'live',
         registrationEnabled: true,
         previewEnabled: true,
         fullAccessRequiresEnrollment: true,
@@ -136,7 +136,7 @@ const programKeyDefaults: Record<ProgramKey, Pick<ProgramCatalogItem, 'status' |
         credentialLabel: 'ZEN AI Pioneer Certificate + verified ZEN Card',
     },
     vanguard: {
-        status: 'preview',
+        status: 'live',
         registrationEnabled: true,
         previewEnabled: true,
         fullAccessRequiresEnrollment: true,

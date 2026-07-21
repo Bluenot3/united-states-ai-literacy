@@ -1,11 +1,20 @@
 import React, { useEffect, useRef } from 'react';
 import type { Section } from '../types';
 import SectionRenderer from './SectionRenderer';
+import { LockedVanguardSection } from '../../../components/vanguard/VanguardModuleFrame';
+import { useContentOverrides } from '../../../hooks/useContentOverrides';
+import {
+    AppendedSections,
+    ModuleEditControls,
+    SectionOverlay,
+} from '../../../components/content-overlay/ContentOverlayRenderer';
 
 interface MainContentProps {
     sections: Section[];
     sectionRefs?: React.MutableRefObject<Record<string, HTMLElement | null>>;
     visibleSections?: Set<string>;
+    unlockedSectionIds: Set<string>;
+    hiddenSectionIds: Set<string>;
 }
 
 const moduleHighlights = [
@@ -26,14 +35,47 @@ const isPart2Start = (section: Section): boolean => {
     );
 };
 
-const MainContent: React.FC<MainContentProps> = ({ sections, sectionRefs, visibleSections }) => {
+const MainContent: React.FC<MainContentProps> = ({ sections, sectionRefs, visibleSections, unlockedSectionIds, hiddenSectionIds }) => {
     const internalRefs = useRef<Record<string, HTMLElement | null>>({});
     const refs = sectionRefs ?? internalRefs;
+    const { buckets, rows } = useContentOverrides('vanguard', 'module2');
+    const rowsById = React.useMemo(() => {
+        const map = new Map<string, typeof rows[number]>();
+        for (const row of rows) map.set(row.id, row);
+        return map;
+    }, [rows]);
     let part2Inserted = false;
 
     const renderSection = (section: Section, level: number = 0): React.ReactNode => {
+        if (hiddenSectionIds.has(section.id)) return null;
+
         const showPart2Divider = level === 0 && !part2Inserted && isPart2Start(section);
         if (showPart2Divider) part2Inserted = true;
+        const bucket = buckets.bySection.get(section.id) ?? {};
+
+        if (!unlockedSectionIds.has(section.id)) {
+            return (
+                <React.Fragment key={section.id}>
+                    {showPart2Divider && (
+                        <div className="relative my-14 flex items-center gap-5">
+                            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-sky-400/40 to-transparent" />
+                            <div className="flex items-center gap-3 rounded-full border border-sky-400/25 bg-sky-400/[0.08] px-5 py-2.5 backdrop-blur-sm">
+                                <span className="h-1.5 w-1.5 rounded-full bg-sky-400 shadow-[0_0_6px_rgba(56,189,248,0.8)]" />
+                                <span className="text-[11px] font-bold uppercase tracking-[0.32em] text-sky-300">Part 2</span>
+                            </div>
+                            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-sky-400/40 to-transparent" />
+                        </div>
+                    )}
+                    <LockedVanguardSection
+                        id={section.id}
+                        ref={(element) => { refs.current[section.id] = element; }}
+                        title={section.title}
+                        accentClassName="from-sky-500 via-cyan-500 to-emerald-400"
+                        className="mb-14"
+                    />
+                </React.Fragment>
+            );
+        }
 
         return (
             <React.Fragment key={section.id}>
@@ -48,42 +90,50 @@ const MainContent: React.FC<MainContentProps> = ({ sections, sectionRefs, visibl
                     </div>
                 )}
 
-                <div
-                    id={section.id}
-                    ref={(el) => { refs.current[section.id] = el; }}
-                    className="mb-14 scroll-mt-28"
+                <SectionOverlay
+                    sectionId={section.id}
+                    before={bucket.before}
+                    after={bucket.after}
+                    replace={bucket.replace}
+                    hide={bucket.hide}
                 >
-                    <div className="relative">
-                        <div className="vanguard-section-card glass-card mb-0 overflow-hidden border border-white/10 bg-[linear-gradient(160deg,rgba(7,14,30,0.95)_0%,rgba(12,20,39,0.9)_48%,rgba(9,16,33,0.96)_100%)] p-6 shadow-[0_24px_70px_rgba(2,6,23,0.42)] backdrop-blur-xl md:p-8">
-                            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-400/60 to-transparent" />
-                            {level === 0 && (
-                                <div className="mb-6 h-1.5 w-20 rounded-full bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-400" />
-                            )}
-                            <h2
-                                className={[
-                                    'mb-7 font-outfit font-black tracking-tight text-slate-100',
-                                    level === 0 ? 'text-3xl md:text-4xl' : 'text-2xl md:text-3xl',
-                                ].join(' ')}
-                            >
-                                {section.title}
-                            </h2>
-                            <div className="space-y-8">
-                                {section.content.map((item, index) => (
-                                    <SectionRenderer key={`${section.id}-${index}`} item={item} section={section} itemIndex={index} />
-                                ))}
+                    <div
+                        id={section.id}
+                        ref={(el) => { refs.current[section.id] = el; }}
+                        className="mb-14 scroll-mt-28"
+                    >
+                        <div className="relative">
+                            <div className="vanguard-section-card glass-card mb-0 overflow-hidden border border-white/10 bg-[linear-gradient(160deg,rgba(7,14,30,0.95)_0%,rgba(12,20,39,0.9)_48%,rgba(9,16,33,0.96)_100%)] p-6 shadow-[0_24px_70px_rgba(2,6,23,0.42)] backdrop-blur-xl md:p-8">
+                                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-400/60 to-transparent" />
+                                {level === 0 && (
+                                    <div className="mb-6 h-1.5 w-20 rounded-full bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-400" />
+                                )}
+                                <h2
+                                    className={[
+                                        'mb-7 font-outfit font-black tracking-tight text-slate-100',
+                                        level === 0 ? 'text-3xl md:text-4xl' : 'text-2xl md:text-3xl',
+                                    ].join(' ')}
+                                >
+                                    {section.title}
+                                </h2>
+                                <div className="space-y-8">
+                                    {section.content.map((item, index) => (
+                                        <SectionRenderer key={`${section.id}-${index}`} item={item} section={section} itemIndex={index} />
+                                    ))}
+                                </div>
                             </div>
-                        </div>
 
-                        {section.subSections && (
-                            <div
-                                className="ml-4 border-l-2 border-transparent pl-4 md:ml-8 md:pl-8"
-                                style={{ borderImage: 'linear-gradient(to bottom, rgba(14,165,233,0.3), rgba(6,182,212,0.18), rgba(15,23,42,0.04)) 1' }}
-                            >
-                                {section.subSections.map((sub) => renderSection(sub, level + 1))}
-                            </div>
-                        )}
+                            {section.subSections && (
+                                <div
+                                    className="ml-4 border-l-2 border-transparent pl-4 md:ml-8 md:pl-8"
+                                    style={{ borderImage: 'linear-gradient(to bottom, rgba(14,165,233,0.3), rgba(6,182,212,0.18), rgba(15,23,42,0.04)) 1' }}
+                                >
+                                    {section.subSections.map((sub) => renderSection(sub, level + 1))}
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
+                </SectionOverlay>
             </React.Fragment>
         );
     };
@@ -131,6 +181,8 @@ const MainContent: React.FC<MainContentProps> = ({ sections, sectionRefs, visibl
             </header>
 
             {sections.map((section) => renderSection(section))}
+            <AppendedSections blocks={buckets.appendedSections} />
+            <ModuleEditControls rowsById={rowsById} />
         </div>
     );
 };

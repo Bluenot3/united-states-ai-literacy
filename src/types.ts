@@ -227,7 +227,8 @@ export interface Certificate {
     type: 'module' | 'final';
     moduleNumber?: 1 | 2 | 3 | 4;
     userName: string;
-    userEmail: string;
+    /** Retained only for legacy device-local certificates; never returned publicly. */
+    userEmail?: string;
     issuedAt: string;
     performance: {
         sectionsCompleted: number;
@@ -237,8 +238,10 @@ export interface Certificate {
         completionPercentage: number;
     };
     sha256Hash: string;
-    blockNumber: number;
-    previousHash: string;
+    blockNumber?: number;
+    previousHash?: string;
+    verificationSource?: 'supabase' | 'supabase-cache' | 'local';
+    verificationVersion?: number;
 }
 
 export interface InteractiveComponentProps {
@@ -310,6 +313,16 @@ export interface Student {
     moduleProgress: {
         [key: number]: ModuleProgress;
     };
+    /** Supabase-backed progress for AI Pioneer, Vanguard quizzes, and future programs. */
+    programProgress: Array<{
+        programKey: string;
+        moduleKey: string | null;
+        lessonKey: string | null;
+        progressPercent: number;
+        status: 'not_started' | 'started' | 'completed';
+        lastActivityAt: string | null;
+        metadata: Record<string, unknown>;
+    }>;
     assignments: Assignment[];
     status: 'active' | 'inactive' | 'at-risk';
     sessionHistory: SessionRecord[];

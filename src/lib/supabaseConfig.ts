@@ -11,11 +11,16 @@ export const SUPABASE_URL =
     import.meta.env.VITE_SUPABASE_URL ||
     PLACEHOLDER_URL;
 
-export const SUPABASE_PUBLISHABLE_KEY =
+const configuredSupabaseKey =
     import.meta.env.VITE_VANGUARD_SUPABASE_PUBLISHABLE_KEY ||
     import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
     import.meta.env.VITE_SUPABASE_KEY ||
     PLACEHOLDER_KEY;
+
+// Secret/service-role keys must never enter a browser bundle.
+export const SUPABASE_PUBLISHABLE_KEY = configuredSupabaseKey.startsWith('sb_secret_')
+    ? PLACEHOLDER_KEY
+    : configuredSupabaseKey;
 
 export const isSupabaseConfigured = (
     SUPABASE_URL !== PLACEHOLDER_URL &&
@@ -23,7 +28,7 @@ export const isSupabaseConfigured = (
 );
 
 function isOpaqueSupabaseApiKey(value: string): boolean {
-    return value.startsWith('sb_publishable_') || value.startsWith('sb_secret_');
+    return value.startsWith('sb_publishable_');
 }
 
 /** Supabase's modern publishable keys belong in `apikey`, not a bearer header. */

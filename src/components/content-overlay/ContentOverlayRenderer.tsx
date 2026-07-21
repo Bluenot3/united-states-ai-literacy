@@ -26,19 +26,25 @@ export const SectionOverlay: React.FC<SectionOverlayProps> = ({
     children,
 }) => {
     const { editMode, isAdmin, programId, moduleId, openEditor } = useEditMode();
-    const isHidden = hide.some((h) => h.is_published) || (isAdmin && hide.length > 0);
+    const hasPublishedHide = hide.some((h) => h.is_published);
+    const hasPublishedReplace = replace.some((r) => r.is_published);
+    const isHidden = hasPublishedHide || (isAdmin && hide.length > 0);
     const hasHideRow = hide.length > 0;
     const hasReplace = replace.length > 0;
+    const learnerQuizSuppressed = hasPublishedHide || hasPublishedReplace;
+    const visibleAttachedBlocks = (blocks: ContentOverride[]) => blocks.filter((block) => (
+        isAdmin || block.block_type !== 'quiz' || !learnerQuizSuppressed
+    ));
 
     // For students: if hidden or replaced, we skip the original children.
-    const showOriginalToStudents = !isHidden && !hasReplace;
+    const showOriginalToStudents = !hasPublishedHide && !hasPublishedReplace;
 
     return (
         <>
-            {before.map((b) => (
+            {visibleAttachedBlocks(before).map((b) => (
                 <div key={b.id} className="mb-6">
                     <AdminBlockWrap override={b}>
-                        <ContentBlockRenderer override={b} isAdminView={isAdmin} />
+                        <ContentBlockRenderer override={b} isAdminView={isAdmin && editMode} />
                     </AdminBlockWrap>
                 </div>
             ))}
@@ -71,18 +77,18 @@ export const SectionOverlay: React.FC<SectionOverlayProps> = ({
             )}
 
             {/* Full replacement content (rendered instead of the original for students) */}
-            {replace.map((r) => (
+            {visibleAttachedBlocks(replace).map((r) => (
                 <div key={r.id} className="mb-14">
                     <AdminBlockWrap override={r}>
-                        <ContentBlockRenderer override={r} isAdminView={isAdmin} />
+                        <ContentBlockRenderer override={r} isAdminView={isAdmin && editMode} />
                     </AdminBlockWrap>
                 </div>
             ))}
 
-            {after.map((a) => (
+            {visibleAttachedBlocks(after).map((a) => (
                 <div key={a.id} className="mb-14">
                     <AdminBlockWrap override={a}>
-                        <ContentBlockRenderer override={a} isAdminView={isAdmin} />
+                        <ContentBlockRenderer override={a} isAdminView={isAdmin && editMode} />
                     </AdminBlockWrap>
                 </div>
             ))}
@@ -123,7 +129,7 @@ const AdminBlockWrap: React.FC<{ override: ContentOverride; children: React.Reac
 // AppendedSections — render admin-authored bonus sections at end of module
 // ---------------------------------------------------------------------------
 export const AppendedSections: React.FC<{ blocks: ContentOverride[] }> = ({ blocks }) => {
-    const { isAdmin } = useEditMode();
+    const { isAdmin, editMode } = useEditMode();
     if (blocks.length === 0) return null;
     return (
         <div className="mt-14 space-y-8">
@@ -134,7 +140,7 @@ export const AppendedSections: React.FC<{ blocks: ContentOverride[] }> = ({ bloc
             </div>
             {blocks.map((b) => (
                 <AdminBlockWrap key={b.id} override={b}>
-                    <ContentBlockRenderer override={b} isAdminView={isAdmin} />
+                    <ContentBlockRenderer override={b} isAdminView={isAdmin && editMode} />
                 </AdminBlockWrap>
             ))}
         </div>
@@ -174,7 +180,8 @@ const ToolbarBtn: React.FC<{ onClick: () => void; children: React.ReactNode }> =
 
 // ---------------------------------------------------------------------------
 // ModuleEditControls — floating "Edit Content" toggle + [+ Add section]
-// + editor host. Renders nothing for non-admins.
+// + editor host. Learner rendering stays inside valid curriculum sections;
+// suppressed quiz rows remain manageable through the admin editor.
 // ---------------------------------------------------------------------------
 export const ModuleEditControls: React.FC<{ rowsById: Map<string, ContentOverride> }> = ({ rowsById }) => {
     const { isAdmin, editMode, setEditMode, openEditor, programId, moduleId, editorState } = useEditMode();

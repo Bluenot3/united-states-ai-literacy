@@ -1,5 +1,6 @@
 import React from 'react';
 import type { ProgramContentItem } from '../types';
+import SmartCodeBlock from './SmartCodeBlock';
 import StudioMediaBlock from './StudioMediaBlocks';
 
 interface ProgramSectionRendererProps {
@@ -64,18 +65,7 @@ const ProgramSectionRenderer: React.FC<ProgramSectionRendererProps> = ({ content
                     }
 
                     case 'code':
-                        return (
-                            <div key={index} className="overflow-hidden rounded-xl border border-slate-700/40 bg-slate-900">
-                                {(item.title || item.language) && (
-                                    <p className="px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-700/40">
-                                        {item.title || item.language}
-                                    </p>
-                                )}
-                                <pre className="max-h-96 overflow-auto p-4 text-xs leading-6 text-slate-100">
-                                    <code>{item.content}</code>
-                                </pre>
-                            </div>
-                        );
+                        return <SmartCodeBlock key={index} code={item.content} language={item.language} title={item.title} variant="light" />;
 
                     case 'image':
                     case 'video':

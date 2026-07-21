@@ -1,32 +1,45 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useBilling } from '../contexts/BillingContext';
+import { useAuth } from '../hooks/useAuth';
+import { hasProgramAccess, normalizeProgramKey } from '../services/programAccess';
 
 const BillingSuccessPage: React.FC = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const { checkEntitlement } = useBilling();
+    const { user } = useAuth();
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [countdown, setCountdown] = useState(4);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const programKey = normalizeProgramKey(searchParams.get('program'));
+    const destination = programKey === 'pioneer' ? '/programs/pioneer/launch' : '/dashboard';
+    const programName = programKey === 'pioneer' ? 'AI Pioneer Program' : 'ZEN Vanguard';
 
     useEffect(() => {
         const verifyPayment = async () => {
             const sessionId = searchParams.get('session_id');
 
-            if (!sessionId) {
+            if (!sessionId || !programKey || !user?.id) {
                 setStatus('error');
                 return;
             }
 
-            // Allow a moment for the Stripe webhook to process
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            await checkEntitlement();
-            setStatus('success');
+            // Fulfillment is webhook-driven. Never trust a query-string session id
+            // by itself; wait for the canonical program entitlement in Supabase.
+            for (let attempt = 0; attempt < 10; attempt += 1) {
+                await checkEntitlement();
+                if (await hasProgramAccess(user.id, user.email, programKey)) {
+                    setStatus('success');
+                    return;
+                }
+                await new Promise((resolve) => window.setTimeout(resolve, 1000));
+            }
+            setStatus('error');
         };
 
-        verifyPayment();
-    }, [searchParams, checkEntitlement]);
+        void verifyPayment();
+    }, [searchParams, checkEntitlement, programKey, user?.email, user?.id]);
 
     // Countdown + redirect once success
     useEffect(() => {
@@ -36,7 +49,7 @@ const BillingSuccessPage: React.FC = () => {
             setCountdown(prev => {
                 if (prev <= 1) {
                     clearInterval(timerRef.current!);
-                    navigate('/hub', { replace: true });
+                    navigate(destination, { replace: true });
                     return 0;
                 }
                 return prev - 1;
@@ -46,7 +59,7 @@ const BillingSuccessPage: React.FC = () => {
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [status, navigate]);
+    }, [destination, status, navigate]);
 
     return (
         <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,_rgba(201,168,76,0.08),_transparent_60%),linear-gradient(135deg,_#020617_0%,_#060B18_40%,_#0A1628_70%,_#060B18_100%)] text-white">
@@ -71,7 +84,7 @@ const BillingSuccessPage: React.FC = () => {
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-zen-gold via-zen-gold-light to-zen-gold-dark text-base font-black text-zen-navy shadow-[0_10px_24px_rgba(201,168,76,0.25)]">
                         Z
                     </div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-zen-gold/70">ZEN Vanguard</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-zen-gold/70">{programName}</p>
                 </div>
 
                 {/* Loading state */}
@@ -110,22 +123,25 @@ const BillingSuccessPage: React.FC = () => {
                             <div className="text-center">
                                 <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-zen-gold/15 bg-zen-gold/[0.06] px-3 py-1">
                                     <div className="h-1.5 w-1.5 rounded-full bg-zen-emerald animate-pulse" />
-                                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-zen-gold">Subscription Active</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-zen-gold">Program Access Active</span>
                                 </div>
                                 <h2 className="mt-4 text-2xl font-black text-white sm:text-3xl">Payment confirmed.</h2>
                                 <p className="mt-3 text-sm leading-7 text-slate-400">
-                                    Welcome to ZEN Vanguard. All four modules, interactive labs, and certification tracks
-                                    are now unlocked for your account.
+                                    Welcome to {programName}. Your verified program access is now attached to this Supabase account.
                                 </p>
                             </div>
 
                             {/* Feature list */}
                             <div className="mt-7 space-y-2.5">
-                                {[
-                                    'All 4 AI learning modules — fully unlocked',
-                                    'Interactive labs, simulations & certifications',
-                                    'Program Hub with guided learning paths',
-                                ].map(feat => (
+                                {(programKey === 'pioneer' ? [
+                                    'All four AI Pioneer modules unlocked',
+                                    'Interactive labs, builds, and portfolio proof',
+                                    'Progress saved to your Supabase account',
+                                ] : [
+                                    'All four Vanguard modules unlocked',
+                                    'Interactive labs, simulations, and certification',
+                                    'Progress saved to your Supabase account',
+                                ]).map(feat => (
                                     <div key={feat} className="flex items-center gap-3 rounded-xl border border-zen-gold/8 bg-zen-gold/[0.03] px-4 py-3">
                                         <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-zen-emerald/15 text-[10px] font-bold text-zen-emerald ring-1 ring-zen-emerald/25">
                                             ✓
@@ -138,7 +154,7 @@ const BillingSuccessPage: React.FC = () => {
                             {/* Redirect progress */}
                             <div className="mt-8">
                                 <div className="mb-3 flex items-center justify-between text-xs text-slate-500">
-                                    <span>Redirecting to Program Hub</span>
+                                    <span>Redirecting to {programName}</span>
                                     <span className="font-semibold text-zen-gold">{countdown}s</span>
                                 </div>
                                 <div className="h-1 w-full overflow-hidden rounded-full bg-slate-800">
@@ -150,10 +166,10 @@ const BillingSuccessPage: React.FC = () => {
                             </div>
 
                             <button
-                                onClick={() => navigate('/hub', { replace: true })}
+                                onClick={() => navigate(destination, { replace: true })}
                                 className="mt-6 w-full rounded-full bg-gradient-to-r from-zen-gold via-zen-gold-light to-zen-gold px-5 py-3.5 text-sm font-bold text-zen-navy transition hover:opacity-90 hover:shadow-glowing-gold"
                             >
-                                Enter Program Hub now →
+                                Enter {programName} now →
                             </button>
                         </div>
                     </div>
@@ -181,10 +197,10 @@ const BillingSuccessPage: React.FC = () => {
 
                             <div className="mt-8 flex flex-col gap-3">
                                 <button
-                                    onClick={() => navigate('/hub', { replace: true })}
+                                    onClick={() => navigate('/programs?status=pending#program-access', { replace: true })}
                                     className="w-full rounded-full bg-gradient-to-r from-zen-gold via-zen-gold-light to-zen-gold px-5 py-3.5 text-sm font-bold text-zen-navy transition hover:opacity-90"
                                 >
-                                    Go to Hub
+                                    Recheck program access
                                 </button>
                                 <button
                                     onClick={() => navigate('/paywall')}

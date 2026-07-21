@@ -4,7 +4,6 @@
 // Codex finishes wiring program-scoped entitlement everywhere.
 
 import { supabase } from '../lib/supabase';
-import { isAdminEmail } from './adminAccess';
 
 export type ProgramKey = 'pioneer' | 'vanguard';
 
@@ -20,15 +19,6 @@ export interface ProgramEntitlement {
     access_ends_at: string | null;
     note?: string | null;
     updated_at?: string;
-}
-
-const ACTIVE_STATUSES = new Set(['active', 'trialing']);
-
-function isWindowOpen(starts: string | null, ends: string | null): boolean {
-    const now = Date.now();
-    if (starts && new Date(starts).getTime() > now) return false;
-    if (ends && new Date(ends).getTime() <= now) return false;
-    return true;
 }
 
 export function normalizeProgramKey(value: string | null | undefined): ProgramKey | null {
@@ -48,43 +38,38 @@ export function normalizeProgramKey(value: string | null | undefined): ProgramKe
  */
 export async function hasProgramAccess(
     userId: string | undefined | null,
-    email: string | undefined | null,
+    _email: string | undefined | null,
     programKey: ProgramKey,
 ): Promise<boolean> {
-    if (isAdminEmail(email)) return true;
     if (!userId) return false;
 
     try {
-        const { data, error } = await supabase
-            .from('program_entitlements')
-            .select('status, access_starts_at, access_ends_at')
-            .eq('user_id', userId)
-            .eq('program_key', programKey)
-            .maybeSingle();
-
-        if (!error && data) {
-            if (ACTIVE_STATUSES.has(data.status as string)
-                && isWindowOpen(data.access_starts_at, data.access_ends_at)) {
-                return true;
-            }
+        const { data, error } = await supabase.rpc('has_program_access', {
+            _user_id: userId,
+            _program_key: programKey,
+        });
+        if (error) {
+            console.warn('[programAccess] canonical access lookup failed:', error.message);
+            return false;
         }
+        return data === true;
     } catch (err) {
         // Network/RLS error — fall through to legacy check.
-        console.warn('[programAccess] entitlement lookup failed:', err);
-    }
-
-    // Legacy global flag — Vanguard only, never Pioneer.
-    if (programKey !== 'vanguard') return false;
-    try {
-        const { data } = await supabase
-            .from('user_profiles')
-            .select('is_entitled')
-            .eq('id', userId)
-            .maybeSingle();
-        return data?.is_entitled === true;
-    } catch {
+        console.warn('[programAccess] canonical access lookup failed:', err);
         return false;
     }
+
+    // Legacy global entitlements are backfilled into program_entitlements by
+    // migration. Never let a mutable/global profile flag unlock another course.
+    return false;
+}
+
+export interface VerifiedQuizAttemptResult {
+    correct: number;
+    incorrect: number;
+    total: number;
+    passed: boolean;
+    attemptedAt: string;
 }
 
 export async function listMyEntitlements(userId: string): Promise<ProgramEntitlement[]> {
@@ -98,6 +83,28 @@ export async function listMyEntitlements(userId: string): Promise<ProgramEntitle
     } catch {
         return [];
     }
+}
+
+export async function submitVanguardQuizAttempt(
+    quizId: string,
+    selectedOptionIndexes: number[],
+): Promise<VerifiedQuizAttemptResult> {
+    const { data, error } = await supabase.rpc('submit_vanguard_quiz_attempt', {
+        p_quiz_id: quizId,
+        p_selected_option_indexes: selectedOptionIndexes,
+    });
+    if (error) throw error;
+
+    const row = (Array.isArray(data) ? data[0] : data) as Record<string, unknown> | undefined;
+    if (!row) throw new Error('Quiz verification returned no result.');
+
+    return {
+        correct: Number(row.correct_count ?? 0),
+        incorrect: Number(row.incorrect_count ?? 0),
+        total: Number(row.total_count ?? 0),
+        passed: row.passed === true,
+        attemptedAt: String(row.attempted_at ?? new Date().toISOString()),
+    };
 }
 
 /** Admin RPC wrapper. RLS / SECURITY DEFINER enforces `is_zen_admin()`. */

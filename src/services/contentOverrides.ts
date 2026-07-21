@@ -1,4 +1,4 @@
-// Admin Content Overlay — CMS layer for Pioneer module pages.
+// Admin Content Overlay — additive CMS layer for course module pages.
 // Additive: if the table is empty (or Supabase isn't reachable), all reads
 // return [] and every page renders exactly as before.
 import { supabase } from '../lib/supabase';
@@ -11,7 +11,36 @@ export type OverrideBlockType =
     | 'image'
     | 'html'
     | 'link_card'
-    | 'divider';
+    | 'divider'
+    | 'quiz';
+
+export interface PublicQuizQuestion {
+    question: string;
+    options: string[];
+    explanation?: string;
+}
+
+export interface PublicQuizPayload {
+    quiz_id: string;
+    questions: PublicQuizQuestion[];
+    passing_percent?: number;
+}
+
+export const SHIPPED_VANGUARD_QUIZ_IDS = new Set([
+    'quiz-1-1',
+    'quiz-1-2',
+    'quiz-1-exit',
+    'quiz-2-1',
+    'quiz-2-2',
+    'quiz-3-1',
+    'quiz-3-2',
+    'quiz-4-1',
+    'quiz-4-2',
+]);
+
+export function isShippedVanguardQuizId(quizId: string): boolean {
+    return SHIPPED_VANGUARD_QUIZ_IDS.has(quizId);
+}
 
 export interface ContentOverride {
     id: string;
@@ -34,6 +63,67 @@ export type ContentOverrideDraft = Omit<
 > & { id?: string };
 
 const TABLE = 'content_overrides';
+
+function cleanPublicQuizQuestion(value: unknown): PublicQuizQuestion | null {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+    const record = value as Record<string, unknown>;
+    const question = typeof record.question === 'string' ? record.question.trim() : '';
+    const options = Array.isArray(record.options)
+        ? record.options
+            .filter((option): option is string => typeof option === 'string')
+            .map((option) => option.trim())
+            .filter(Boolean)
+        : [];
+    if (!question || options.length < 2) return null;
+    const explanation = typeof record.explanation === 'string'
+        ? record.explanation.trim()
+        : '';
+    return explanation ? { question, options, explanation } : { question, options };
+}
+
+/**
+ * Parse the learner-visible portion of a quiz override. This deliberately
+ * ignores every property except prompts, options, explanations and threshold.
+ */
+export function parsePublicQuizPayload(payload: unknown): PublicQuizPayload | null {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
+    const record = payload as Record<string, unknown>;
+    const quizId = typeof record.quiz_id === 'string' ? record.quiz_id.trim() : '';
+    if (!quizId || !Array.isArray(record.questions)) return null;
+
+    const questions = record.questions
+        .map(cleanPublicQuizQuestion)
+        .filter((question): question is PublicQuizQuestion => Boolean(question));
+    const passingPercent = Number(record.passing_percent);
+
+    return {
+        quiz_id: quizId,
+        questions,
+        ...(Number.isFinite(passingPercent) && passingPercent >= 1 && passingPercent <= 100
+            ? { passing_percent: Math.round(passingPercent) }
+            : {}),
+    };
+}
+
+export function buildPublicQuizPayload(
+    quizId: string,
+    questions: PublicQuizQuestion[],
+    passingPercent: number,
+): PublicQuizPayload {
+    return {
+        quiz_id: quizId.trim(),
+        questions: questions.map((question) => ({
+            question: question.question.trim(),
+            options: question.options.map((option) => option.trim()),
+            ...(question.explanation?.trim() ? { explanation: question.explanation.trim() } : {}),
+        })),
+        passing_percent: Math.min(100, Math.max(1, Math.round(passingPercent))),
+    };
+}
+
+export function quizCompletionKey(override: ContentOverride, quizId: string): string {
+    return `${quizId}@${override.updated_at}`;
+}
 
 export async function fetchOverridesForModule(
     programId: string,
@@ -74,6 +164,79 @@ export async function fetchAllOverrides(): Promise<ContentOverride[]> {
         if (import.meta.env.DEV) console.warn('[content-overrides] fetchAll threw', err);
         return [];
     }
+}
+
+export async function fetchPublishedQuizOverride(quizId: string): Promise<ContentOverride | null> {
+    if (!quizId) return null;
+    try {
+        const { data, error } = await supabase
+            .from(TABLE)
+            .select('*')
+            .eq('program_id', 'vanguard')
+            .eq('block_type', 'quiz')
+            .eq('is_published', true)
+            .contains('payload', { quiz_id: quizId })
+            .limit(1)
+            .maybeSingle();
+        if (error) {
+            throw error;
+        }
+        return data as ContentOverride | null;
+    } catch (err) {
+        if (import.meta.env.DEV) console.warn('[content-overrides] quiz fetch threw', err);
+        throw err;
+    }
+}
+
+export interface PublishVanguardQuizOverrideInput {
+    id?: string;
+    moduleId: string;
+    sectionId: string | null;
+    position: OverridePosition;
+    sortOrder: number;
+    quizId: string;
+    questions: PublicQuizQuestion[];
+    correctOptionIndexes: number[];
+    passingPercent: number;
+}
+
+/**
+ * Atomically publishes public quiz copy and its private scoring definition.
+ * Correct option indexes are RPC inputs only and are never placed in the
+ * content_overrides payload returned to learners.
+ */
+export async function publishVanguardQuizOverride(
+    input: PublishVanguardQuizOverrideInput,
+): Promise<ContentOverride | null> {
+    const { data, error } = await supabase
+        .rpc('publish_vanguard_quiz_override', {
+            p_override_id: input.id ?? null,
+            p_module_id: input.moduleId,
+            p_section_id: input.sectionId,
+            p_position: input.position,
+            p_sort_order: input.sortOrder,
+            p_quiz_id: input.quizId,
+            p_questions: input.questions,
+            p_correct_option_indexes: input.correctOptionIndexes,
+            p_passing_percent: input.passingPercent,
+        })
+        .maybeSingle();
+    if (error) {
+        console.error('[content-overrides] quiz publish failed', error);
+        return null;
+    }
+    return data as ContentOverride | null;
+}
+
+export async function removeVanguardQuizOverride(id: string): Promise<boolean> {
+    const { error } = await supabase.rpc('remove_vanguard_quiz_override', {
+        p_override_id: id,
+    });
+    if (error) {
+        console.error('[content-overrides] quiz remove failed', error);
+        return false;
+    }
+    return true;
 }
 
 export async function upsertOverride(draft: ContentOverrideDraft): Promise<ContentOverride | null> {

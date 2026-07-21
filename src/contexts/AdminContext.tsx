@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import type { Student, Message, ActivityEvent, AdminStats, User } from '../types';
+import type { Student, Message, ActivityEvent, AdminStats } from '../types';
 import { dal } from '../services/dal';
-import { isAdminEmail } from '../services/adminAccess';
+import { useAuth } from '../hooks/useAuth';
 
 interface AdminContextType {
     isAdminAuthenticated: boolean;
@@ -60,9 +60,18 @@ const calculateStats = (students: Student[]): AdminStats => {
     }, 0);
 
     const totalPoints = students.reduce((sum, s) => sum + s.totalPoints, 0);
-    const totalPossibleSections = students.length * 4 * 50;
-    const averageProgress = totalPossibleSections > 0
-        ? Math.round((totalSectionsCompleted / totalPossibleSections) * 100)
+    const aggregateProgramProgress = students.flatMap((student) => (
+        (student.programProgress ?? []).filter((progress) => (
+            progress.moduleKey === '__program__'
+            && progress.lessonKey === '__aggregate__'
+            && Number.isFinite(progress.progressPercent)
+        ))
+    ));
+    const averageProgress = aggregateProgramProgress.length > 0
+        ? Math.round(
+            aggregateProgramProgress.reduce((sum, progress) => sum + progress.progressPercent, 0)
+            / aggregateProgramProgress.length,
+        )
         : 0;
 
     const atRiskStudents = students.filter(s => s.status === 'at-risk').length;
@@ -102,10 +111,18 @@ const calculateStats = (students: Student[]): AdminStats => {
 };
 
 export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const {
+        loading: authLoading,
+        isAdmin,
+        adminLoading: canonicalAdminLoading,
+        refreshAdminStatus,
+        login: authLogin,
+        logout: authLogout,
+    } = useAuth();
     // Dev bypass: sessionStorage.__admin_bypass__ lets local preview skip Supabase auth
     const devBypass = import.meta.env.DEV && sessionStorage.getItem('__admin_bypass__') === '1';
-    const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(devBypass);
-    const [adminLoading, setAdminLoading] = useState(!devBypass);
+    const isAdminAuthenticated = devBypass || isAdmin;
+    const adminLoading = devBypass ? false : authLoading || canonicalAdminLoading;
     const [students, setStudents] = useState<Student[]>([]);
     const [messages, _setMessages] = useState<Message[]>([]);
     const [activityFeed, setActivityFeed] = useState<ActivityEvent[]>([]);
@@ -114,17 +131,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // admin allowlist (services/adminAccess.ts) is automatically an admin —
     // no separate admin login required. royaltokens@gmail.com and the rest of
     // the allowlist sign in once at /login and get everything.
-    useEffect(() => {
-        if (devBypass) {
-            return;
-        }
-        const unsubscribe = dal.auth.onAuthStateChanged((sessionUser: User | null) => {
-            setIsAdminAuthenticated(Boolean(sessionUser?.email && isAdminEmail(sessionUser.email)));
-            setAdminLoading(false);
-        });
-        return unsubscribe;
-    }, [devBypass]);
-
     // Build activity feed from student data
     const buildActivityFeed = useCallback((loadedStudents: Student[]): ActivityEvent[] => {
         const events: ActivityEvent[] = [];
@@ -139,21 +145,20 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     timestamp: session.startedAt,
                     moduleId: session.moduleId,
                 });
-                (session.sectionsViewed ?? []).forEach((sectionId, si) => {
+            });
+            Object.entries(student.moduleProgress).forEach(([modId, mp]) => {
+                const moduleId = Number(modId);
+                (mp.completedSections ?? []).forEach((sectionId, si) => {
                     events.push({
-                        id: `${student.id}-section-${i}-${si}`,
+                        id: `${student.id}-section-${modId}-${si}`,
                         studentId: student.id,
                         studentName: student.name,
                         type: 'section_complete',
                         description: `Completed section: ${sectionId}`,
-                        timestamp: session.startedAt,
-                        moduleId: session.moduleId,
-                        points: 10,
+                        timestamp: mp.completedAt ?? mp.startedAt ?? student.enrolledAt,
+                        moduleId,
                     });
                 });
-            });
-            Object.entries(student.moduleProgress).forEach(([modId, mp]) => {
-                const moduleId = Number(modId);
                 (mp.completedInteractives ?? []).forEach((interactiveId, ii) => {
                     events.push({
                         id: `${student.id}-interactive-${modId}-${ii}`,
@@ -163,7 +168,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                         description: `Completed interactive: ${interactiveId}`,
                         timestamp: mp.startedAt ?? student.enrolledAt,
                         moduleId,
-                        points: 25,
                     });
                 });
                 if (mp.certificateId) {
@@ -175,7 +179,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                         description: `Earned Module ${moduleId} certificate`,
                         timestamp: mp.completedAt ?? student.enrolledAt,
                         moduleId,
-                        points: 500,
                     });
                 }
             });
@@ -202,36 +205,30 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
     }, [isAdminAuthenticated, loadRealData]);
 
-    const adminLogin = useCallback(async (username: string, password: string): Promise<boolean> => {
-        // Map username to email if needed
-        let email = username;
-        if (!email.includes('@')) {
-            email = 'admin@zenvanguard.com'; // Default admin email mapping
-        }
+    const adminLogin = useCallback(async (email: string, password: string): Promise<boolean> => {
+        const canonicalEmail = email.trim();
+        if (!canonicalEmail.includes('@')) return false;
 
         try {
-            await dal.auth.login(email, password);
+            await authLogin(canonicalEmail, password);
 
             // Central allowlist — managed in services/adminAccess.ts
-            if (isAdminEmail(email) || username === 'admin') {
-                setIsAdminAuthenticated(true);
-                return true;
-            }
+            const allowed = await refreshAdminStatus();
+            if (allowed) return true;
 
             // Not in admin list
-            await dal.auth.logout();
+            await authLogout();
             return false;
         } catch (error) {
             console.error("Admin Login Failed:", error);
             return false;
         }
-    }, []);
+    }, [authLogin, authLogout, refreshAdminStatus]);
 
     const adminLogout = useCallback(() => {
-        dal.auth.logout();
-        setIsAdminAuthenticated(false);
+        void authLogout();
         setStudents([]);
-    }, []);
+    }, [authLogout]);
 
     const sendMessage = useCallback((to: string[], subject: string, _body: string, _type: Message['type']) => {
         // Implementation for sending messages (Firestore 'messages' collection)

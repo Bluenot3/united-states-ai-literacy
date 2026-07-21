@@ -40,6 +40,7 @@ interface StickySectionNavCardProps<TSection extends NavSection> {
     accentClassName: string;
     activeAccentClassName: string;
     onNavigate: (sectionId: string) => void;
+    unlockedSectionIds?: Set<string>;
     renderIcon?: (section: TSection, isActive: boolean) => React.ReactNode;
     compact?: boolean;
     moduleNumber?: number;
@@ -123,6 +124,7 @@ const StickySectionNavCard = <TSection extends NavSection>({
     accentClassName,
     activeAccentClassName,
     onNavigate,
+    unlockedSectionIds,
     renderIcon,
     moduleNumber,
 }: StickySectionNavCardProps<TSection>) => {
@@ -150,8 +152,16 @@ const StickySectionNavCard = <TSection extends NavSection>({
     const nextId = activeIdx >= 0 && activeIdx < allSections.length - 1 ? allSections[activeIdx + 1]?.id : undefined;
     const firstId = allSections[0]?.id;
     const lastId = allSections[allSections.length - 1]?.id;
-    const pct = allSections.length > 0 ? Math.round((completedSections.length / allSections.length) * 100) : 0;
+    const completedSectionCount = allSections.reduce(
+        (count, section) => count + (completedSections.includes(section.id) ? 1 : 0),
+        0,
+    );
+    const pct = allSections.length > 0 ? Math.round((completedSectionCount / allSections.length) * 100) : 0;
     const filtered = useMemo(() => filterSections(sections, searchQuery), [sections, searchQuery]);
+    const isUnlocked = useCallback(
+        (sectionId?: string) => Boolean(sectionId && (!unlockedSectionIds || unlockedSectionIds.has(sectionId))),
+        [unlockedSectionIds],
+    );
 
     /* ── Sync optimistic on real change ──────────────────────────────── */
     useEffect(() => { setOptimisticSection(null); }, [activeSection]);
@@ -201,7 +211,7 @@ const StickySectionNavCard = <TSection extends NavSection>({
 
     /* ── Navigation helpers ───────────────────────────────────────────── */
     const goTo = (id?: string) => {
-        if (!id) return;
+        if (!id || !isUnlocked(id)) return;
         setOptimisticSection(id);
         onNavigate(id);
     };
@@ -219,6 +229,7 @@ const StickySectionNavCard = <TSection extends NavSection>({
         items.map((s) => {
             const isActive = resolved === s.id;
             const isDone = completedSections.includes(s.id);
+            const isLocked = !isUnlocked(s.id);
             const hasKids = Boolean(s.subSections?.length);
             const isExpanded = expandedParents.has(s.id) || searchQuery.trim().length > 0;
 
@@ -229,9 +240,10 @@ const StickySectionNavCard = <TSection extends NavSection>({
                         {hasKids ? (
                             <button
                                 type="button"
-                                onClick={() => toggleParent(s.id)}
-                                className="flex h-5 w-5 shrink-0 items-center justify-center text-slate-600 transition hover:text-slate-300"
-                                aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                                onClick={() => !isLocked && toggleParent(s.id)}
+                                disabled={isLocked}
+                                className="flex h-5 w-5 shrink-0 items-center justify-center text-slate-600 transition hover:text-slate-300 disabled:cursor-not-allowed disabled:opacity-40"
+                                aria-label={isLocked ? `${s.title} is locked` : isExpanded ? 'Collapse' : 'Expand'}
                             >
                                 <svg viewBox="0 0 16 16" fill="none" className={`h-2.5 w-2.5 transition-transform ${isExpanded ? 'rotate-90' : ''}`}>
                                     <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -245,10 +257,14 @@ const StickySectionNavCard = <TSection extends NavSection>({
                         <button
                             type="button"
                             onClick={() => goTo(s.id)}
+                            disabled={isLocked}
+                            aria-label={isLocked ? `${s.title}, locked until the previous section is complete` : s.title}
                             style={{ paddingLeft: `${0.4 + depth * 0.6}rem` }}
                             className={[
                                 'flex flex-1 items-center gap-2 overflow-hidden rounded-xl border px-2.5 py-2 text-left text-sm transition-all duration-150',
-                                isActive
+                                isLocked
+                                    ? 'cursor-not-allowed border-white/[0.04] bg-white/[0.015] text-slate-600 opacity-70'
+                                    : isActive
                                     ? `border-white/20 bg-gradient-to-r ${activeAccentClassName} text-white shadow-md`
                                     : isDone
                                         ? 'border-emerald-500/20 bg-emerald-500/[0.08] text-emerald-200 hover:bg-emerald-500/[0.14]'
@@ -257,11 +273,19 @@ const StickySectionNavCard = <TSection extends NavSection>({
                         >
                             {/* Icon */}
                             <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-lg transition-all ${
-                                isActive ? 'bg-white/20 text-white'
+                                isLocked ? 'bg-white/[0.03] text-slate-600'
+                                    : isActive ? 'bg-white/20 text-white'
                                     : isDone ? 'bg-emerald-400/20 text-emerald-400'
                                         : 'bg-white/[0.05] text-slate-600'
                             }`}>
-                                {isDone && !isActive
+                                {isLocked
+                                    ? (
+                                        <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" aria-hidden="true">
+                                            <rect x="3.5" y="7" width="9" height="6.5" rx="1.4" stroke="currentColor" strokeWidth="1.4" />
+                                            <path d="M5.5 7V5.5a2.5 2.5 0 0 1 5 0V7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                                        </svg>
+                                    )
+                                    : isDone && !isActive
                                     ? <CheckIcon />
                                     : renderIcon
                                         ? renderIcon(s, isActive)
@@ -272,7 +296,7 @@ const StickySectionNavCard = <TSection extends NavSection>({
                             <span className="min-w-0 flex-1 truncate text-[0.78rem] font-medium leading-5">{s.title}</span>
 
                             {/* Done tick */}
-                            {isDone && !isActive && (
+                            {isDone && !isActive && !isLocked && (
                                 <span className="shrink-0 text-emerald-400 opacity-70"><CheckIcon /></span>
                             )}
                         </button>
@@ -543,8 +567,8 @@ const StickySectionNavCard = <TSection extends NavSection>({
                                         key={label}
                                         type="button"
                                         onClick={() => goTo(id)}
-                                        disabled={!id}
-                                        title={label}
+                                        disabled={!id || !isUnlocked(id)}
+                                        title={id && !isUnlocked(id) ? `${label} is locked` : label}
                                         aria-label={label}
                                         className={[
                                             'flex h-8 flex-1 items-center justify-center rounded-xl border transition-all duration-150',

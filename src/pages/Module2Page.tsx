@@ -1,7 +1,9 @@
 import React, { Suspense, useRef } from 'react';
 import CompletionModal from '../components/CompletionModal';
 import VanguardModuleFrame from '../components/vanguard/VanguardModuleFrame';
+import { EditModeProvider } from '../components/content-overlay/EditModeContext';
 import { useModuleExperience } from '../hooks/useModuleExperience';
+import { useContentOverrides } from '../hooks/useContentOverrides';
 
 import { curriculumData } from '../modules/module2/data/curriculumData';
 import Header from '../modules/module2/components/Header';
@@ -48,13 +50,26 @@ const MODULE_ID = 2;
 
 const Module2Page: React.FC = () => {
     const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+    const { rows: contentOverrideRows } = useContentOverrides('vanguard', 'module2');
+    const publishedOverrides = React.useMemo(
+        () => contentOverrideRows.filter((row) => row.is_published),
+        [contentOverrideRows],
+    );
     const {
         user,
         moduleProgress,
         activeSection,
+        activeSectionTitle,
+        completeActiveSection,
+        canCompleteActiveSection,
+        missingRequiredQuizIds,
         visibleSections,
         flattenedSections,
         totalSections,
+        completedSectionCount,
+        hiddenSectionIds,
+        unlockedSectionIds,
+        allSectionsComplete,
         isCommandPaletteOpen,
         setIsCommandPaletteOpen,
         isModuleComplete,
@@ -64,6 +79,7 @@ const Module2Page: React.FC = () => {
         moduleId: MODULE_ID,
         sections: curriculumData.sections,
         sectionRefs,
+        publishedOverrides,
     });
 
     if (!user) {
@@ -72,13 +88,14 @@ const Module2Page: React.FC = () => {
 
     return (
         <Module2ErrorBoundary>
-            <VanguardModuleFrame
+            <EditModeProvider programId="vanguard" moduleId="module2">
+                <VanguardModuleFrame
                 moduleNumber={MODULE_ID}
                 title="Agents & Automation Frameworks"
                 subtitle="Turn model outputs into real systems by learning agent design, tool usage, orchestration, memory, security, and the delivery patterns behind useful AI automation."
                 accentClassName="from-sky-500 via-cyan-500 to-emerald-400"
                 chipLabels={['Agents', 'Automation', 'API-backed workflows']}
-                completedSections={moduleProgress.completedSections.length}
+                completedSections={completedSectionCount}
                 totalSections={totalSections}
                 bleed={false}
                 header={(
@@ -87,28 +104,44 @@ const Module2Page: React.FC = () => {
                         <Header />
                     </>
                 )}
-                sidebar={<Sidebar sections={curriculumData.sections} activeSection={activeSection} />}
-                footer={<ModuleFooter currentModule={2} />}
+                sidebar={<Sidebar sections={curriculumData.sections} activeSection={activeSection} unlockedSectionIds={unlockedSectionIds} />}
+                activeSectionTitle={activeSectionTitle}
+                activeSectionComplete={moduleProgress.completedSections.includes(activeSection)}
+                canCompleteActiveSection={canCompleteActiveSection}
+                completionBlockedReason={missingRequiredQuizIds.length > 0 ? 'Pass the section quiz to clear this checkpoint.' : undefined}
+                onCompleteActiveSection={completeActiveSection}
+                footer={(
+                    <ModuleFooter
+                        currentModule={2}
+                        canAdvance={Boolean(moduleProgress.certificateId)}
+                        certificateId={moduleProgress.certificateId}
+                        readyToClaim={allSectionsComplete}
+                        onRequestCertificate={() => setShowCompletionModal(true)}
+                    />
+                )}
             >
-                <MainContent sections={curriculumData.sections} sectionRefs={sectionRefs} visibleSections={visibleSections} />
-            </VanguardModuleFrame>
+                <MainContent sections={curriculumData.sections} sectionRefs={sectionRefs} visibleSections={visibleSections} unlockedSectionIds={unlockedSectionIds} hiddenSectionIds={hiddenSectionIds} />
+                </VanguardModuleFrame>
 
-            <Suspense fallback={null}>
-                <GeminiChat />
-            </Suspense>
-            <CommandPalette
-                isOpen={isCommandPaletteOpen}
-                onClose={() => setIsCommandPaletteOpen(false)}
-                sections={flattenedSections as any}
-            />
-            {isModuleComplete && <CompletionCelebration />}
-            {showCompletionModal && (
-                <CompletionModal
-                    moduleId={MODULE_ID}
-                    moduleName="Agents & Automation Frameworks"
-                    onClose={() => setShowCompletionModal(false)}
+                <Suspense fallback={null}>
+                    <GeminiChat />
+                </Suspense>
+                <CommandPalette
+                    isOpen={isCommandPaletteOpen}
+                    onClose={() => setIsCommandPaletteOpen(false)}
+                    sections={flattenedSections.filter((section) => unlockedSectionIds.has(section.id)) as any}
                 />
-            )}
+                {isModuleComplete && <CompletionCelebration />}
+                {showCompletionModal && (
+                    <CompletionModal
+                        moduleId={MODULE_ID}
+                        moduleName="Agents & Automation Frameworks"
+                        completedSections={completedSectionCount}
+                        totalSections={totalSections}
+                        onClose={() => setShowCompletionModal(false)}
+                    />
+                )}
+            </EditModeProvider>
         </Module2ErrorBoundary>
     );
 };

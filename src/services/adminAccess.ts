@@ -1,22 +1,19 @@
-// Single source of truth for ZEN admin accounts.
-// Any account on this list gets: free access to every program (see
-// services/programAccess.ts) AND the Admin Command Center at /admin
-// (see contexts/AdminContext.tsx). Add new admins here only.
-export const ADMIN_EMAILS = [
-    'royaltokens@gmail.com',
-    'admin@zenvanguard.com',
-    'alexleschik@bgcgw.org',
-    'testadmin@zenai.co',
-    'alex1leschik@gmail.com',
-    'huxley@zenai.biz',
-] as const;
+import { supabase } from '../lib/supabase';
+import { isSupabaseConfigured } from '../lib/supabaseConfig';
 
-const ADMIN_EMAIL_SET = new Set<string>(ADMIN_EMAILS);
+/** Resolve admin authority from the same Supabase allowlist used by RLS. */
+export async function getCanonicalAdminStatus(): Promise<boolean> {
+    if (!isSupabaseConfigured) return false;
 
-export function normalizeAdminEmail(email?: string | null) {
-    return email?.trim().toLowerCase() ?? '';
-}
-
-export function isAdminEmail(email?: string | null) {
-    return ADMIN_EMAIL_SET.has(normalizeAdminEmail(email));
+    try {
+        const { data, error } = await supabase.rpc('is_zen_admin');
+        if (error) {
+            console.warn('[adminAccess] canonical admin lookup failed:', error.message);
+            return false;
+        }
+        return data === true;
+    } catch (error) {
+        console.warn('[adminAccess] canonical admin lookup failed:', error);
+        return false;
+    }
 }

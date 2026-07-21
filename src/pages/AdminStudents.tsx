@@ -1,5 +1,26 @@
 import React, { useState, useMemo } from 'react';
 import { useAdmin } from '../contexts/AdminContext';
+import type { Student } from '../types';
+
+type StudentProgramProgress = Student['programProgress'][number];
+
+const readMetadataNumber = (metadata: Record<string, unknown>, key: string) => {
+    const value = metadata[key];
+    return typeof value === 'number' && Number.isFinite(value) ? value : null;
+};
+
+const readCompletedSectionCount = (metadata: Record<string, unknown>) => {
+    const progress = metadata.progress;
+    if (!progress || typeof progress !== 'object' || Array.isArray(progress)) return 0;
+    const completedSections = (progress as Record<string, unknown>).completedSections;
+    return Array.isArray(completedSections) ? completedSections.length : 0;
+};
+
+const formatProgramName = (programKey: string) => (
+    programKey === 'ai-pioneer'
+        ? 'AI Pioneer'
+        : programKey.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ')
+);
 
 const AdminStudents: React.FC = () => {
     const { students, sendMessage, createAssignment } = useAdmin();
@@ -66,7 +87,11 @@ const AdminStudents: React.FC = () => {
     const getProgressPercent = (student: typeof students[0]) => {
         const total = 50 + 40 + 40 + 60; // Module section totals
         const completed = Object.values(student.moduleProgress).reduce((sum, m) => sum + m.completedSections.length, 0);
-        return Math.min(100, Math.round((completed / total) * 100));
+        const legacyPercent = Math.min(100, Math.round((completed / total) * 100));
+        const programPercent = (student.programProgress ?? [])
+            .filter((entry) => entry.lessonKey === '__aggregate__')
+            .reduce((highest, entry) => Math.max(highest, entry.progressPercent), 0);
+        return Math.max(legacyPercent, programPercent);
     };
 
     const getTimeAgo = (date: string) => {
@@ -292,6 +317,29 @@ const StudentDetailModal: React.FC<{ studentId: string; onClose: () => void }> =
         { id: 3, name: 'AI Applications', total: 40 },
         { id: 4, name: 'Advanced Topics', total: 60 },
     ];
+    const programProgress = student.programProgress ?? [];
+    const progressByProgram = Array.from(programProgress.reduce((groups, entry) => {
+        const group = groups.get(entry.programKey) ?? [];
+        group.push(entry);
+        groups.set(entry.programKey, group);
+        return groups;
+    }, new Map<string, StudentProgramProgress[]>()).entries()).map(([programKey, entries]) => {
+        const aggregate = entries.find((entry) => entry.lessonKey === '__aggregate__');
+        const quizRows = entries.filter((entry) => entry.lessonKey?.startsWith('quiz-'));
+        const passedQuizzes = quizRows.filter((entry) => entry.metadata.passed === true).length;
+        const fallbackPercent = entries.length > 0
+            ? Math.round((entries.filter((entry) => entry.status === 'completed').length / entries.length) * 100)
+            : 0;
+
+        return {
+            programKey,
+            percent: Math.round(aggregate?.progressPercent ?? fallbackPercent),
+            completedSections: aggregate ? readCompletedSectionCount(aggregate.metadata) : 0,
+            passedQuizzes,
+            totalQuizzes: quizRows.length,
+        };
+    });
+    const quizResults = programProgress.filter((entry) => entry.lessonKey?.startsWith('quiz-'));
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
@@ -368,6 +416,64 @@ const StudentDetailModal: React.FC<{ studentId: string; onClose: () => void }> =
                             );
                         })}
                     </div>
+                </div>
+
+                {/* Supabase-backed program and assessment progress */}
+                <div className="p-6 pt-0 space-y-4">
+                    <div>
+                        <h3 className="text-white font-bold">Program Progress</h3>
+                        <p className="text-xs text-slate-500 mt-1">Live records saved in Supabase across devices.</p>
+                    </div>
+                    {progressByProgram.length > 0 ? (
+                        <div className="grid sm:grid-cols-2 gap-3">
+                            {progressByProgram.map((summary) => (
+                                <div key={summary.programKey} className="rounded-xl border border-slate-700 bg-slate-900/50 p-4">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <p className="font-bold text-white">{formatProgramName(summary.programKey)}</p>
+                                        <span className="text-brand-primary font-black">{summary.percent}%</span>
+                                    </div>
+                                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-700/60">
+                                        <div className="h-full bg-gradient-to-r from-brand-primary to-purple-500" style={{ width: `${summary.percent}%` }} />
+                                    </div>
+                                    <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
+                                        {summary.completedSections > 0 && <span>{summary.completedSections} sections complete</span>}
+                                        {summary.totalQuizzes > 0 && <span>{summary.passedQuizzes}/{summary.totalQuizzes} quizzes passed</span>}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="rounded-xl border border-dashed border-slate-700 p-4 text-sm text-slate-500">No program activity recorded yet.</p>
+                    )}
+
+                    {quizResults.length > 0 && (
+                        <div className="overflow-hidden rounded-xl border border-slate-700">
+                            <div className="grid grid-cols-12 gap-2 bg-slate-900/70 px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                <span className="col-span-5">Assessment</span>
+                                <span className="col-span-2 text-center">Correct</span>
+                                <span className="col-span-2 text-center">Incorrect</span>
+                                <span className="col-span-3 text-right">Result</span>
+                            </div>
+                            {quizResults.map((result) => {
+                                const correct = readMetadataNumber(result.metadata, 'correct');
+                                const incorrect = readMetadataNumber(result.metadata, 'incorrect');
+                                const passed = result.metadata.passed === true;
+                                return (
+                                    <div key={`${result.programKey}-${result.moduleKey}-${result.lessonKey}`} className="grid grid-cols-12 gap-2 border-t border-slate-700/70 px-4 py-3 text-sm">
+                                        <div className="col-span-5">
+                                            <p className="font-semibold text-slate-200">{result.lessonKey}</p>
+                                            <p className="text-xs text-slate-500">{formatProgramName(result.programKey)}</p>
+                                        </div>
+                                        <span className="col-span-2 self-center text-center font-bold text-emerald-400">{correct ?? '—'}</span>
+                                        <span className="col-span-2 self-center text-center font-bold text-rose-400">{incorrect ?? '—'}</span>
+                                        <span className={`col-span-3 self-center text-right font-bold ${passed ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                            {passed ? 'Passed' : 'Retry'}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
 
                 {/* Actions */}

@@ -30,7 +30,7 @@ const LoginPage: React.FC = () => {
     const navigate = useNavigate();
 
     const isLogin = mode === 'login';
-    const showPreviewHint = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true';
+    const showPreviewHint = import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true';
 
     // Redirect once authenticated
     useEffect(() => {

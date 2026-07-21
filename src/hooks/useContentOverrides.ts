@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     bucketOverrides,
     fetchOverridesForModule,
+    fetchPublishedQuizOverride,
     type ContentOverride,
     type ModuleOverrideBuckets,
 } from '../services/contentOverrides';
@@ -61,4 +62,48 @@ export function useContentOverrides(programId: string, moduleId: string): UseCon
     const buckets = useMemo(() => bucketOverrides(visibleRows), [visibleRows]);
 
     return { rows, visibleRows, buckets, loading, isAdmin: isAdminAuthenticated, refresh };
+}
+
+export interface PublishedQuizOverrideState {
+    override: ContentOverride | null;
+    loading: boolean;
+    error: boolean;
+}
+
+export function usePublishedQuizOverride(quizId: string, enabled = true): PublishedQuizOverrideState {
+    const [override, setOverride] = useState<ContentOverride | null>(null);
+    const [loading, setLoading] = useState(enabled);
+    const [error, setError] = useState(false);
+
+    const refresh = useCallback(async () => {
+        if (!enabled || !quizId) {
+            setOverride(null);
+            setLoading(false);
+            setError(false);
+            return;
+        }
+        setLoading(true);
+        setError(false);
+        try {
+            setOverride(await fetchPublishedQuizOverride(quizId));
+        } catch {
+            setOverride(null);
+            setError(true);
+        } finally {
+            setLoading(false);
+        }
+    }, [enabled, quizId]);
+
+    useEffect(() => {
+        void refresh();
+    }, [refresh]);
+
+    useEffect(() => {
+        if (!enabled) return undefined;
+        const handler = () => { void refresh(); };
+        window.addEventListener(EVENT, handler);
+        return () => window.removeEventListener(EVENT, handler);
+    }, [enabled, refresh]);
+
+    return { override, loading, error };
 }

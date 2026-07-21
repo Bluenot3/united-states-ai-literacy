@@ -5,7 +5,7 @@ import { useAuth } from './hooks/useAuth';
 import { useBilling } from './contexts/BillingContext';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
-import { ArsenalProvider, useArsenal } from './contexts/ArsenalContext';
+import { ArsenalProvider } from './contexts/ArsenalContext';
 import EcoLaunchHandler from './components/EcoLaunchHandler';
 import { hasProgramAccess, normalizeProgramKey, type ProgramKey } from './services/programAccess';
 
@@ -298,11 +298,6 @@ const AdminProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children
 // Redirects unauthenticated users to /login; shows loader while session is resolving
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { isAuthenticated, loading } = useAuth();
-    const { isEmbedded } = useArsenal();
-
-    if (isEmbedded) {
-        return <>{children}</>;
-    }
 
     if (loading) {
         return <PageLoader />;
@@ -326,9 +321,8 @@ const BillingProtectedRoute: React.FC<{
     programKey?: ProgramKey;
     allowUnpaid?: boolean;
 }> = ({ children, programKey, allowUnpaid = false }) => {
-    const { isAuthenticated, loading: authLoading, user } = useAuth();
+    const { isAuthenticated, loading: authLoading, user, isAdmin, adminLoading } = useAuth();
     const { entitled, loading: billingLoading } = useBilling();
-    const { isEmbedded } = useArsenal();
     const location = useLocation();
     const params = useParams();
 
@@ -338,25 +332,39 @@ const BillingProtectedRoute: React.FC<{
         ?? null;
     const resolvedProgramKey: ProgramKey | null = programKey
         ?? normalizeProgramKey(slugFromRoute);
+    const adminPreview = isAdmin;
 
-    const [programAccess, setProgramAccess] = useState<'unknown' | 'allowed' | 'denied'>(
-        resolvedProgramKey ? 'unknown' : 'allowed',
-    );
+    const accessScope = resolvedProgramKey && user?.id
+        ? `${user.id}::${resolvedProgramKey}::${user.email?.trim().toLowerCase() ?? ''}`
+        : null;
+    const [programAccessCheck, setProgramAccessCheck] = useState<{
+        scope: string | null;
+        status: 'unknown' | 'allowed' | 'denied';
+    }>({ scope: null, status: 'unknown' });
+    const programAccess = resolvedProgramKey
+        ? programAccessCheck.scope === accessScope
+            ? programAccessCheck.status
+            : 'unknown'
+        : 'allowed';
 
     useEffect(() => {
-        if (!resolvedProgramKey) { setProgramAccess('allowed'); return; }
+        if (!resolvedProgramKey) {
+            setProgramAccessCheck({ scope: null, status: 'unknown' });
+            return;
+        }
         if (!isAuthenticated || !user?.id) return;
+        const scope = `${user.id}::${resolvedProgramKey}::${user.email?.trim().toLowerCase() ?? ''}`;
         let cancelled = false;
-        setProgramAccess('unknown');
+        setProgramAccessCheck({ scope, status: 'unknown' });
         hasProgramAccess(user.id, user.email, resolvedProgramKey).then((ok) => {
-            if (!cancelled) setProgramAccess(ok ? 'allowed' : 'denied');
+            if (!cancelled) {
+                setProgramAccessCheck({ scope, status: ok ? 'allowed' : 'denied' });
+            }
         });
         return () => { cancelled = true; };
     }, [resolvedProgramKey, isAuthenticated, user?.id, user?.email]);
 
-    if (isEmbedded) return <>{children}</>;
-
-    if (authLoading || billingLoading) return <PageLoader />;
+    if (authLoading || adminLoading || billingLoading) return <PageLoader />;
 
     if (!isAuthenticated) {
         const returnTo = `${location.pathname}${location.search}`;
@@ -366,8 +374,27 @@ const BillingProtectedRoute: React.FC<{
     // Auth-only routes (the unified /programs hub renders its own access panels).
     if (allowUnpaid) return <>{children}</>;
 
+    // A dynamic launch route must resolve to a known paid program. Staged or
+    // unknown slugs may be viewed/registered through the auth-only routes, but
+    // must never inherit a different program's global billing state. Admins
+    // retain preview access while those programs are being prepared.
+    if (slugFromRoute && !resolvedProgramKey) {
+        if (isAdmin) return <>{children}</>;
+        return (
+            <Navigate
+                to={`/programs?program=${encodeURIComponent(slugFromRoute)}#program-access`}
+                replace
+            />
+        );
+    }
+
     // Per-program gating takes precedence when a program key is resolvable.
     if (resolvedProgramKey) {
+        // Supabase session hydration can expose the user id a render before the
+        // canonical Auth email arrives. Do not make a deny/redirect decision
+        // against that incomplete identity, especially for allowlisted admins.
+        if (!user?.email) return <PageLoader />;
+        if (adminPreview) return <>{children}</>;
         if (programAccess === 'unknown') return <PageLoader />;
         if (programAccess === 'denied') {
             return (
@@ -383,6 +410,27 @@ const BillingProtectedRoute: React.FC<{
     // Generic fallback for non-program-scoped routes.
     if (!entitled) {
         return <Navigate to="/programs#program-access" replace />;
+    }
+
+    return <>{children}</>;
+};
+
+const ModuleSequenceRoute: React.FC<{
+    moduleNumber: 1 | 2 | 3 | 4;
+    children: React.ReactNode;
+}> = ({ moduleNumber, children }) => {
+    const { user, loading, isAdmin, adminLoading } = useAuth();
+
+    if (loading || adminLoading) return <PageLoader />;
+    if (!user) return <Navigate to="/login" replace />;
+    if (moduleNumber === 1 || isAdmin) return <>{children}</>;
+
+    const previousModuleNumber = (moduleNumber - 1) as 1 | 2 | 3;
+    const previousModule = user.modules[previousModuleNumber];
+    const previousCredentialClaimed = Boolean(previousModule.certificateId && previousModule.completedAt);
+
+    if (!previousCredentialClaimed) {
+        return <Navigate to={`/module/${previousModuleNumber}`} replace />;
     }
 
     return <>{children}</>;
@@ -427,6 +475,10 @@ const App: React.FC = () => {
                             <BillingSuccessPage />
                         </Suspense>
                     }
+                />
+                <Route
+                    path="/certificate/:certId"
+                    element={<Suspense fallback={<PageLoader />}><CertificatePage /></Suspense>}
                 />
 
                 <Route
@@ -475,7 +527,7 @@ const App: React.FC = () => {
                 <Route
                     path="/programs/:slug/register"
                     element={
-                        <BillingProtectedRoute>
+                        <BillingProtectedRoute allowUnpaid>
                             <Suspense fallback={<PageLoader />}><ProgramRegisterPage /></Suspense>
                         </BillingProtectedRoute>
                     }
@@ -483,7 +535,7 @@ const App: React.FC = () => {
                 <Route
                     path="/register/:slug"
                     element={
-                        <BillingProtectedRoute>
+                        <BillingProtectedRoute allowUnpaid>
                             <Suspense fallback={<PageLoader />}><ProgramRegisterPage /></Suspense>
                         </BillingProtectedRoute>
                     }
@@ -499,7 +551,7 @@ const App: React.FC = () => {
                 <Route
                     path="/programs/:slug"
                     element={
-                        <BillingProtectedRoute>
+                        <BillingProtectedRoute allowUnpaid>
                             <Suspense fallback={<PageLoader />}><ProgramDetailPage /></Suspense>
                         </BillingProtectedRoute>
                     }
@@ -518,7 +570,7 @@ const App: React.FC = () => {
                     <Route path="credential-forge" element={<Suspense fallback={<PageLoader />}><CredentialForgePage /></Suspense>} />
                     <Route path="hub" element={<Suspense fallback={<PageLoader />}><ProgramHubPage /></Suspense>} />
                     <Route path="programs/:programId" element={<BillingProtectedRoute><Suspense fallback={<PageLoader />}><ProgramDashboardPage /></Suspense></BillingProtectedRoute>} />
-                    <Route path="dashboard" element={<Dashboard />} />
+                    <Route path="dashboard" element={<BillingProtectedRoute programKey="vanguard"><Dashboard /></BillingProtectedRoute>} />
                     <Route
                         path="guide"
                         element={
@@ -536,11 +588,10 @@ const App: React.FC = () => {
                         }
                     />
                     <Route path="profile" element={<PioneerProfilePage />} />
-                    <Route path="module/1/*" element={<Suspense fallback={<PageLoader />}><Module1Page /></Suspense>} />
-                    <Route path="module/2/*" element={<Suspense fallback={<PageLoader />}><Module2Page /></Suspense>} />
-                    <Route path="module/3/*" element={<Suspense fallback={<PageLoader />}><Module3Page /></Suspense>} />
-                    <Route path="module/4/*" element={<Suspense fallback={<PageLoader />}><Module4Page /></Suspense>} />
-                    <Route path="certificate/:certId" element={<Suspense fallback={<PageLoader />}><CertificatePage /></Suspense>} />
+                    <Route path="module/1/*" element={<BillingProtectedRoute programKey="vanguard"><ModuleSequenceRoute moduleNumber={1}><Suspense fallback={<PageLoader />}><Module1Page /></Suspense></ModuleSequenceRoute></BillingProtectedRoute>} />
+                    <Route path="module/2/*" element={<BillingProtectedRoute programKey="vanguard"><ModuleSequenceRoute moduleNumber={2}><Suspense fallback={<PageLoader />}><Module2Page /></Suspense></ModuleSequenceRoute></BillingProtectedRoute>} />
+                    <Route path="module/3/*" element={<BillingProtectedRoute programKey="vanguard"><ModuleSequenceRoute moduleNumber={3}><Suspense fallback={<PageLoader />}><Module3Page /></Suspense></ModuleSequenceRoute></BillingProtectedRoute>} />
+                    <Route path="module/4/*" element={<BillingProtectedRoute programKey="vanguard"><ModuleSequenceRoute moduleNumber={4}><Suspense fallback={<PageLoader />}><Module4Page /></Suspense></ModuleSequenceRoute></BillingProtectedRoute>} />
                 </Route>
 
                 <Route

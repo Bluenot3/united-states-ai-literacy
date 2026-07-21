@@ -1,13 +1,13 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useBilling } from '../contexts/BillingContext';
 import { useAuth } from '../hooks/useAuth';
-import { isAdminEmail } from '../services/adminAccess';
+import { hasProgramAccess } from '../services/programAccess';
 import { getProgramBySlug } from '../zen-programs/programIntegrationContract';
 import { isProfileComplete, loadProfile, saveProfile, type ZenProfile } from '../services/profileSetup';
 
 const PROGRAM_DESTINATIONS = {
-    pioneer: '/programs/pioneer',
+    pioneer: '/programs/pioneer/launch',
     vanguard: '/dashboard',
 } as const;
 
@@ -57,15 +57,37 @@ const PaywallPage: React.FC = () => {
     // not the generic /programs hub.
     const programDestination = PROGRAM_DESTINATIONS[programKind];
     const returnTo = explicitReturn ?? programDestination;
-    const { user, isAuthenticated } = useAuth();
-    const { createCheckoutSession, adminBypass, checkEntitlement, entitled, error } = useBilling();
+    const { user, isAuthenticated, isAdmin, adminLoading } = useAuth();
+    const { createCheckoutSession, adminBypass, error } = useBilling();
     const [showAdminModal, setShowAdminModal] = useState(false);
     const [adminUsername, setAdminUsername] = useState('');
     const [adminPassword, setAdminPassword] = useState('');
     const [adminError, setAdminError] = useState('');
     const [loading, setLoading] = useState(false);
-    const signedInAdmin = isAdminEmail(user?.email);
+    const signedInAdmin = !adminLoading && isAdmin;
     const pendingPayment = params.get('pending') === '1' || params.get('status') === 'pending';
+    const [selectedProgramAccess, setSelectedProgramAccess] = useState<'unknown' | 'allowed' | 'denied'>('unknown');
+
+    const refreshSelectedProgramAccess = useCallback(async (): Promise<boolean> => {
+        if (mustSelectProgram || !isAuthenticated || !user?.id) {
+            setSelectedProgramAccess('denied');
+            return false;
+        }
+
+        if (signedInAdmin) {
+            setSelectedProgramAccess('allowed');
+            return true;
+        }
+
+        setSelectedProgramAccess('unknown');
+        const allowed = await hasProgramAccess(user.id, user.email, programKind);
+        setSelectedProgramAccess(allowed ? 'allowed' : 'denied');
+        return allowed;
+    }, [isAuthenticated, mustSelectProgram, programKind, signedInAdmin, user?.email, user?.id]);
+
+    useEffect(() => {
+        void refreshSelectedProgramAccess();
+    }, [refreshSelectedProgramAccess]);
 
     // Local profile state (Codex: wire to user_profiles table)
     const existingProfile = useMemo(() => loadProfile(user?.id), [user?.id]);
@@ -101,7 +123,7 @@ const PaywallPage: React.FC = () => {
                 eyebrow: 'AI Pioneer program access',
                 headline: 'Enter the AI Pioneer Program.',
                 body: 'Build, launch, and showcase real AI tools. Activate your seat to unlock the build path, labs, Hugging Face deployment, portfolio artifacts, and certificate track.',
-                price: '$45 program access',
+                price: '$45 one-time access',
                 product: 'AI Pioneer Program',
                 image: '/zen-brand-logo-light.png',
                 accent: 'from-cyan-300 via-blue-400 to-violet-400',
@@ -112,7 +134,7 @@ const PaywallPage: React.FC = () => {
             eyebrow: 'ZEN Vanguard program access',
             headline: 'Enter the Vanguard operator track.',
             body: 'Operator-grade AI systems training. Activate full access to the Vanguard systems curriculum, operator labs, certificates, and progress layer.',
-            price: '$75 program access',
+            price: '$75 one-time access',
             product: 'ZEN Vanguard Program',
             image: '/zen-logo-alt.png',
             accent: 'from-zen-gold via-cyan-300 to-emerald-300',
@@ -146,7 +168,7 @@ const PaywallPage: React.FC = () => {
             return;
         }
         setLoading(true);
-        const url = await createCheckoutSession(returnTo);
+        const url = await createCheckoutSession(programKind, returnTo);
         if (url) {
             goTo(url);
             return;
@@ -159,7 +181,7 @@ const PaywallPage: React.FC = () => {
         ? 1
         : !signedInAdmin && !profileSaved
             ? 2
-            : !(entitled || signedInAdmin)
+            : selectedProgramAccess !== 'allowed' && !signedInAdmin
                 ? 3
                 : 4;
 
@@ -171,7 +193,7 @@ const PaywallPage: React.FC = () => {
             goTo(returnTo);
             return;
         }
-        const allowed = await checkEntitlement();
+        const allowed = await refreshSelectedProgramAccess();
         if (allowed) {
             goTo(returnTo);
             return;
@@ -196,7 +218,7 @@ const PaywallPage: React.FC = () => {
         setLoading(false);
     };
 
-    const hasAccess = entitled || signedInAdmin;
+    const hasAccess = selectedProgramAccess === 'allowed' || signedInAdmin;
 
     if (mustSelectProgram) {
         const choices: Array<{ slug: 'pioneer' | 'vanguard'; title: string; subtitle: string; price: string; accent: string; bullets: string[] }> = [
@@ -204,7 +226,7 @@ const PaywallPage: React.FC = () => {
                 slug: 'pioneer',
                 title: 'AI Pioneer Program',
                 subtitle: 'Build, launch, and showcase real AI tools. Ages 11-18.',
-                price: '$45 program access',
+                price: '$45 one-time access',
                 accent: 'from-cyan-300 via-blue-400 to-violet-400',
                 bullets: programFeatures.pioneer,
             },
@@ -212,7 +234,7 @@ const PaywallPage: React.FC = () => {
                 slug: 'vanguard',
                 title: 'ZEN Vanguard',
                 subtitle: 'Operator-grade AI systems training. Adults & professionals.',
-                price: '$75 program access',
+                price: '$75 one-time access',
                 accent: 'from-zen-gold via-cyan-300 to-emerald-300',
                 bullets: programFeatures.vanguard,
             },
@@ -426,12 +448,12 @@ const PaywallPage: React.FC = () => {
                         )}
 
                         {/* Payment-pending state */}
-                        {pendingPayment && !entitled && !signedInAdmin && (
+                        {pendingPayment && !hasAccess && (
                             <div className="mt-6 rounded-2xl border border-amber-300/25 bg-amber-300/[0.08] p-4">
                                 <p className="text-xs font-black uppercase tracking-[0.22em] text-amber-100">Payment submitted — verifying access</p>
                                 <p className="mt-2 text-sm leading-6 text-amber-50/90">It can take a moment for Stripe to confirm and unlock {panelCopy.product}. If this persists, contact support.</p>
                                 <div className="mt-3 flex flex-wrap gap-2">
-                                    <button type="button" onClick={() => { setLoading(true); checkEntitlement().finally(() => setLoading(false)); }} className="rounded-full bg-amber-200 px-4 py-2 text-xs font-black text-amber-950">Refresh access</button>
+                                    <button type="button" onClick={() => { setLoading(true); refreshSelectedProgramAccess().finally(() => setLoading(false)); }} className="rounded-full bg-amber-200 px-4 py-2 text-xs font-black text-amber-950">Refresh access</button>
                                     <a href="mailto:support@zenai.world" className="rounded-full border border-amber-300/30 px-4 py-2 text-xs font-black text-amber-100">Contact support</a>
                                     <Link to="/programs" className="rounded-full border border-white/12 px-4 py-2 text-xs font-black text-white">View programs</Link>
                                 </div>

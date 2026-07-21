@@ -16,12 +16,17 @@ const iconMap: Record<string, React.FC<{ className?: string }>> = {
 interface SidebarProps {
     sections: Section[];
     activeSection: string;
+    unlockedSectionIds: Set<string>;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ sections, activeSection }) => {
+const Sidebar: React.FC<SidebarProps> = ({ sections, activeSection, unlockedSectionIds }) => {
     const { user } = useAuth();
 
     const handleNavigate = (sectionId: string) => {
+        if (!unlockedSectionIds.has(sectionId)) {
+            return;
+        }
+
         const element = document.getElementById(sectionId);
         if (!element) {
             return;
@@ -51,6 +56,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sections, activeSection }) => {
                 accentClassName="from-emerald-500 via-teal-500 to-cyan-400"
                 activeAccentClassName="from-emerald-600 via-teal-600 to-cyan-500"
                 onNavigate={handleNavigate}
+                unlockedSectionIds={unlockedSectionIds}
                 renderIcon={(section, isActive) => {
                     const IconComponent = section.icon ? (iconMap[section.icon] ?? iconMap.default) : iconMap.default;
                     return <IconComponent className={`h-4 w-4 ${isActive ? 'text-white' : ''}`} />;

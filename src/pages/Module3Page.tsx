@@ -1,7 +1,9 @@
 import React, { Suspense, useRef } from 'react';
 import CompletionModal from '../components/CompletionModal';
 import VanguardModuleFrame from '../components/vanguard/VanguardModuleFrame';
+import { EditModeProvider } from '../components/content-overlay/EditModeContext';
 import { useModuleExperience } from '../hooks/useModuleExperience';
+import { useContentOverrides } from '../hooks/useContentOverrides';
 
 import { curriculumData } from '../modules/module3/data/curriculumData';
 import Header from '../modules/module3/components/Header';
@@ -48,13 +50,26 @@ const MODULE_ID = 3;
 
 const Module3Page: React.FC = () => {
     const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+    const { rows: contentOverrideRows } = useContentOverrides('vanguard', 'module3');
+    const publishedOverrides = React.useMemo(
+        () => contentOverrideRows.filter((row) => row.is_published),
+        [contentOverrideRows],
+    );
     const {
         user,
         moduleProgress,
         activeSection,
+        activeSectionTitle,
+        completeActiveSection,
+        canCompleteActiveSection,
+        missingRequiredQuizIds,
         visibleSections,
         flattenedSections,
         totalSections,
+        completedSectionCount,
+        hiddenSectionIds,
+        unlockedSectionIds,
+        allSectionsComplete,
         isCommandPaletteOpen,
         setIsCommandPaletteOpen,
         isModuleComplete,
@@ -64,6 +79,7 @@ const Module3Page: React.FC = () => {
         moduleId: MODULE_ID,
         sections: curriculumData.sections,
         sectionRefs,
+        publishedOverrides,
     });
 
     if (!user) {
@@ -72,51 +88,70 @@ const Module3Page: React.FC = () => {
 
     return (
         <Module3ErrorBoundary>
-            <VanguardModuleFrame
+            <EditModeProvider programId="vanguard" moduleId="module3">
+                <VanguardModuleFrame
                 moduleNumber={MODULE_ID}
                 title="Personal Intelligence & Cognitive Systems"
                 subtitle="Build a second-brain workflow for research, retrieval, decision support, and personal operating leverage without losing rigor, provenance, or speed."
                 accentClassName="from-emerald-500 via-teal-500 to-cyan-400"
                 chipLabels={['RAG systems', 'Decision support', 'Knowledge capture']}
-                completedSections={moduleProgress.completedSections.length}
+                completedSections={completedSectionCount}
                 totalSections={totalSections}
                 header={(
                     <>
                         <ScrollProgressBar />
                         <Header
                             onCommandPaletteToggle={() => setIsCommandPaletteOpen(true)}
-                            completedSections={moduleProgress.completedSections.length}
+                            completedSections={completedSectionCount}
                             totalSections={totalSections}
                         />
                     </>
                 )}
-                sidebar={<Sidebar sections={curriculumData.sections} activeSection={activeSection} />}
-                footer={<ModuleFooter currentModule={3} />}
+                sidebar={<Sidebar sections={curriculumData.sections} activeSection={activeSection} unlockedSectionIds={unlockedSectionIds} />}
+                activeSectionTitle={activeSectionTitle}
+                activeSectionComplete={moduleProgress.completedSections.includes(activeSection)}
+                canCompleteActiveSection={canCompleteActiveSection}
+                completionBlockedReason={missingRequiredQuizIds.length > 0 ? 'Pass the section quiz to clear this checkpoint.' : undefined}
+                onCompleteActiveSection={completeActiveSection}
+                footer={(
+                    <ModuleFooter
+                        currentModule={3}
+                        canAdvance={Boolean(moduleProgress.certificateId)}
+                        certificateId={moduleProgress.certificateId}
+                        readyToClaim={allSectionsComplete}
+                        onRequestCertificate={() => setShowCompletionModal(true)}
+                    />
+                )}
             >
                 <MainContent
                     title={curriculumData.title}
                     sections={curriculumData.sections}
                     sectionRefs={sectionRefs}
-                    visibleSections={visibleSections}
+                        visibleSections={visibleSections}
+                        unlockedSectionIds={unlockedSectionIds}
+                        hiddenSectionIds={hiddenSectionIds}
                 />
-            </VanguardModuleFrame>
+                </VanguardModuleFrame>
 
-            <Suspense fallback={null}>
-                <GeminiChat />
-            </Suspense>
-            <CommandPalette
-                isOpen={isCommandPaletteOpen}
-                onClose={() => setIsCommandPaletteOpen(false)}
-                sections={flattenedSections}
-            />
-            {isModuleComplete && <CompletionCelebration />}
-            {showCompletionModal && (
-                <CompletionModal
-                    moduleId={MODULE_ID}
-                    moduleName="Personal Intelligence & Cognitive Systems"
-                    onClose={() => setShowCompletionModal(false)}
+                <Suspense fallback={null}>
+                    <GeminiChat />
+                </Suspense>
+                <CommandPalette
+                    isOpen={isCommandPaletteOpen}
+                    onClose={() => setIsCommandPaletteOpen(false)}
+                    sections={flattenedSections.filter((section) => unlockedSectionIds.has(section.id))}
                 />
-            )}
+                {isModuleComplete && <CompletionCelebration />}
+                {showCompletionModal && (
+                    <CompletionModal
+                        moduleId={MODULE_ID}
+                        moduleName="Personal Intelligence & Cognitive Systems"
+                        completedSections={completedSectionCount}
+                        totalSections={totalSections}
+                        onClose={() => setShowCompletionModal(false)}
+                    />
+                )}
+            </EditModeProvider>
         </Module3ErrorBoundary>
     );
 };

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import LiveSessionsAdminPanel from './LiveSessionsAdminPanel';
 import {
     getProgramCatalog,
     type ProgramCatalogItem,
@@ -280,6 +281,8 @@ export const ProgramAdminPanel: React.FC = () => {
                         </div>
                     )}
                 </section>
+
+                <LiveSessionsAdminPanel catalog={catalog} />
 
                 <section className="mt-5 overflow-x-auto">
                     <ProgramRegistrationTable

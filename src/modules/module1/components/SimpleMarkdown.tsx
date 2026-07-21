@@ -1,79 +1,87 @@
 import React from 'react';
+import SmartCodeBlock from '../../../zen-programs/components/SmartCodeBlock';
 
 interface SimpleMarkdownProps {
   content: string;
 }
 
-const SimpleMarkdown: React.FC<SimpleMarkdownProps> = ({ content }) => {
-  const renderContent = () => {
-    if (!content) return null;
+const renderInline = (text: string, keyPrefix: string): React.ReactNode[] => (
+  text
+    .split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g)
+    .filter(Boolean)
+    .map((token, index) => {
+      if (token.startsWith('**') && token.endsWith('**')) {
+        return <strong key={`${keyPrefix}-strong-${index}`}>{token.slice(2, -2)}</strong>;
+      }
+      if (token.startsWith('*') && token.endsWith('*')) {
+        return <em key={`${keyPrefix}-em-${index}`}>{token.slice(1, -1)}</em>;
+      }
+      return <React.Fragment key={`${keyPrefix}-text-${index}`}>{token}</React.Fragment>;
+    })
+);
 
-    // Process code blocks first
-    const codeBlockRegex = /```(.*?)\n([\s\S]*?)```/g;
-    const parts = content.split(codeBlockRegex);
+const renderTextBlock = (text: string, blockIndex: number): React.ReactElement[] => {
+  const elements: React.ReactElement[] = [];
+  let listItems: React.ReactElement[] = [];
 
-    // FIX: Replaced JSX.Element with React.ReactElement to resolve "Cannot find namespace 'JSX'" error.
-    const elements: (React.ReactElement | string)[] = [];
-    let isCode = false;
-
-    for (let i = 0; i < parts.length; i++) {
-        const part = parts[i];
-        if (isCode) {
-            // This is the code content
-            const language = parts[i-1] || 'text';
-             elements.push(
-                <pre key={`code-${i}`} className="bg-slate-900 text-white p-4 rounded-lg my-4 overflow-x-auto">
-                    <code className={`language-${language}`}>{part.trim()}</code>
-                </pre>
-            );
-        } else if (i > 0 && parts[i-1] !== undefined && parts[i-2] !== undefined) {
-            // This is the language part, which we handle when processing the code content
-        } else {
-            // This is regular markdown content
-            const lines = part.split('\n');
-            let inList = false;
-            // FIX: Replaced JSX.Element with React.ReactElement to resolve "Cannot find namespace 'JSX'" error.
-            let currentList: React.ReactElement[] = [];
-
-            const closeList = () => {
-                if (inList) {
-                    elements.push(<ul key={`ul-${elements.length}`} className="list-disc list-inside space-y-1 my-4 pl-4 text-brand-text-light">{currentList}</ul>);
-                    inList = false;
-                    currentList = [];
-                }
-            };
-            
-            lines.forEach((line, index) => {
-                let processedLine = line
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-                if (processedLine.startsWith('### ')) {
-                    closeList();
-                    elements.push(<h5 key={`${i}-${index}`} className="font-bold text-lg text-brand-text mt-4 mb-2" dangerouslySetInnerHTML={{ __html: processedLine.substring(4) }} />);
-                } else if (processedLine.startsWith('## ')) {
-                    closeList();
-                    elements.push(<h4 key={`${i}-${index}`} className="font-bold text-xl text-brand-text mt-4 mb-2" dangerouslySetInnerHTML={{ __html: processedLine.substring(3) }} />);
-                } else if (processedLine.startsWith('# ')) {
-                    closeList();
-                    elements.push(<h3 key={`${i}-${index}`} className="font-bold text-2xl text-brand-text mt-4 mb-2" dangerouslySetInnerHTML={{ __html: processedLine.substring(2) }} />);
-                } else if (processedLine.match(/^\s*[-*] /)) {
-                    inList = true;
-                    currentList.push(<li key={`${i}-${index}`} dangerouslySetInnerHTML={{ __html: processedLine.replace(/^\s*[-*] /, '') }} />);
-                } else if (processedLine.trim() !== '') {
-                    closeList();
-                    elements.push(<p key={`${i}-${index}`} className="text-brand-text-light mb-2" dangerouslySetInnerHTML={{ __html: processedLine }} />);
-                }
-            });
-            closeList();
-        }
-        isCode = !isCode;
-    }
-    
-    return elements;
+  const closeList = () => {
+    if (!listItems.length) return;
+    elements.push(
+      <ul key={`list-${blockIndex}-${elements.length}`} className="my-4 list-inside list-disc space-y-1 pl-4 text-brand-text-light">
+        {listItems}
+      </ul>,
+    );
+    listItems = [];
   };
 
-  return <div>{renderContent()}</div>;
+  text.split('\n').forEach((line, lineIndex) => {
+    const key = `${blockIndex}-${lineIndex}`;
+    if (/^\s*[-*]\s+/.test(line)) {
+      listItems.push(<li key={key}>{renderInline(line.replace(/^\s*[-*]\s+/, ''), key)}</li>);
+      return;
+    }
+
+    closeList();
+    if (line.startsWith('### ')) {
+      elements.push(<h5 key={key} className="mb-2 mt-4 text-lg font-bold text-brand-text">{renderInline(line.slice(4), key)}</h5>);
+    } else if (line.startsWith('## ')) {
+      elements.push(<h4 key={key} className="mb-2 mt-4 text-xl font-bold text-brand-text">{renderInline(line.slice(3), key)}</h4>);
+    } else if (line.startsWith('# ')) {
+      elements.push(<h3 key={key} className="mb-2 mt-4 text-2xl font-bold text-brand-text">{renderInline(line.slice(2), key)}</h3>);
+    } else if (line.trim()) {
+      elements.push(<p key={key} className="mb-2 text-brand-text-light">{renderInline(line, key)}</p>);
+    }
+  });
+
+  closeList();
+  return elements;
+};
+
+const SimpleMarkdown: React.FC<SimpleMarkdownProps> = ({ content }) => {
+  if (!content) return null;
+
+  const elements: React.ReactElement[] = [];
+  const fence = /```([^\n]*)\n([\s\S]*?)```/g;
+  let cursor = 0;
+  let match: RegExpExecArray | null;
+  let blockIndex = 0;
+
+  while ((match = fence.exec(content)) !== null) {
+    elements.push(...renderTextBlock(content.slice(cursor, match.index), blockIndex));
+    elements.push(
+      <SmartCodeBlock
+        key={`code-${blockIndex}`}
+        code={match[2].trim()}
+        language={match[1].trim()}
+        variant="light"
+      />,
+    );
+    cursor = match.index + match[0].length;
+    blockIndex += 1;
+  }
+
+  elements.push(...renderTextBlock(content.slice(cursor), blockIndex));
+  return <div>{elements}</div>;
 };
 
 export default SimpleMarkdown;

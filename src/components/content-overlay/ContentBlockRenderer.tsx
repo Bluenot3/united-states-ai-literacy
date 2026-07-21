@@ -1,6 +1,11 @@
 import React from 'react';
 import SimpleMarkdown from '../../modules/module1/components/SimpleMarkdown';
-import type { ContentOverride } from '../../services/contentOverrides';
+import SectionQuiz from '../SectionQuiz';
+import {
+    isShippedVanguardQuizId,
+    parsePublicQuizPayload,
+    type ContentOverride,
+} from '../../services/contentOverrides';
 
 interface BlockProps {
     override: ContentOverride;
@@ -195,6 +200,44 @@ const ContentBlockRenderer: React.FC<BlockProps> = ({ override, isAdminView }) =
                             <p className="mt-1 truncate text-xs text-slate-500">{url}</p>
                         </div>
                     </a>
+                </BlockShell>
+            );
+        }
+        case 'quiz': {
+            const quiz = parsePublicQuizPayload(p);
+            if (!quiz) return null;
+            const moduleMatch = override.module_id.match(/^module([1-4])$/);
+            const moduleId = moduleMatch ? Number(moduleMatch[1]) as 1 | 2 | 3 | 4 : undefined;
+
+            if (isAdminView) {
+                return (
+                    <BlockShell override={override} isAdminView>
+                        <p className="text-xs font-bold uppercase tracking-[0.28em] text-violet-300">
+                            {isShippedVanguardQuizId(quiz.quiz_id) ? 'Built-in quiz update' : 'Required quiz'}
+                        </p>
+                        <p className="mt-2 text-sm font-semibold text-slate-100">{quiz.quiz_id}</p>
+                        <p className="mt-1 text-xs text-slate-400">
+                            {quiz.questions.length > 0
+                                ? `${quiz.questions.length} questions · ${quiz.passing_percent ?? 60}% to pass`
+                                : 'Restored to the shipped questions · correct choices remain private'}
+                        </p>
+                    </BlockShell>
+                );
+            }
+
+            // Shipped quizzes already have a SectionQuiz component in the
+            // curriculum. That component resolves this published override by
+            // quiz ID, so rendering the overlay row again would duplicate it.
+            if (isShippedVanguardQuizId(quiz.quiz_id)) return null;
+            if (!moduleId || quiz.questions.length === 0) return null;
+
+            return (
+                <BlockShell override={override}>
+                    <SectionQuiz
+                        interactiveId={quiz.quiz_id}
+                        quizOverride={override}
+                        moduleId={moduleId}
+                    />
                 </BlockShell>
             );
         }

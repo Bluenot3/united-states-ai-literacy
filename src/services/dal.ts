@@ -64,7 +64,9 @@ async function loadFullUser(supabaseUser: { id: string; email?: string }): Promi
             final_certification_hash: null,
         };
 
-        const { error } = await supabase.from('user_profiles').insert(newProfile);
+        // Profile creation is handled by the Auth trigger. This guarded RPC is
+        // only a recovery path and derives identity from auth.uid()/JWT.
+        const { error } = await supabase.rpc('ensure_my_user_profile');
         if (error) {
             console.error('Error creating user profile:', error);
             return null;
@@ -113,7 +115,9 @@ async function loadFullUser(supabaseUser: { id: string; email?: string }): Promi
 
     return {
         id: supabaseUser.id,
-        email: profile.email as string,
+        // Auth owns identity. The public profile email is display metadata and
+        // must never be allowed to influence admin or entitlement decisions.
+        email: supabaseUser.email ?? '',
         name: profile.name as string,
         picture: profile.picture as string,
         createdAt: profile.created_at as string,
@@ -156,6 +160,7 @@ export const dal = {
          */
         onAuthStateChanged(callback: (user: User | null) => void): () => void {
             let initialResolved = false;
+            let authEventVersion = 0;
 
             const deliverAuthState = (user: User | null) => {
                 if (!initialResolved) {
@@ -173,15 +178,22 @@ export const dal = {
             }, 6000);
 
             // @ts-expect-error - Type definition clash with local node_modules
-            const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+                const eventVersion = ++authEventVersion;
                 if (session?.user) {
-                    try {
-                        const user = await loadFullUser(session.user);
-                        deliverAuthState(user);
-                    } catch (error) {
-                        console.error('Failed to hydrate authenticated user:', error);
-                        deliverAuthState(null);
-                    }
+                    // Supabase warns against awaiting further Supabase queries inside
+                    // onAuthStateChange because the auth client lock can deadlock.
+                    // Defer profile/progress hydration until after this callback returns.
+                    window.setTimeout(() => {
+                        void loadFullUser(session.user)
+                            .then((user) => {
+                                if (eventVersion === authEventVersion) deliverAuthState(user);
+                            })
+                            .catch((error) => {
+                                console.error('Failed to hydrate authenticated user:', error);
+                                if (eventVersion === authEventVersion) deliverAuthState(null);
+                            });
+                    }, 0);
                 } else {
                     deliverAuthState(null);
                 }
@@ -196,10 +208,21 @@ export const dal = {
         /**
          * Sign in with email and password
          */
-        async login(email: string, password: string): Promise<void> {
+        async login(email: string, password: string): Promise<User> {
             // @ts-expect-error - Type definition clash
-            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) throw new Error(error.message);
+
+            if (!data.user) {
+                throw new Error('Supabase did not return an authenticated user.');
+            }
+
+            const authenticatedUser = await loadFullUser(data.user);
+            if (!authenticatedUser) {
+                throw new Error('Signed in, but the learner profile could not be loaded.');
+            }
+
+            return authenticatedUser;
         },
 
         /**
@@ -263,23 +286,20 @@ export const dal = {
          */
         async updateUser(userId: string, user: User): Promise<void> {
             // Update user_profiles
-            const { error: profileError } = await supabase.from('user_profiles').upsert({
-                id: userId,
-                email: user.email,
+            const { error: profileError } = await supabase.from('user_profiles').update({
                 name: user.name,
                 picture: user.picture,
                 total_points: user.totalPoints,
-                final_certification_id: user.finalCertificationId,
-                final_certification_hash: user.finalCertificationHash,
                 updated_at: new Date().toISOString(),
-            });
+            }).eq('id', userId);
 
             if (profileError) {
                 console.error('Error updating user profile:', profileError);
                 throw profileError;
             }
 
-            // Upsert module progress for modules that have data
+            // Upsert every module so a reset to the empty/default state is also
+            // durable across devices instead of leaving stale progress in Supabase.
             const progressRows = ([1, 2, 3, 4] as const)
                 .map((moduleId) => {
                     const mp = user.modules[moduleId];
@@ -290,20 +310,10 @@ export const dal = {
                         completed_interactives: mp.completedInteractives,
                         points: mp.points,
                         started_at: mp.startedAt,
-                        completed_at: mp.completedAt,
                         last_viewed_section: mp.lastViewedSection,
-                        certificate_id: mp.certificateId,
-                        certificate_hash: mp.certificateHash,
                         updated_at: new Date().toISOString(),
                     };
-                })
-                .filter(
-                    (row) =>
-                        row.started_at !== null ||
-                        row.completed_sections.length > 0 ||
-                        row.completed_interactives.length > 0 ||
-                        row.points > 0
-                );
+                });
 
             if (progressRows.length > 0) {
                 const { error: progressError } = await supabase.from('module_progress').upsert(progressRows, {
@@ -345,15 +355,23 @@ export const dal = {
          * Requires the current user to be authenticated as an admin email (see RLS policies).
          */
         async getAllStudents(): Promise<import('../types').Student[]> {
-            const [profilesResult, progressResult, sessionsResult] = await Promise.all([
+            const [profilesResult, progressResult, sessionsResult, programProgressResult] = await Promise.all([
                 supabase.from('user_profiles').select('*').order('created_at', { ascending: false }),
                 supabase.from('module_progress').select('*'),
                 supabase.from('session_history').select('*').order('ended_at', { ascending: false }),
+                supabase.from('program_user_progress').select('*').order('last_activity_at', { ascending: false }),
             ]);
+
+            const failedQuery = [profilesResult, progressResult, sessionsResult, programProgressResult]
+                .find((result) => result.error);
+            if (failedQuery?.error) {
+                throw failedQuery.error;
+            }
 
             const profiles = profilesResult.data ?? [];
             const allProgress = progressResult.data ?? [];
             const allSessions = sessionsResult.data ?? [];
+            const allProgramProgress = programProgressResult.data ?? [];
 
             const now = Date.now();
             const twoDaysAgo = now - 48 * 60 * 60 * 1000;
@@ -363,6 +381,19 @@ export const dal = {
                 const userId = profile.id as string;
                 const userProgress = allProgress.filter((p) => p.user_id === userId);
                 const userSessions = allSessions.filter((s) => s.user_id === userId);
+                const programProgress: import('../types').Student['programProgress'] = allProgramProgress
+                    .filter((row) => row.user_id === userId)
+                    .map((row) => ({
+                        programKey: String(row.program_key),
+                        moduleKey: row.module_key ? String(row.module_key) : null,
+                        lessonKey: row.lesson_key ? String(row.lesson_key) : null,
+                        progressPercent: Number(row.progress_percent ?? 0),
+                        status: (row.status as 'not_started' | 'started' | 'completed') ?? 'not_started',
+                        lastActivityAt: row.last_activity_at ? String(row.last_activity_at) : null,
+                        metadata: row.metadata && typeof row.metadata === 'object' && !Array.isArray(row.metadata)
+                            ? row.metadata as Record<string, unknown>
+                            : {},
+                    }));
 
                 const moduleProgress: import('../types').Student['moduleProgress'] = {};
                 for (const row of userProgress) {
@@ -384,9 +415,15 @@ export const dal = {
 
                 // Determine status
                 const latestSession = userSessions[0];
-                const lastActiveTime = latestSession
-                    ? new Date((latestSession.ended_at ?? latestSession.created_at) as string).getTime()
-                    : new Date(profile.created_at as string).getTime();
+                const activityCandidates = [
+                    profile.created_at as string,
+                    latestSession ? (latestSession.ended_at ?? latestSession.created_at) as string : null,
+                    programProgress[0]?.lastActivityAt ?? null,
+                ].filter((value): value is string => Boolean(value));
+                const lastActive = activityCandidates.sort(
+                    (first, second) => new Date(second).getTime() - new Date(first).getTime(),
+                )[0] ?? (profile.created_at as string);
+                const lastActiveTime = new Date(lastActive).getTime();
 
                 let status: 'active' | 'inactive' | 'at-risk' = 'inactive';
                 if (lastActiveTime > oneDayAgo) status = 'active';
@@ -398,11 +435,10 @@ export const dal = {
                     name: profile.name as string,
                     avatar: profile.picture as string,
                     enrolledAt: profile.created_at as string,
-                    lastActive: latestSession
-                        ? ((latestSession.ended_at ?? latestSession.created_at) as string)
-                        : (profile.created_at as string),
+                    lastActive,
                     totalPoints: profile.total_points as number,
                     moduleProgress,
+                    programProgress,
                     assignments: [],
                     status,
                     sessionHistory,
