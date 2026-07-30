@@ -6,6 +6,8 @@ import path from 'path';
 import Stripe from 'stripe';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
+import { createGatewayRouter } from './gateway/index.js';
+import { configuredProviders as gatewayConfiguredProviders } from './gateway/providers.js';
 import {
     sendEmail,
     buildWelcomeEmail,
@@ -40,10 +42,6 @@ const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabase
 
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 const adminSessions = new Map();
-
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
-const OPENAI_CHAT_MODEL = 'gpt-4o-mini';
-const OPENAI_IMAGE_MODEL = 'dall-e-2';
 
 // Entitlements are now managed in Supabase via user_profiles table
 
@@ -114,62 +112,6 @@ function requireStripe(res) {
     });
 
     return false;
-}
-
-async function createOpenAIChatCompletion(messages, temperature = 0.7, maxTokens = 2048) {
-    if (!OPENAI_API_KEY) {
-        throw new Error('OpenAI is not configured on the server.');
-    }
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-            messages,
-            temperature,
-            max_tokens: maxTokens,
-            model: OPENAI_CHAT_MODEL
-        }),
-    });
-
-    if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(errorBody || `OpenAI request failed with status ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || '';
-}
-
-async function createOpenAIImageGeneration(prompt) {
-    if (!OPENAI_API_KEY) {
-        throw new Error('OpenAI is not configured on the server.');
-    }
-
-    const response = await fetch('https://api.openai.com/v1/images/generations', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-            prompt,
-            n: 1,
-            size: '512x512',
-            model: OPENAI_IMAGE_MODEL
-        }),
-    });
-
-    if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(errorBody || `OpenAI image request failed with status ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.data?.[0]?.url || '';
 }
 
 app.disable('x-powered-by');
@@ -493,39 +435,20 @@ app.post(
     },
 );
 
-app.post('/api/ai/generate', async (req, res) => {
-    const { messages, temperature, maxTokens } = req.body;
+// ─── ZEN AI Gateway ────────────────────────────────────────────────────────
+// Every AI call for every program routes through here: classroom safety
+// guardrails, per-user rate limits and spend caps, caching, provider failover,
+// and usage accounting all live in server/gateway/.
 
-    if (!Array.isArray(messages) || messages.length === 0) {
-        res.status(400).json({ error: 'messages must be a non-empty array.' });
-        return;
-    }
+const gatewayRouter = createGatewayRouter();
 
-    try {
-        const text = await createOpenAIChatCompletion(messages, temperature, maxTokens);
-        res.json({ text });
-    } catch (error) {
-        console.error('AI generation error:', error);
-        res.status(503).json({ error: error.message });
-    }
-});
+app.use('/api/gateway/v1', gatewayRouter);
 
-app.post('/api/ai/image', async (req, res) => {
-    const { prompt } = req.body;
+// Back-compat: /api/ai/generate and /api/ai/image stay live so existing lesson
+// code keeps working, but they now inherit every gateway protection instead of
+// calling OpenAI directly.
 
-    if (!prompt || typeof prompt !== 'string') {
-        res.status(400).json({ error: 'prompt must be a valid string.' });
-        return;
-    }
-
-    try {
-        const url = await createOpenAIImageGeneration(prompt);
-        res.json({ url });
-    } catch (error) {
-        console.error('AI image generation error:', error);
-        res.status(503).json({ error: error.message });
-    }
-});
+app.use('/api/ai', gatewayRouter);
 
 // ─── Email endpoints ───────────────────────────────────────────────────────
 
@@ -578,6 +501,7 @@ app.post('/api/email/certificate', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
+    const gatewayProviders = gatewayConfiguredProviders();
     res.json({
         status: 'ok',
         version: process.env.npm_package_version || '3.1.0',
@@ -585,7 +509,11 @@ app.get('/api/health', (_req, res) => {
         features: {
             stripe: Boolean(stripe),
             adminBypass: isAdminBypassConfigured(),
-            aiProxy: Boolean(OPENAI_API_KEY),
+            aiProxy: gatewayProviders.length > 0,
+            aiGateway: {
+                mounted: '/api/gateway/v1',
+                providers: gatewayProviders,
+            },
             email: Boolean(process.env.RESEND_API_KEY),
             supabase: Boolean(supabase),
         },

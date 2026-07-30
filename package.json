@@ -2,7 +2,7 @@
   "name": "united-states-ai-literacy",
   "private": true,
   "version": "3.1.0",
-  "description": "ZEN Vanguard professional AI literacy platform — full suite of programs including Vanguard, AI Pioneer, Homeschool Kit, T3, Web3, Arena, and Hermes Agent Ops.",
+  "description": "ZEN Vanguard professional AI literacy platform \u2014 full suite of programs including Vanguard, AI Pioneer, Homeschool Kit, T3, Web3, Arena, and Hermes Agent Ops.",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,7 +12,8 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:gateway": "node --test \"server/gateway/__tests__/*.test.mjs\""
   },
   "engines": {
     "node": ">=18.18.0"
