@@ -5,6 +5,7 @@ import { getCurriculumByProgramId } from '../curriculum';
 import StudioMediaBlock from '../components/StudioMediaBlocks';
 import { getRegistryProgramIdForProgramKey, toProgramKey } from '../programIntegrationContract';
 import { getProgramById } from '../programsRegistry';
+import PioneerDashboardPage from '../pioneer/PioneerDashboardPage';
 import {
     LearningConceptVisualizer,
     MiniOrbit,
@@ -45,7 +46,7 @@ import {
     type ProgramSection,
 } from '../types';
 
-const ProgramDashboardPage: React.FC = () => {
+const SharedProgramDashboard: React.FC = () => {
     const { programId: routeProgramId } = useParams<{ programId: string }>();
     const programId = useMemo(() => {
         if (!routeProgramId) {
@@ -529,11 +530,11 @@ const ProgramDashboardPage: React.FC = () => {
                     </Link>
                     <div className="flex min-w-0 flex-1 items-center justify-center gap-3">
                         <span className={`hidden h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br ${theme.active} text-sm font-black text-slate-950 shadow-[0_14px_34px_rgba(14,165,233,.25)] sm:inline-flex`}>
-                            AI
+                            {program.icon}
                         </span>
                         <div className="min-w-0 text-center sm:text-left">
-                            <p className={`text-[10px] font-black uppercase tracking-[0.3em] text-cyan-50 ${textLift}`}>ZEN AI Pioneer Program</p>
-                            <h1 className={`truncate text-lg font-black tracking-tight text-white sm:text-xl ${headingLift}`}>Build, launch, and showcase real AI tools.</h1>
+                            <p className={`text-[10px] font-black uppercase tracking-[0.3em] text-cyan-50 ${textLift}`}>{program.name}</p>
+                            <h1 className={`truncate text-lg font-black tracking-tight text-white sm:text-xl ${headingLift}`}>{repaired(program.spotlight)}</h1>
                         </div>
                     </div>
                     <div className={`rounded-full border border-white/18 bg-black/42 px-4 py-2 text-sm font-black text-white shadow-[inset_0_1px_0_rgba(255,255,255,.08)] ${textLift}`}>
@@ -552,7 +553,9 @@ const ProgramDashboardPage: React.FC = () => {
                             <div className="flex items-center justify-between gap-4">
                                 <div>
                                     <p className={`text-[10px] font-black uppercase tracking-[0.28em] text-cyan-50 ${textLift}`}>Course Nav</p>
-                                    <h2 className={`mt-1 text-xl font-black text-white ${headingLift}`}>4 modules / 8 sections</h2>
+                                    <h2 className={`mt-1 text-xl font-black text-white ${headingLift}`}>
+                                        {curriculum.sections.length} modules / {leafSections.length} sections
+                                    </h2>
                                 </div>
                                 <MiniOrbit percent={progressPercent} className="h-14 w-14 shrink-0" />
                             </div>
@@ -857,6 +860,33 @@ const ProgramDashboardPage: React.FC = () => {
             </div>
         </div>
     );
+};
+
+/**
+ * The AI Pioneer Program runs on its own mission-console experience; every
+ * other program keeps the shared dashboard above. The split lives in a thin
+ * wrapper so hook order stays stable when the route param changes.
+ */
+const ProgramDashboardPage: React.FC = () => {
+    const { programId: routeProgramId } = useParams<{ programId: string }>();
+    const resolvedId = useMemo(() => {
+        if (!routeProgramId) {
+            return '';
+        }
+
+        if (getProgramById(routeProgramId)) {
+            return routeProgramId;
+        }
+
+        const programKey = toProgramKey(routeProgramId);
+        return programKey ? getRegistryProgramIdForProgramKey(programKey) : routeProgramId;
+    }, [routeProgramId]);
+
+    if (resolvedId === 'pioneer') {
+        return <PioneerDashboardPage />;
+    }
+
+    return <SharedProgramDashboard />;
 };
 
 export default ProgramDashboardPage;

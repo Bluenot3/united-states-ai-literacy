@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { getAiClient } from '../../lib/aiClient';
 import { repairContent, repairText } from '../../utils/text';
 import type { ProgramResourceContentItem, ProgramSection } from '../types';
+import './pioneerArcade.css';
 
 export const sectionActions = ['Start', 'Learn', 'Explore', 'Build', 'Reflect', 'Complete'];
 
@@ -153,25 +154,41 @@ export const ShellMetric: React.FC<{ label: string; value: string; sublabel: str
     </div>
 );
 
+/**
+ * Screen chrome shared by every Pioneer mini-app.
+ *
+ * Styled as an arcade cabinet screen: a bezel with a live indicator and the
+ * play/complete control, then the app itself on an inset display. Because
+ * all 27 interactives route through here, this is the single place that
+ * sets their look.
+ */
 export const MiniAppShell: React.FC<{
     title: string;
     children: React.ReactNode;
     onComplete: () => void;
     completeLabel?: string;
-}> = ({ title, children, onComplete, completeLabel = 'Mark interaction complete' }) => (
-    <div className={`relative mt-5 overflow-hidden rounded-[1.45rem] border ${missionPanelSoft} ${electricFrame}`}>
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-100/80 to-transparent" />
-        <div className="pointer-events-none absolute inset-x-8 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-100/45 to-transparent" />
-        <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 border-b border-cyan-100/18 bg-black/48 px-4 py-3">
-            <div className="flex items-center gap-3">
-                <span className="h-2.5 w-2.5 rounded-full bg-cyan-200 shadow-[0_0_18px_rgba(103,232,249,.9)]" />
-                <p className={`text-[10px] font-black uppercase tracking-[0.24em] text-cyan-50 ${textLift}`}>{title}</p>
+}> = ({ title, children, onComplete, completeLabel = 'Mark app cleared' }) => (
+    <div className="pa-cabinet relative mt-4">
+        <div className="pa-cabinet-bezel relative flex flex-wrap items-center justify-between gap-3 px-4 py-2.5">
+            <div className="flex min-w-0 items-center gap-2.5">
+                <span className="pa-led shrink-0" />
+                <p className="pa-text-lift truncate text-[10px] font-black uppercase tracking-[0.24em] text-white">{title}</p>
             </div>
-            <button type="button" onClick={onComplete} className="rounded-full border border-cyan-950/20 bg-cyan-100 px-3 py-1.5 text-xs font-black text-slate-950 shadow-[0_10px_26px_rgba(34,211,238,.32)] transition hover:-translate-y-0.5 hover:bg-white">
+            <button
+                type="button"
+                onClick={onComplete}
+                className="shrink-0 rounded-full border border-white/20 bg-white/[0.09] px-3.5 py-1.5 text-[11px] font-black text-white transition hover:-translate-y-0.5 hover:bg-white/[0.18]"
+            >
                 {completeLabel}
             </button>
         </div>
-        <div className="relative z-10 p-4">{children}</div>
+        <div className="relative">
+            <div
+                className="pointer-events-none absolute inset-0 z-10 rounded-b-[1.35rem]"
+                style={{ boxShadow: 'inset 0 0 48px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.05)' }}
+            />
+            <div className="relative p-4">{children}</div>
+        </div>
     </div>
 );
 
