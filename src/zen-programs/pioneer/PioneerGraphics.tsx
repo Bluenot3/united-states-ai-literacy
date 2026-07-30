@@ -118,61 +118,65 @@ export const PioneerCrest: React.FC<RgbProps & { className?: string; rank: numbe
 /* ═══ World glyphs ═══════════════════════════════════════════════════ */
 
 const glyphPaths: Record<WorldGlyphKind, React.ReactNode> = {
-    // ORIGIN — a neuron blooming into signal
-    spark: (
+    // ZEN MINT — a coining punch striking a blank; radiating strike marks.
+    strike: (
         <>
-            <circle cx="32" cy="32" r="7" fill="currentColor" />
-            {[0, 60, 120, 180, 240, 300].map((deg) => {
+            <circle cx="32" cy="34" r="9" fill="none" stroke="currentColor" strokeWidth="2.4" />
+            <circle cx="32" cy="34" r="3.4" fill="currentColor" />
+            <path d="M32 25 V10 M26 14 h12" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+            {[210, 240, 300, 330].map((deg) => {
                 const rad = (deg * Math.PI) / 180;
                 return (
-                    <g key={deg}>
-                        <line
-                            x1={32 + Math.cos(rad) * 9}
-                            y1={32 + Math.sin(rad) * 9}
-                            x2={32 + Math.cos(rad) * 21}
-                            y2={32 + Math.sin(rad) * 21}
-                            stroke="currentColor"
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                        />
-                        <circle cx={32 + Math.cos(rad) * 23} cy={32 + Math.sin(rad) * 23} r="3" fill="currentColor" />
-                    </g>
+                    <line
+                        key={deg}
+                        x1={32 + Math.cos(rad) * 12}
+                        y1={34 + Math.sin(rad) * 12}
+                        x2={32 + Math.cos(rad) * 19}
+                        y2={34 + Math.sin(rad) * 19}
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                    />
                 );
             })}
         </>
     ),
-    // FORGE — a prism striking sparks
-    forge: (
+    // ZEN ASSAY — a balance testing two samples for purity.
+    assay: (
         <>
-            <path d="M32 12 L50 44 H14 Z" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" />
-            <path d="M32 12 V44" stroke="currentColor" strokeWidth="1.6" opacity="0.6" />
-            <path d="M20 52 H44" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-            <path d="M26 44 L22 56 M38 44 L42 56" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.8" />
-            <circle cx="32" cy="30" r="4" fill="currentColor" />
+            <path d="M32 12 V44" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+            <path d="M14 20 H50" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+            <circle cx="32" cy="12" r="2.8" fill="currentColor" />
+            <path d="M8 20 L14 32 H2 Z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" transform="translate(6 0)" />
+            <path d="M50 20 L56 32 H44 Z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" transform="translate(-6 0)" />
+            <path d="M22 48 H42" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
         </>
     ),
-    // CIRCUIT — a lattice with routed traces
-    circuit: (
+    // ZEN INTAGLIO — a burin cutting parallel lines into a plate.
+    burin: (
         <>
-            <rect x="22" y="22" width="20" height="20" rx="4" fill="none" stroke="currentColor" strokeWidth="2.6" />
-            <circle cx="32" cy="32" r="3.4" fill="currentColor" />
-            {[
-                'M32 22 V12', 'M32 42 V52', 'M22 32 H12', 'M42 32 H52',
-                'M24 24 L16 16', 'M40 24 L48 16', 'M24 40 L16 48', 'M40 40 L48 48',
-            ].map((d) => (
-                <path key={d} d={d} stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            ))}
-            {[[32, 10], [32, 54], [10, 32], [54, 32]].map(([cx, cy]) => (
-                <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="2.6" fill="currentColor" />
+            <path d="M40 10 L52 22 L26 48 L16 50 L18 40 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" />
+            <path d="M40 10 L52 22" stroke="currentColor" strokeWidth="1.4" opacity="0.7" />
+            <path d="M18 40 L26 48" stroke="currentColor" strokeWidth="1.4" opacity="0.7" />
+            {[0, 1, 2, 3].map((i) => (
+                <path
+                    key={i}
+                    d={`M${10 + i * 3} ${58 - i * 1.5} L${26 + i * 3} ${58 - i * 1.5}`}
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                    opacity={0.85 - i * 0.15}
+                />
             ))}
         </>
     ),
-    // SUMMIT — a peak crowned with a star
-    summit: (
+    // ZEN SEAL — an impressed seal with a ribbon.
+    seal: (
         <>
-            <path d="M10 50 L26 24 L36 38 L44 26 L54 50 Z" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" />
-            <path d="M10 50 L26 24 L36 38 Z" fill="currentColor" opacity="0.22" />
-            <path d="M32 6 L34.6 13 L42 13.6 L36.4 18.4 L38.2 25.6 L32 21.6 L25.8 25.6 L27.6 18.4 L22 13.6 L29.4 13 Z" fill="currentColor" />
+            <circle cx="32" cy="26" r="15" fill="none" stroke="currentColor" strokeWidth="2.4" />
+            <circle cx="32" cy="26" r="10" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.65" />
+            <path d="M32 18 L34.2 23.4 L40 23.8 L35.6 27.4 L37 33 L32 29.8 L27 33 L28.4 27.4 L24 23.8 L29.8 23.4 Z" fill="currentColor" />
+            <path d="M24 39 L20 56 L32 50 L44 56 L40 39" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" />
         </>
     ),
 };
@@ -185,7 +189,10 @@ export const WorldGlyph: React.FC<RgbProps & {
     /** Not yet reached in the recommended order. Still fully reachable — this
      *  only dims the mark, it never gates access. */
     dormant?: boolean;
-}> = ({ kind, rgb, rgbAlt = rgb, className = '', charge = 0, dormant = false }) => {
+    /** Drop the hex frame + charge ring — for use inside an EngravedMedallion,
+     *  which already supplies its own frame and progress arc. */
+    bare?: boolean;
+}> = ({ kind, rgb, rgbAlt = rgb, className = '', charge = 0, dormant = false, bare = false }) => {
     const locked = dormant;
     const uid = useId().replace(/:/g, '');
     const perimeter = 300;
@@ -205,19 +212,19 @@ export const WorldGlyph: React.FC<RgbProps & {
                 </radialGradient>
             </defs>
 
-            <rect x="0" y="0" width="64" height="64" fill={`url(#wgGlow-${uid})`} />
+            {!bare && <rect x="0" y="0" width="64" height="64" fill={`url(#wgGlow-${uid})`} />}
 
             {/* Hex frame */}
-            <path
+            {!bare && <path
                 d="M32 2 L58 17 V47 L32 62 L6 47 V17 Z"
                 fill="rgba(3, 8, 20, 0.82)"
                 stroke={locked ? 'rgba(148,163,184,0.35)' : `rgba(${rgb}, 0.5)`}
                 strokeWidth="1.6"
                 strokeLinejoin="round"
-            />
+            />}
 
             {/* Charge meter riding the hex edge */}
-            {charge > 0 && !locked && (
+            {!bare && charge > 0 && !locked && (
                 <path
                     d="M32 2 L58 17 V47 L32 62 L6 47 V17 Z"
                     fill="none"

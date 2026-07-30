@@ -18,6 +18,8 @@ export interface PioneerWorld {
     moduleId: string;
     codename: string;
     tagline: string;
+    /** One-line gloss explaining the security-engraving metaphor. */
+    craft: string;
     /** `r, g, b` triple, injected as the --pa-world custom property. */
     rgb: string;
     rgbAlt: string;
@@ -31,60 +33,66 @@ export interface PioneerWorld {
     glyph: WorldGlyphKind;
 }
 
-export type WorldGlyphKind = 'spark' | 'forge' | 'circuit' | 'summit';
+export type WorldGlyphKind = 'strike' | 'assay' | 'burin' | 'seal';
 
 export const PIONEER_WORLDS: PioneerWorld[] = [
     {
         moduleId: 'module-1',
-        codename: 'ORIGIN',
-        tagline: 'Where signal becomes understanding',
-        rgb: '103, 232, 249',
-        rgbAlt: '167, 139, 250',
-        gradient: 'from-cyan-300 via-sky-400 to-violet-400',
-        wash: 'from-cyan-500/25 via-sky-600/10 to-transparent',
-        ring: 'ring-cyan-300/40',
-        text: 'text-cyan-200',
-        chip: 'border-cyan-300/35 bg-cyan-400/15 text-cyan-100',
-        glyph: 'spark',
+        codename: 'ZEN MINT',
+        tagline: 'Where raw signal is struck into understanding',
+        // Gloss shown under the codename so the metaphor teaches instead of
+        // decorating: each world is a stage of security engraving.
+        craft: 'A mint strikes a blank into something with a face and a value.',
+        rgb: '201, 168, 76',
+        rgbAlt: '223, 192, 106',
+        gradient: 'from-amber-200 via-yellow-300 to-amber-400',
+        wash: 'from-amber-400/25 via-yellow-600/10 to-transparent',
+        ring: 'ring-amber-200/40',
+        text: 'text-amber-100',
+        chip: 'border-amber-200/35 bg-amber-300/15 text-amber-50',
+        glyph: 'strike',
     },
     {
         moduleId: 'module-2',
-        codename: 'FORGE',
-        tagline: 'Where models are chosen and shipped',
-        rgb: '251, 146, 60',
-        rgbAlt: '244, 114, 182',
-        gradient: 'from-amber-300 via-orange-400 to-rose-400',
-        wash: 'from-orange-500/25 via-rose-600/10 to-transparent',
-        ring: 'ring-orange-300/40',
-        text: 'text-orange-200',
-        chip: 'border-orange-300/35 bg-orange-400/15 text-orange-100',
-        glyph: 'forge',
-    },
-    {
-        moduleId: 'module-3',
-        codename: 'CIRCUIT',
-        tagline: 'Where code and knowledge connect',
+        codename: 'ZEN ASSAY',
+        tagline: 'Where models are tested for purity and put to work',
+        craft: 'An assay office measures what a metal really is before anyone trusts it.',
         rgb: '52, 211, 153',
-        rgbAlt: '45, 212, 191',
-        gradient: 'from-emerald-300 via-teal-400 to-cyan-400',
+        rgbAlt: '34, 211, 238',
+        gradient: 'from-emerald-300 via-teal-300 to-cyan-400',
         wash: 'from-emerald-500/25 via-teal-600/10 to-transparent',
         ring: 'ring-emerald-300/40',
         text: 'text-emerald-200',
         chip: 'border-emerald-300/35 bg-emerald-400/15 text-emerald-100',
-        glyph: 'circuit',
+        glyph: 'assay',
+    },
+    {
+        moduleId: 'module-3',
+        codename: 'ZEN INTAGLIO',
+        tagline: 'Where code and knowledge are cut into working tools',
+        craft: 'Intaglio is the engraving that puts ink below the surface — the hardest line to fake.',
+        rgb: '167, 139, 250',
+        rgbAlt: '129, 140, 248',
+        gradient: 'from-violet-300 via-indigo-300 to-blue-400',
+        wash: 'from-violet-500/25 via-indigo-600/10 to-transparent',
+        ring: 'ring-violet-300/40',
+        text: 'text-violet-200',
+        chip: 'border-violet-300/35 bg-violet-400/15 text-violet-100',
+        glyph: 'burin',
     },
     {
         moduleId: 'module-4',
-        codename: 'SUMMIT',
-        tagline: 'Where the work becomes a credential',
-        rgb: '253, 224, 71',
-        rgbAlt: '232, 121, 249',
-        gradient: 'from-yellow-200 via-amber-300 to-fuchsia-400',
-        wash: 'from-amber-400/25 via-fuchsia-600/10 to-transparent',
-        ring: 'ring-amber-200/40',
-        text: 'text-amber-100',
-        chip: 'border-amber-200/35 bg-amber-300/15 text-amber-50',
-        glyph: 'summit',
+        codename: 'ZEN SEAL',
+        tagline: 'Where finished work is certified and issued',
+        craft: 'The seal is applied last, and only to work that passed every earlier stage.',
+        rgb: '224, 87, 107',
+        rgbAlt: '201, 168, 76',
+        gradient: 'from-rose-300 via-red-300 to-amber-300',
+        wash: 'from-rose-500/25 via-amber-600/10 to-transparent',
+        ring: 'ring-rose-300/40',
+        text: 'text-rose-200',
+        chip: 'border-rose-300/35 bg-rose-400/15 text-rose-100',
+        glyph: 'seal',
     },
 ];
 

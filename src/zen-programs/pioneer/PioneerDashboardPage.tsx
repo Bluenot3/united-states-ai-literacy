@@ -64,7 +64,18 @@ import {
     type PioneerWorld,
     type WorldState,
 } from './pioneerGame';
+import ZenLiveEmbed from './ZenLiveEmbed';
+import { liveLabsForSection } from './zenLiveLabs';
+import {
+    CornerCartouche,
+    EngravedMedallion,
+    GuillocheBand,
+    GuillocheWatermark,
+    Microprint,
+    SecurityThread,
+} from './ZenTreasuryGraphics';
 import './pioneerArcade.css';
+import './zenTreasury.css';
 
 const PROGRAM_ID = 'pioneer';
 
@@ -117,6 +128,10 @@ const count = (value: number, singular: string, plural = `${singular}s`) => (
 const worldVars = (world: PioneerWorld): React.CSSProperties => ({
     ['--pa-world' as string]: world.rgb,
     ['--pa-world-2' as string]: world.rgbAlt,
+    // The treasury layer reads its own names so the two systems can be used
+    // together on the same element without either owning the other's vars.
+    ['--zt-rgb' as string]: world.rgb,
+    ['--zt-rgb-alt' as string]: world.rgbAlt,
 });
 
 const AmbientField: React.FC<{ world: PioneerWorld }> = ({ world }) => (
@@ -608,10 +623,13 @@ const WorldBriefing: React.FC<{
 
     return (
         <div className="grid gap-4" style={worldVars(world)}>
-            <section className="pa-glass pa-edge relative overflow-hidden rounded-[2rem] p-6 sm:p-8">
+            <section className="zt-plate relative overflow-hidden rounded-[2rem] p-6 sm:p-8">
+                <GuillocheWatermark rgb={world.rgb} opacity={0.18} />
+                <GuillocheBand rgb={world.rgb} className="pointer-events-none absolute inset-x-0 top-0 h-8 opacity-75" />
+                <SecurityThread rgb={world.rgb} label={`${world.codename} · ZEN AI PIONEER`} className="pointer-events-none absolute inset-x-0 bottom-0 h-4" />
                 <div
                     className="pointer-events-none absolute inset-0"
-                    style={{ background: `radial-gradient(90% 120% at 88% -20%, rgba(${world.rgb}, .26), transparent 58%)` }}
+                    style={{ background: `radial-gradient(90% 120% at 88% -20%, rgba(${world.rgb}, .2), transparent 58%)` }}
                 />
                 <div className="relative grid gap-7 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
                     <div>
@@ -629,16 +647,14 @@ const WorldBriefing: React.FC<{
                             )}
                         </div>
 
-                        <p
-                            className="mt-5 text-xs font-black uppercase tracking-[0.4em]"
-                            style={{ color: `rgb(${world.rgb})` }}
-                        >
+                        <p className="zt-ovi mt-5 text-xs font-black uppercase tracking-[0.4em]">
                             {world.codename}
                         </p>
                         <h1 className="pa-title-lift mt-2 max-w-3xl text-3xl font-black tracking-[-0.04em] text-white sm:text-5xl">
                             {repaired(module.title).replace(/^Module \d+:\s*/i, '')}
                         </h1>
                         <p className="mt-3 max-w-2xl text-base font-semibold leading-7 text-slate-300">{world.tagline}.</p>
+                        <p className="mt-1.5 max-w-2xl text-[13px] font-medium italic leading-6 text-slate-500">{world.craft}</p>
 
                         <div className="mt-6 flex flex-wrap items-center gap-2.5">
                             <button
@@ -661,13 +677,20 @@ const WorldBriefing: React.FC<{
                     </div>
 
                     <div className="relative flex shrink-0 items-center justify-center">
-                        <WorldGlyph
-                            kind={world.glyph}
+                        <EngravedMedallion
                             rgb={world.rgb}
                             rgbAlt={world.rgbAlt}
                             charge={worldState.percent}
-                            className="pa-float h-40 w-40 sm:h-52 sm:w-52"
-                        />
+                            className="pa-float h-44 w-44 sm:h-56 sm:w-56"
+                        >
+                            <WorldGlyph
+                                kind={world.glyph}
+                                rgb={world.rgb}
+                                rgbAlt={world.rgbAlt}
+                                bare
+                                className="h-1/2 w-1/2"
+                            />
+                        </EngravedMedallion>
                     </div>
                 </div>
 
@@ -719,12 +742,11 @@ const WorldBriefing: React.FC<{
                         >
                             <div className="flex items-start justify-between gap-4">
                                 <div className="flex items-center gap-3">
-                                    <span
-                                        className="pa-hex flex h-11 w-11 shrink-0 items-center justify-center text-sm font-black text-slate-950"
-                                        style={{ background: `linear-gradient(140deg, #ffffff, rgb(${world.rgb}))` }}
-                                    >
-                                        {sectionIndex + 1}
-                                    </span>
+                                    <CornerCartouche
+                                        value={String(sectionIndex + 1).padStart(2, '0')}
+                                        rgb={world.rgb}
+                                        className="h-12 w-12 shrink-0"
+                                    />
                                     <div>
                                         <p className="text-[9px] font-black uppercase tracking-[0.24em] text-slate-400">Quest {sectionIndex + 1}</p>
                                         <p className="pa-tabular text-[11px] font-bold text-slate-400">{questPercent}% charged</p>
@@ -1017,7 +1039,8 @@ const MissionPod: React.FC<{
     const [openKeyword, setOpenKeyword] = useState<string | null>(null);
 
     return (
-        <section className="pa-glass pa-edge relative overflow-hidden rounded-[1.8rem]" style={worldVars(world)}>
+        <section className="zt-plate relative overflow-hidden rounded-[1.8rem]" style={worldVars(world)}>
+            <GuillocheBand rgb={world.rgb} className="pointer-events-none absolute inset-x-0 top-0 h-6 opacity-55" />
             <div
                 className="pointer-events-none absolute inset-0"
                 style={{ background: `radial-gradient(80% 100% at 100% 0%, rgba(${world.rgb}, .16), transparent 55%)` }}
@@ -1026,12 +1049,11 @@ const MissionPod: React.FC<{
             <div className="relative border-b border-white/8 p-5 sm:p-6">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="flex min-w-0 items-start gap-3.5">
-                        <span
-                            className="pa-hex flex h-12 w-12 shrink-0 items-center justify-center text-base font-black text-slate-950"
-                            style={{ background: `linear-gradient(140deg, #ffffff, rgb(${world.rgb}))` }}
-                        >
-                            {String(index + 1).padStart(2, '0')}
-                        </span>
+                        <CornerCartouche
+                            value={String(index + 1).padStart(2, '0')}
+                            rgb={world.rgb}
+                            className="h-13 w-13 shrink-0"
+                            />
                         <div className="min-w-0">
                             <p className="text-[10px] font-black uppercase tracking-[0.26em] text-slate-400">Mission {index + 1}</p>
                             <h3 className="pa-title-lift mt-1 text-2xl font-black tracking-[-0.03em] text-white sm:text-3xl">
@@ -1560,6 +1582,7 @@ const PioneerDashboardPage: React.FC = () => {
     const codeItems = currentSection.content.filter((item) => item.type === 'code');
     const isCurrentComplete = completedSections.has(currentSection.id);
 
+    const liveLabs = liveLabsForSection(currentSection.id);
     const questSteps = buildQuestSteps(currentSection, progress, true);
     const questPercent = Math.round(questSteps.reduce((sum, step) => sum + step.percent, 0) / questSteps.length);
 
@@ -1790,16 +1813,19 @@ const PioneerDashboardPage: React.FC = () => {
                     ) : (
                         <div className="grid gap-4">
                             {/* Quest header */}
-                            <section className="pa-glass pa-edge relative overflow-hidden rounded-[2rem] p-5 sm:p-7">
+                            <section className="zt-plate relative overflow-hidden rounded-[2rem] p-5 sm:p-7">
+                                <GuillocheWatermark rgb={world.rgb} />
+                                <GuillocheBand rgb={world.rgb} className="pointer-events-none absolute inset-x-0 top-0 h-7 opacity-70" />
+                                <Microprint rgb={world.rgb} className="pointer-events-none absolute inset-x-0 bottom-0 h-2 opacity-40" />
                                 <div
                                     className="pointer-events-none absolute inset-0"
-                                    style={{ background: `radial-gradient(80% 120% at 92% -20%, rgba(${world.rgb}, .22), transparent 58%)` }}
+                                    style={{ background: `radial-gradient(80% 120% at 92% -20%, rgba(${world.rgb}, .18), transparent 58%)` }}
                                 />
                                 <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
                                     <div className="min-w-0">
                                         <div className="flex flex-wrap items-center gap-2">
                                             <Chip className={world.chip}>
-                                                World {activeWorldIndex + 1} · {world.codename}
+                                                <span className="zt-ovi font-black">{world.codename}</span>
                                             </Chip>
                                             <Chip className="border-white/12 bg-black/40 text-slate-300">
                                                 Quest {activeWorldState.sections.findIndex((s) => s.id === currentSection.id) + 1} of {activeWorldState.sections.length}
@@ -1886,6 +1912,40 @@ const PioneerDashboardPage: React.FC = () => {
                                                 world={world}
                                                 explored={exploredApps.has(app.title)}
                                                 onExplore={() => markAppCleared(app.title)}
+                                            />
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+
+                            {/* Live labs — real models, hosted free, no ZEN key spent */}
+                            {liveLabs.length > 0 && (
+                                <section className="zt-plate relative overflow-hidden rounded-[1.9rem] p-5 sm:p-6">
+                                    <GuillocheWatermark rgb={world.rgb} opacity={0.1} />
+                                    <div className="relative flex flex-wrap items-end justify-between gap-3">
+                                        <div>
+                                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Live labs</p>
+                                            <h2 className="pa-title-lift mt-1 text-xl font-black tracking-tight text-white sm:text-2xl">
+                                                Drive a real model, not a simulation.
+                                            </h2>
+                                            <p className="mt-1.5 max-w-2xl text-[13px] font-semibold leading-6 text-slate-400">
+                                                These run on Hugging Face and NVIDIA, free and hosted by them. Everything else in
+                                                this quest is ours — these are the real thing, so you can feel the difference.
+                                            </p>
+                                        </div>
+                                        <Chip className={world.chip}>
+                                            {count(liveLabs.length, 'lab')}
+                                        </Chip>
+                                    </div>
+                                    <div className="relative mt-5 grid gap-3.5">
+                                        {liveLabs.map((lab) => (
+                                            <ZenLiveEmbed
+                                                key={lab.id}
+                                                lab={lab}
+                                                rgb={world.rgb}
+                                                rgbAlt={world.rgbAlt}
+                                                cleared={exploredApps.has(`live:${lab.id}`)}
+                                                onCleared={() => markAppCleared(`live:${lab.id}`)}
                                             />
                                         ))}
                                     </div>

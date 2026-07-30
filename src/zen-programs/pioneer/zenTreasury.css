@@ -1,0 +1,197 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   ZEN TREASURY — the material layer.
+
+   Security-engraving surfaces fused with ZEN's liquid-glass language:
+   optically-variable ink, engraved plate texture, microprint rules, and
+   security threads. Pairs with ZenTreasuryGraphics.tsx (the line work).
+
+   Every rule is prefixed .zt- and only loaded by the Pioneer experience.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Optically variable ink ─────────────────────────────────────────────
+   Real OVI shifts hue with viewing angle. We can't read the angle, so the
+   next best cue is motion: the sheen travels as the surface is hovered,
+   and the base gradient drifts continuously. */
+
+.zt-ovi {
+  background-image: linear-gradient(
+    115deg,
+    rgba(var(--zt-rgb), 0.95) 0%,
+    #ffffff 22%,
+    rgba(var(--zt-rgb-alt, var(--zt-rgb)), 0.95) 44%,
+    rgba(var(--zt-rgb), 0.7) 66%,
+    #ffffff 88%,
+    rgba(var(--zt-rgb), 0.95) 100%
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+          background-clip: text;
+  color: transparent;
+  animation: zt-ovi-shift 9s ease-in-out infinite alternate;
+}
+
+@keyframes zt-ovi-shift {
+  from { background-position: 0% 50%; }
+  to   { background-position: 100% 50%; }
+}
+
+/* A surface (not text) that carries the same shifting film. */
+.zt-ovi-surface {
+  position: relative;
+  isolation: isolate;
+}
+.zt-ovi-surface::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    118deg,
+    transparent 18%,
+    rgba(var(--zt-rgb), 0.16) 34%,
+    rgba(255, 255, 255, 0.2) 46%,
+    rgba(var(--zt-rgb-alt, var(--zt-rgb)), 0.16) 58%,
+    transparent 78%
+  );
+  background-size: 260% 100%;
+  mix-blend-mode: screen;
+  opacity: 0.75;
+  animation: zt-ovi-shift 12s ease-in-out infinite alternate;
+}
+
+/* ── Engraved plate ─────────────────────────────────────────────────────
+   Intaglio printing leaves ink standing above the paper. The cue is a hard
+   inner highlight on the top edge and a deep, tight shadow below. */
+
+.zt-plate {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(120% 90% at 12% -10%, rgba(var(--zt-rgb), 0.10), transparent 58%),
+    linear-gradient(168deg, rgba(10, 14, 26, 0.94) 0%, rgba(5, 8, 18, 0.97) 52%, rgba(3, 6, 14, 0.99) 100%);
+  border: 1px solid rgba(var(--zt-rgb), 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.6),
+    0 26px 70px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(22px) saturate(1.3);
+  -webkit-backdrop-filter: blur(22px) saturate(1.3);
+}
+
+/* Engine-turned ground: the fine crosshatch bed under engraved artwork. */
+.zt-plate::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.5;
+  background-image:
+    repeating-linear-gradient(38deg, rgba(255, 255, 255, 0.028) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(-38deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 5px);
+}
+
+/* ── Guilloché rule + microprint edge ──────────────────────────────────── */
+
+.zt-rule {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(var(--zt-rgb), 0.75) 20%,
+    rgba(255, 255, 255, 0.7) 50%,
+    rgba(var(--zt-rgb), 0.75) 80%,
+    transparent
+  );
+  box-shadow: 0 0 12px rgba(var(--zt-rgb), 0.4);
+}
+
+/* ── Security thread ───────────────────────────────────────────────────── */
+
+.zt-thread {
+  background: linear-gradient(90deg, rgba(var(--zt-rgb), 0.16), rgba(var(--zt-rgb), 0.05));
+  border-block: 1px solid rgba(var(--zt-rgb), 0.28);
+}
+
+.zt-thread-text {
+  display: block;
+  white-space: nowrap;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 7px;
+  letter-spacing: 0.32em;
+  line-height: 1.6;
+  color: rgba(var(--zt-rgb), 0.75);
+  animation: zt-thread-travel 40s linear infinite;
+}
+
+@keyframes zt-thread-travel {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ── Lathe rotation for rosettes ───────────────────────────────────────── */
+
+.zt-lathe {
+  transform-origin: center;
+  animation: zt-spin 90s linear infinite;
+}
+
+@keyframes zt-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Latent image ──────────────────────────────────────────────────────
+   On a real note a latent image appears only at a glancing angle. Here it
+   resolves on hover/focus — a small discoverable reward. */
+
+.zt-latent {
+  position: relative;
+}
+.zt-latent .zt-latent-text {
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.zt-latent:hover .zt-latent-text,
+.zt-latent:focus-within .zt-latent-text {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Deckle edge ───────────────────────────────────────────────────────
+   The torn-fibre edge of security paper, as a masked strip. */
+
+.zt-deckle {
+  -webkit-mask-image: repeating-linear-gradient(
+    90deg,
+    #000 0 6px,
+    transparent 6px 7px,
+    #000 7px 11px,
+    transparent 11px 12px
+  );
+          mask-image: repeating-linear-gradient(
+    90deg,
+    #000 0 6px,
+    transparent 6px 7px,
+    #000 7px 11px,
+    transparent 11px 12px
+  );
+}
+
+/* ── Reduced motion ────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .zt-ovi,
+  .zt-ovi-surface::after,
+  .zt-thread-text,
+  .zt-lathe {
+    animation: none !important;
+  }
+  .zt-latent .zt-latent-text {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
