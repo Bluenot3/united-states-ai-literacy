@@ -37,3 +37,31 @@ This is a review tool, not part of the product:
 
 Live labs embed third-party sites (Hugging Face, NVIDIA) and are click-to-load,
 so they stay inert until a reviewer chooses to run one.
+
+## Publishing it
+
+`dist-preview/` is a plain static site, so any host works. Two good routes:
+
+**One-off link (fastest).** From the repo root, after `npm run build:preview`:
+
+```bash
+npx vercel deploy dist-preview --yes
+```
+
+That uploads the built folder and prints a shareable URL. Add `--prod` for a
+stable one instead of a per-deploy URL.
+
+**Auto-updating link (best for review cycles).** Import this repo as a *second*
+Vercel project (separate from the app) and set:
+
+| Setting | Value |
+| --- | --- |
+| Framework preset | Vite |
+| Build command | `npm run build:preview` |
+| Output directory | `dist-preview` |
+
+Every push to the branch then refreshes the preview URL. Keep it as its own
+project so these settings never touch the main app's deployment.
+
+Either way the deployed bundle contains no keys, no backend and no learner
+data — it is the UI and the curriculum content only.
