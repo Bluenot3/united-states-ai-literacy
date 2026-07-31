@@ -27,3 +27,4 @@ public/marketing_assets/*.jpg
 # Vite/TypeScript cache
 *.tsbuildinfo
 vite.config.ts.timestamp-*
+dist-preview/

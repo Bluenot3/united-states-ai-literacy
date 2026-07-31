@@ -13,7 +13,9 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:gateway": "node --test \"server/gateway/__tests__/*.test.mjs\""
+    "test:gateway": "node --test \"server/gateway/__tests__/*.test.mjs\"",
+    "preview:pioneer": "vite --config vite.preview.config.ts",
+    "build:preview": "vite build --config vite.preview.config.ts"
   },
   "engines": {
     "node": ">=18.18.0"
