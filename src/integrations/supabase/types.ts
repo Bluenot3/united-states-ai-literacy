@@ -74,6 +74,59 @@ export type Database = {
         }
         Relationships: []
       }
+      module_progress: {
+        Row: {
+          certificate_hash: string | null
+          certificate_id: string | null
+          completed_at: string | null
+          completed_interactives: string[]
+          completed_sections: string[]
+          created_at: string
+          last_viewed_section: string
+          module_id: number
+          points: number
+          started_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          certificate_hash?: string | null
+          certificate_id?: string | null
+          completed_at?: string | null
+          completed_interactives?: string[]
+          completed_sections?: string[]
+          created_at?: string
+          last_viewed_section?: string
+          module_id: number
+          points?: number
+          started_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          certificate_hash?: string | null
+          certificate_id?: string | null
+          completed_at?: string | null
+          completed_interactives?: string[]
+          completed_sections?: string[]
+          created_at?: string
+          last_viewed_section?: string
+          module_id?: number
+          points?: number
+          started_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       program_entitlements: {
         Row: {
           access_ends_at: string | null
@@ -179,6 +232,83 @@ export type Database = {
           updated_at?: string
           user_id?: string
           username?: string | null
+        }
+        Relationships: []
+      }
+      session_history: {
+        Row: {
+          created_at: string
+          ended_at: string
+          id: number
+          module_id: number
+          sections_viewed: string[]
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at: string
+          id?: number
+          module_id: number
+          sections_viewed?: string[]
+          started_at: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string
+          id?: number
+          module_id?: number
+          sections_viewed?: string[]
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_profiles: {
+        Row: {
+          created_at: string
+          email: string
+          final_certification_hash: string | null
+          final_certification_id: string | null
+          id: string
+          metadata: Json
+          name: string
+          picture: string | null
+          total_points: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          final_certification_hash?: string | null
+          final_certification_id?: string | null
+          id: string
+          metadata?: Json
+          name: string
+          picture?: string | null
+          total_points?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          final_certification_hash?: string | null
+          final_certification_id?: string | null
+          id?: string
+          metadata?: Json
+          name?: string
+          picture?: string | null
+          total_points?: number
+          updated_at?: string
         }
         Relationships: []
       }
